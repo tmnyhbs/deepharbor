@@ -1,0 +1,14 @@
+[project]
+name = "st2dh"
+version = "0.1.0"
+description = "Stripe to Deep Harbor endpoint"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "configparser>=7.2.0",
+    "flask>=3.1.2",
+    "logging>=0.4.9.6",
+    "psycopg2-binary>=2.9.11",
+    "stripe>=14.3.0",
+    "waitress>=3.0.2",
+]

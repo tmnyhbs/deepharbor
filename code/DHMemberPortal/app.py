@@ -21,6 +21,15 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 ###############################################################################
+# Health check endpoint
+###############################################################################
+
+@app.route("/health")
+def health():
+    return "OK", 200
+
+
+###############################################################################
 # Flask routes for B2C flows, including login and logout
 ###############################################################################
 
@@ -49,6 +58,8 @@ def signup_check_email():
     if not email:
         return render_template('signup_email.html', error='Please enter an email address')
     
+    session["signup_email"] = email
+
     # Get access token for API calls using client credentials
     try:
         # Get access token for DHService
@@ -57,6 +68,12 @@ def signup_check_email():
             dhservices.DH_CLIENT_SECRET
         )
 
+        # If a member already exists for this email, send them to SSO login
+        member_data = dhservices.get_member_id(access_token, email)
+        if member_data and member_data.get("member_id"):
+            flash('An account already exists for this email. Please sign in.', 'info')
+            return redirect(url_for('login'))
+
         # Search for existing contact
         contact_data = dhservices.search_contacts_by_email(access_token, email)
         logger.debug(f"Contact search result for {email}: {contact_data}")
@@ -64,6 +81,18 @@ def signup_check_email():
         contact_obj = None
         if contact_data and isinstance(contact_data, list) and len(contact_data) > 0:
             contact_obj = contact_data[0].get('contact')
+
+        # Per Sky on 2/12/26: We do not want to auto-populate the form
+        # with the contact data as it could be a privacy concern. What
+        # we will do is a new method where when they sign up with an email,
+        # we will send them a link to the signup form where we can validate
+        # that the email they entered is actually theirs by including a 
+        # token in the link that they have to click on to access the form. 
+        # That way, we can be sure that the person filling out the form has 
+        # access to the email they entered, without actually showing them 
+        # any of the contact data we have on file for that email. For now, 
+        # we'll just show the empty form.
+        contact_obj = None
         
         # Show form with contact and waiver info
         return render_template('signup_form.html', 
@@ -75,6 +104,12 @@ def signup_check_email():
         logger.error(f"Error checking for existing contact: {str(e)}")
         # On error, show empty form
         return render_template('signup_form.html', email=email, contact_found=False)
+
+@app.route('/signup/payment')
+def signup_payment():
+    """Show payment step with Stripe pricing table"""
+    email = request.args.get('email') or session.get('signup_email')
+    return render_template('signup_payment.html', email=email)
 
 @app.route('/signup/submit', methods=['POST'])
 def signup_submit():
@@ -101,19 +136,34 @@ def signup_submit():
     status_data = {
         "waiver_signed": waiver_signed,
         "membership_level": "New Member",
-        "membership_status": "Active",
+        "membership_status": "Pending", # They're pending until an admin approves it
         "member_since": datetime.now().strftime('%Y-%m-%d'),
         "renewal_date": None,        
     }
+    
+    # We want to pre-create some fields in the forms for
+    # making it easier for the admins to review the new member's information 
+    # and track their progress through the onboarding steps.
     forms_data = {
-        "waiver_signed_at": waiver_signed_at or None
+        "waiver_signed_at": waiver_signed_at or None,
+        "id_check_1": "",
+        "id_check_2": "",
+        "terms_of_use_accepted": False,
+        "orientation_completed_date": "",
+        "essentials_forms_completed_date": "",
+        "is_21_or_older": False,
+    }
+    notes_data = {
+        "note": f"New signup with email {email}. Waiver signed: {waiver_signed}, Waiver signed at: {waiver_signed_at}",
+        "from": "Member Portal Signup",
+        "timestamp": datetime.now().isoformat()
     }
     logger.debug(f"Waiver signed: {waiver_signed}, Waiver signed at: {waiver_signed_at}")
     logger.debug(f"Identity data to be sent for signup: {identity_data}")
     logger.debug(f"Connections data to be sent for signup: {connections_data}")
     logger.debug(f"Status data to be sent for signup: {status_data}")
     logger.debug(f"Forms data to be sent for signup: {forms_data}")
-    
+    logger.debug(f"Notes data to be sent for signup: {notes_data}")
     try:
         # Get access token for DHService
         access_token = dhservices.get_access_token(
@@ -147,13 +197,16 @@ def signup_submit():
         dhservices.update_member_forms(access_token, member_id, forms_data)
         logger.info(f"Logged waiver form submission for member {member_id}")
         
+        # And we add a note about the new signup
+        dhservices.update_member_notes(access_token, member_id, notes_data)
+        logger.info(f"Added note for new signup for member {member_id}")
     except Exception as e:
         logger.error(f"Error creating new member: {str(e)}")
         flash('Error creating new member', 'error')
         return redirect(url_for('signup_start'))
     
-    flash('Sign up successful! Please log in.', 'success')
-    return redirect(url_for('login'))
+    flash('Sign up successful! Please complete payment.', 'success')
+    return redirect(url_for('signup_payment', email=email))
 
 @app.route("/login")
 def login():
@@ -294,6 +347,7 @@ def member_dashboard():
                              authorizations_computer_authorizations=computer_auths,
                              authorizations_physical_authorizations=physical_auths,
                              status=member_info.get('status', {}) if isinstance(member_info, dict) else {},
+                             access=member_info.get('access', {}) if isinstance(member_info, dict) else {},
                              extras=member_info.get('extras', {}) if isinstance(member_info, dict) else {},
                              forms=member_info.get('forms', []) if isinstance(member_info, dict) else {},
                              user=session.get('user'))
@@ -301,6 +355,53 @@ def member_dashboard():
         logger.error(f"Dashboard error: {str(e)}", exc_info=True)
         flash('Error loading dashboard', 'error')
         return redirect(url_for('login'))
+
+@app.route('/dashboard/update-profile', methods=['POST'])
+def member_update_profile():
+    """Update member profile fields from dashboard"""
+    if not session.get("user"):
+        flash('Please log in to update your profile', 'error')
+        return redirect(url_for('login'))
+
+    if 'access_token' not in session or 'member_id' not in session:
+        flash('Session expired, please log in again', 'error')
+        return redirect(url_for('login'))
+
+    access_token = session['access_token']
+    member_id = session['member_id']
+    user_email = session.get('email')
+
+    first_name = request.form.get('first_name', '').strip()
+    last_name = request.form.get('last_name', '').strip()
+    nickname = request.form.get('nickname', '').strip()
+    rfid_tags_raw = request.form.get('rfid_tags', '').strip()
+
+    try:
+        member_info = dhservices.get_full_member_info(access_token, member_id)
+        identity_data = (member_info.get('identity') if isinstance(member_info, dict) else {}) or {}
+    except Exception as e:
+        logger.error(f"Error fetching identity for update: {str(e)}", exc_info=True)
+        identity_data = {}
+
+    identity_data["first_name"] = first_name or None
+    identity_data["last_name"] = last_name or None
+    identity_data["nickname"] = nickname or None
+
+    if not identity_data.get("emails") and user_email:
+        identity_data["emails"] = [{"type": "primary", "email_address": user_email}]
+
+    rfid_tags = [tag.strip() for tag in rfid_tags_raw.split(',') if tag.strip()]
+    access_data = {"rfid_tags": rfid_tags}
+
+    try:
+        dhservices.update_member_identity(access_token, member_id, identity_data)
+        dhservices.update_member_access(access_token, member_id, access_data)
+        flash('Profile updated successfully', 'success')
+    except Exception as e:
+        logger.error(f"Error updating member profile: {str(e)}", exc_info=True)
+        flash('Error updating profile', 'error')
+
+    return redirect(url_for('member_dashboard'))
 
 @app.route("/logout")
 def logout():

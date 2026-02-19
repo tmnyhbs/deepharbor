@@ -15,6 +15,48 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         cursor: pointer;
     }
+
+    .cute-signin {
+        background: linear-gradient(135deg, #ff6bb5 0%, #ff4d9d 45%, #ff87c8 100%);
+        border: none;
+        box-shadow: 0 12px 24px rgba(255, 77, 157, 0.28);
+        letter-spacing: 0.01em;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .cute-signin::after {
+        content: "";
+        position: absolute;
+        top: -60%;
+        left: -40%;
+        width: 45%;
+        height: 220%;
+        background: rgba(255, 255, 255, 0.45);
+        transform: rotate(18deg);
+        transition: left 0.4s ease;
+    }
+
+    .cute-signin::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.75) 0 2px, transparent 3px),
+            radial-gradient(circle at 70% 35%, rgba(255, 255, 255, 0.6) 0 2px, transparent 3px),
+            radial-gradient(circle at 40% 75%, rgba(255, 255, 255, 0.5) 0 2px, transparent 3px);
+        opacity: 0.7;
+        mix-blend-mode: screen;
+    }
+
+    .cute-signin:hover {
+        transform: translateY(-2px) scale(1.01);
+        box-shadow: 0 16px 28px rgba(255, 77, 157, 0.35);
+    }
+
+    .cute-signin:hover::after {
+        left: 120%;
+    }
 </style>
 
 <h1>Deep Harbor Administration Portal</h1>
@@ -74,6 +116,11 @@
 <!-- Member Details Panel with Tabs -->
 <div id="memberDetailsSection" style="display: none; margin-top: 30px;">
     <h3 class="text-center mb-4">Member Details</h3>
+    <div id="memberHeaderInfo" class="text-center text-muted mb-3" style="display: none;">
+        <span id="memberHeaderName"></span>
+        <span class="mx-2">|</span>
+        <span id="memberHeaderEmail"></span>
+    </div>
     
     <!-- Tabs Navigation -->
     <ul class="nav nav-tabs" id="memberTabs" role="tablist">
@@ -235,7 +282,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="mb-0">Notes Information</h5>
-                        <button class="btn btn-primary btn-sm" id="notesEditBtn" onclick="toggleEditMode('notes')">Edit</button>
+                        <button class="btn btn-primary btn-sm" id="notesEditBtn" onclick="toggleEditMode('notes')">Add note</button>
                     </div>
                     <div id="notesLoading" class="text-center" style="display: none;">
                         <div class="spinner-border" role="status">
@@ -284,11 +331,21 @@
 <script>
 // Store current member ID
 let currentMemberId = null;
+let membershipLevelsCache = null;
+let membershipLevelsPromise = null;
+const loggedInUserName = {{ (
+    user.get('name')
+    or (user.get('given_name', '') ~ ' ' ~ user.get('family_name', ''))
+    or user.get('preferred_username')
+    or user.get('email')
+    or 'Logged in user'
+)|trim|tojson }} + ' via Admin Portal';
 
 // Toggle edit mode for a specific tab
 function toggleEditMode(tabName) {
     const editBtn = document.getElementById(`${tabName}EditBtn`);
     const tabPane = document.getElementById(tabName);
+    const isNotesTab = tabName === 'notes';
     
     if (!tabPane) return;
     
@@ -297,7 +354,7 @@ function toggleEditMode(tabName) {
     
     if (isEditing) {
         // Cancel edit mode - reload the tab data to reset changes
-        editBtn.textContent = 'Edit';
+        editBtn.textContent = isNotesTab ? 'Add note' : 'Edit';
         editBtn.classList.remove('btn-secondary');
         editBtn.classList.add('btn-primary');
         
@@ -305,6 +362,13 @@ function toggleEditMode(tabName) {
         const saveBtn = document.getElementById(`${tabName}SaveBtn`);
         if (saveBtn) {
             saveBtn.remove();
+        }
+
+        if (isNotesTab) {
+            const newRow = document.getElementById('notesNewRow');
+            if (newRow) {
+                newRow.remove();
+            }
         }
         
         // Reload the data to reset any changes
@@ -316,10 +380,21 @@ function toggleEditMode(tabName) {
         editBtn.textContent = 'Cancel';
         editBtn.classList.remove('btn-primary');
         editBtn.classList.add('btn-secondary');
+
+        if (isNotesTab) {
+            addNotesRow();
+            return;
+        }
         
-        // Enable all input fields and textareas in this tab
-        const inputs = tabPane.querySelectorAll('input[type="text"], textarea');
+        // Enable all input fields, selects, and textareas in this tab
+        const inputs = tabPane.querySelectorAll('input[type="text"], textarea, select');
         inputs.forEach(input => {
+            if (input.tagName === 'SELECT') {
+                input.removeAttribute('disabled');
+                input.addEventListener('change', () => handleFieldChange(tabName), { once: false });
+                return;
+            }
+
             input.removeAttribute('readonly');
             
             // Add change listener to detect modifications
@@ -334,6 +409,46 @@ function toggleEditMode(tabName) {
             // Add change listener to detect modifications
             checkbox.addEventListener('change', () => handleFieldChange(tabName), { once: false });
         });
+    }
+}
+
+function addNotesRow() {
+    const dataEl = document.getElementById('notesData');
+    if (!dataEl) {
+        return;
+    }
+
+    let tbody = document.getElementById('notesTableBody');
+    if (!tbody) {
+        dataEl.innerHTML = formatNotesData([]);
+        tbody = document.getElementById('notesTableBody');
+    }
+
+    if (!tbody || document.getElementById('notesNewRow')) {
+        return;
+    }
+
+    const nowIso = new Date().toISOString();
+    const row = document.createElement('tr');
+    row.id = 'notesNewRow';
+    row.innerHTML = `
+        <td>
+            <input type="text" class="form-control form-control-sm" data-field="timestamp" value="${escapeHtml(nowIso)}" readonly>
+        </td>
+        <td>
+            <input type="text" class="form-control form-control-sm" data-field="from" value="${escapeHtml(loggedInUserName)}" readonly>
+        </td>
+        <td>
+            <textarea class="form-control" data-field="note" rows="3" placeholder="Enter note..."></textarea>
+        </td>
+    `;
+
+    tbody.prepend(row);
+
+    const noteInput = row.querySelector('textarea[data-field="note"]');
+    if (noteInput) {
+        noteInput.addEventListener('input', () => handleFieldChange('notes'), { once: false });
+        noteInput.focus();
     }
 }
 
@@ -374,7 +489,7 @@ function saveTabData(tabName) {
     // Collect all field data
     const data = {};
     const validationErrors = [];
-    const inputs = tabPane.querySelectorAll('input[type="text"], textarea');
+    const inputs = tabPane.querySelectorAll('input[type="text"], textarea, select');
     inputs.forEach(input => {
         const fieldName = input.getAttribute('data-field');
         if (fieldName) {
@@ -401,6 +516,13 @@ function saveTabData(tabName) {
             data[fieldName] = value;
         }
     });
+
+    if (tabName === 'notes') {
+        const noteValue = data.note ? String(data.note).trim() : '';
+        if (!noteValue) {
+            validationErrors.push('Note: required');
+        }
+    }
     
     // Check for validation errors before proceeding
     if (validationErrors.length > 0) {
@@ -597,6 +719,27 @@ function getUserPermissions() {
     return null;
 }
 
+// Check if user can change (edit) a specific tab
+function canChangeTab(tabName, permissions) {
+    if (!permissions) {
+        permissions = getUserPermissions();
+    }
+
+    if (!permissions || !permissions.change) {
+        return false;
+    }
+
+    if (!Array.isArray(permissions.change)) {
+        return false;
+    }
+
+    if (permissions.change.includes('all')) {
+        return true;
+    }
+
+    return permissions.change.includes(tabName);
+}
+
 // Check if user can view a specific tab
 function canViewTab(tabName, permissions) {
     console.log(`\n=== Checking permission for tab "${tabName}" ===`);
@@ -655,19 +798,29 @@ function filterTabsByPermissions() {
     allTabs.forEach(tabName => {
         const tabButton = document.getElementById(`${tabName}-tab`);
         const tabNavItem = tabButton ? tabButton.closest('.nav-item') : null;
+        const editBtn = document.getElementById(`${tabName}EditBtn`);
         
         console.log(`Processing tab "${tabName}":`, { tabButton, tabNavItem });
         
+        const canView = canViewTab(tabName, permissions);
+        const canChange = canChangeTab(tabName, permissions);
+        const isVisible = canView || canChange;
+        
         if (tabNavItem) {
-            if (!canViewTab(tabName, permissions)) {
-                // Hide tab if user doesn't have permission
+            if (!isVisible) {
+                // Hide tab if user doesn't have view or change permission
                 console.log(`Hiding tab "${tabName}"`);
                 tabNavItem.style.display = 'none';
             } else {
-                // Show tab if user has permission
+                // Show tab if user has view or change permission
                 console.log(`Showing tab "${tabName}"`);
                 tabNavItem.style.display = 'block';
             }
+        }
+        
+        // Show edit button only if user has change permission for this tab
+        if (editBtn) {
+            editBtn.style.display = canChange ? '' : 'none';
         }
     });
     
@@ -694,9 +847,9 @@ function activateFirstVisibleTab(permissions) {
         }
     });
     
-    // Find and activate the first visible tab
+    // Find and activate the first visible tab (visible if user has view or change permission)
     for (const tabName of allTabs) {
-        if (canViewTab(tabName, permissions)) {
+        if (canViewTab(tabName, permissions) || canChangeTab(tabName, permissions)) {
             const tabButton = document.getElementById(`${tabName}-tab`);
             const tabPane = document.getElementById(tabName);
             if (tabButton && tabPane) {
@@ -820,7 +973,7 @@ function displayResults(members, updateCache = true) {
             `;
             // Add click handler to fetch member data
             row.onclick = function() {
-                loadMemberData(member.member_id);
+                loadMemberData(member);
             };
             tbody.appendChild(row);
         });
@@ -1007,7 +1160,88 @@ function formatEntryData(data) {
     return html;
 }
 
-function formatData(data) {
+function formatNotesData(data) {
+    const notes = Array.isArray(data) ? data : (data && Array.isArray(data.notes) ? data.notes : []);
+
+    let html = '';
+    if (notes.length === 0) {
+        html += '<div class="alert alert-info">No notes found for this member.</div>';
+    }
+
+    html += `
+        <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark" style="position: sticky; top: 0; z-index: 10;">
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>From</th>
+                        <th>Note</th>
+                    </tr>
+                </thead>
+                <tbody id="notesTableBody">
+    `;
+
+    notes.forEach(note => {
+        const rawTimestamp = note && note.timestamp ? String(note.timestamp) : '';
+        const parsedDate = rawTimestamp ? new Date(rawTimestamp) : null;
+        const timestamp = parsedDate && !Number.isNaN(parsedDate.getTime())
+            ? parsedDate.toLocaleString()
+            : (rawTimestamp || 'N/A');
+        const from = note && note.from ? escapeHtml(note.from) : 'Unknown';
+        const noteText = note && note.note ? escapeHtml(note.note).replace(/\n/g, '<br>') : '';
+
+        html += `
+            <tr>
+                <td>${escapeHtml(timestamp)}</td>
+                <td>${from}</td>
+                <td>${noteText}</td>
+            </tr>
+        `;
+    });
+
+    html += `
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-2 text-muted">
+            <small>Showing ${notes.length} note${notes.length === 1 ? '' : 's'}</small>
+        </div>
+    `;
+
+    return html;
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function normalizeMembershipLevels(levels) {
+    if (!Array.isArray(levels)) {
+        return [];
+    }
+
+    return levels.map(level => {
+        if (typeof level === 'string') {
+            return { name: level, description: '' };
+        }
+        if (level && typeof level === 'object') {
+            return {
+                name: level.name || level.membership_level_name || level.membership_level || level.membership_level_id || '',
+                description: level.description || ''
+            };
+        }
+        return null;
+    }).filter(level => level && level.name);
+}
+
+function formatData(data, options = {}) {
+    const tabName = options.tabName || null;
+    const membershipLevels = normalizeMembershipLevels(options.membershipLevels || []);
     let html = '<div class="row">';
     
     // Helper function to format field names
@@ -1017,6 +1251,56 @@ function formatData(data) {
     
     // Helper function to format values as input fields
     const formatValue = (key, value) => {
+        if (tabName === 'status' && key === 'membership_status') {
+            const currentValue = value === null || value === undefined ? '' : String(value);
+            const options = ['active', 'suspended', 'banned'];
+            const hasCurrentValue = currentValue.length > 0;
+            const normalizedCurrent = currentValue.toLowerCase();
+            const hasKnownValue = options.includes(normalizedCurrent);
+            const displayValue = hasKnownValue ? normalizedCurrent : currentValue;
+
+            return `
+                <select class="form-select" data-field="${key}" disabled>
+                    <option value="" ${hasCurrentValue ? '' : 'selected'}>Select membership status</option>
+                    ${!hasKnownValue && hasCurrentValue ? `<option value="${escapeHtml(displayValue)}" selected>${escapeHtml(displayValue)} (current)</option>` : ''}
+                    ${options.map(option => {
+                        const selected = option === normalizedCurrent ? ' selected' : '';
+                        return `<option value="${option}"${selected}>${option}</option>`;
+                    }).join('')}
+                </select>
+            `;
+        }
+
+        if (tabName === 'status' && key === 'membership_level') {
+            const currentValue = value === null || value === undefined ? '' : String(value);
+            const hasCurrentValue = currentValue.length > 0;
+            const levels = [...membershipLevels];
+
+            if (hasCurrentValue && !levels.some(level => level.name === currentValue)) {
+                levels.unshift({
+                    name: currentValue,
+                    description: 'Current value (not in list)'
+                });
+            }
+
+            let optionsHtml = levels.map(level => {
+                const selected = level.name === currentValue ? ' selected' : '';
+                const title = level.description ? ` title="${escapeHtml(level.description)}"` : '';
+                return `<option value="${escapeHtml(level.name)}"${selected}${title}>${escapeHtml(level.name)}</option>`;
+            }).join('');
+
+            if (!optionsHtml) {
+                optionsHtml = '<option value="" disabled>No membership levels available</option>';
+            }
+
+            return `
+                <select class="form-select" data-field="${key}" disabled>
+                    <option value="" ${hasCurrentValue ? '' : 'selected'}>Select membership level</option>
+                    ${optionsHtml}
+                </select>
+            `;
+        }
+
         // Handle null/undefined/empty values
         if (value === null || value === undefined || value === '') {
             return `<input type="text" class="form-control" data-field="${key}" value="" placeholder="Not set" readonly>`;
@@ -1067,9 +1351,39 @@ function formatData(data) {
     return html;
 }
 
-function loadMemberData(memberId) {
+function updateMemberHeaderInfo(member) {
+    const header = document.getElementById('memberHeaderInfo');
+    const nameEl = document.getElementById('memberHeaderName');
+    const emailEl = document.getElementById('memberHeaderEmail');
+
+    if (!header || !nameEl || !emailEl) {
+        return;
+    }
+
+    if (!member) {
+        header.style.display = 'none';
+        nameEl.textContent = '';
+        emailEl.textContent = '';
+        return;
+    }
+
+    const firstName = member.first_name || '';
+    const lastName = member.last_name || '';
+    const fullName = `${firstName} ${lastName}`.trim();
+    const email = member.primary_email_address || '';
+
+    nameEl.textContent = fullName || 'Member';
+    emailEl.textContent = email || 'No email on file';
+    header.style.display = 'block';
+}
+
+function loadMemberData(memberOrId) {
+    const member = typeof memberOrId === 'object' ? memberOrId : null;
+    const memberId = member ? member.member_id : memberOrId;
     currentMemberId = memberId;
     const memberDetailsSection = document.getElementById('memberDetailsSection');
+
+    updateMemberHeaderInfo(member);
     
     // Filter tabs based on user permissions
     filterTabsByPermissions();
@@ -1083,7 +1397,7 @@ function loadMemberData(memberId) {
     let firstVisibleTab = null;
     
     for (const tabName of allTabs) {
-        if (canViewTab(tabName, permissions)) {
+        if (canViewTab(tabName, permissions) || canChangeTab(tabName, permissions)) {
             firstVisibleTab = tabName;
             break;
         }
@@ -1100,9 +1414,35 @@ function loadMemberData(memberId) {
     }
 }
 
+function fetchMembershipLevels() {
+    if (membershipLevelsCache) {
+        return Promise.resolve(membershipLevelsCache);
+    }
+
+    if (!membershipLevelsPromise) {
+        membershipLevelsPromise = fetch('/api/membership_levels/available')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch membership levels');
+                }
+                return response.json();
+            })
+            .then(payload => {
+                membershipLevelsCache = (payload || {}).available_membership_levels || [];
+                return membershipLevelsCache;
+            })
+            .catch(error => {
+                membershipLevelsPromise = null;
+                throw error;
+            });
+    }
+
+    return membershipLevelsPromise;
+}
+
 function fetchTabData(tabName, memberId) {
-    // Check if user has permission to view this tab
-    if (!canViewTab(tabName)) {
+    // Check if user has permission to view or change this tab
+    if (!canViewTab(tabName) && !canChangeTab(tabName)) {
         console.warn(`User does not have permission to view ${tabName} tab`);
         return;
     }
@@ -1133,6 +1473,32 @@ function fetchTabData(tabName, memberId) {
         return;
     }
     
+    // Special handling for status tab
+    if (tabName === 'status') {
+        Promise.all([
+            fetch(`/api/member/${tabName}?member_id=${encodeURIComponent(memberId)}`).then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch status data');
+                }
+                return response.json();
+            }),
+            fetchMembershipLevels()
+        ])
+        .then(([memberData, levels]) => {
+            dataEl.innerHTML = formatData(memberData, {
+                tabName: 'status',
+                membershipLevels: levels
+            });
+        })
+        .catch(error => {
+            dataEl.innerHTML = '<div class="alert alert-danger">Error: ' + error.message + '</div>';
+        })
+        .finally(() => {
+            loadingEl.style.display = 'none';
+        });
+        return;
+    }
+
     // Special handling for entry tab
     if (tabName === 'entry') {
         fetch(`/api/member/${tabName}?member_id=${encodeURIComponent(memberId)}`)
@@ -1144,6 +1510,27 @@ function fetchTabData(tabName, memberId) {
             })
             .then(data => {
                 dataEl.innerHTML = formatEntryData(data);
+            })
+            .catch(error => {
+                dataEl.innerHTML = '<div class="alert alert-danger">Error: ' + error.message + '</div>';
+            })
+            .finally(() => {
+                loadingEl.style.display = 'none';
+            });
+        return;
+    }
+
+    // Special handling for notes tab
+    if (tabName === 'notes') {
+        fetch(`/api/member/${tabName}?member_id=${encodeURIComponent(memberId)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch ${tabName} data`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                dataEl.innerHTML = formatNotesData(data);
             })
             .catch(error => {
                 dataEl.innerHTML = '<div class="alert alert-danger">Error: ' + error.message + '</div>';
@@ -1226,7 +1613,9 @@ document.getElementById('memberSearch').addEventListener('keypress', function(ev
 
 {% else %}
 <!-- We're not logged in -->
-<li><a href='{{ auth_url }}'>Sign In</a></li>
+<div class="d-flex justify-content-center mt-5">
+    <a href='{{ auth_url }}' class="btn btn-primary btn-lg rounded-pill px-4 cute-signin">Sign In</a>
+</div>
 {% endif %}
 
 {% endblock %}

@@ -1,0 +1,10 @@
+[project]
+name = "client-test"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "psycopg2-binary>=2.9.11",
+    "requests>=2.32.5",
+]

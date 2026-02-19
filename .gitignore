@@ -1,6 +1,7 @@
-
+config.ini
 __pycache__/
 wa2dh.log
 .vscode/
 *~
 flask_session/
+*.swp

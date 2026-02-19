@@ -1,0 +1,21 @@
+[project]
+name = "dh2mg"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "bcrypt>=5.0.0",
+    "configparser>=7.2.0",
+    "fastapi[standard]>=0.129.0",
+    "psycopg2-binary>=2.9.11",
+    "pyjwt>=2.11.0",
+    "python-multipart>=0.0.22",
+    "requests>=2.32.5",
+    "uvicorn>=0.40.0",
+]
+
+[tool.uv.workspace]
+members = [
+    "client_test",
+]

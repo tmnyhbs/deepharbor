@@ -16,6 +16,7 @@ from dhs_logging import logger
 # Queue Configuration
 ###############################################################################
 
+
 BASE_DIR = config["shared"]["SHARED_VOLUME_PATH"]
 QUEUE_DIR = os.path.join(BASE_DIR, "queues")
 if not os.path.exists(QUEUE_DIR):
@@ -63,7 +64,7 @@ def perform_board_operation(operation: str, tag_id: str = '', converted_tag: str
         # Add the card to the board - we're enabling for all doors, all times
         # which is reprsented as being from now till 25 years from now
         response = board.put_card(BOARD_SERIAL_NUM, 
-                                  converted_tag, 
+                                  int(converted_tag), 
                                   start_date, 
                                   end_date, 
                                   1, 
@@ -74,7 +75,7 @@ def perform_board_operation(operation: str, tag_id: str = '', converted_tag: str
         logger.info(f"Response from adding card: {response}")
     elif operation == "remove":
         # Remove the card from the board
-        board.delete_card(BOARD_SERIAL_NUM, converted_tag)
+        board.delete_card(BOARD_SERIAL_NUM, int(converted_tag))
         logger.info(f"Removed card with converted tag: {converted_tag}")
     else:
         logger.error(f"Unknown operation: {operation}")
@@ -229,3 +230,10 @@ def main():
 
 if __name__ == "__main__":
     main()
+    """
+    # Manual testing
+    set_datetime()
+    get_datetime()
+    #perform_board_operation('remove', '0001460326', '2218534') 
+    #perform_board_operation('add', '0001460326', '2218534') 
+    """

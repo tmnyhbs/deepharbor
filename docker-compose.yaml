@@ -19,10 +19,15 @@
 services:
   #########################################################
   # Database Service (Postgresql)
+  # Note that we are using the TimescaleDB image, which is a
+  # PostgreSQL extension that provides time-series capabilities. 
+  # This is useful for things like access logs, which are 
+  # time-series data. We can use TimescaleDB's hypertables 
+  # to efficiently store and query time-series data.
   #########################################################
   
   db:
-    image: postgres:latest
+    image: timescale/timescaledb:latest-pg18
     restart: always
     environment:
       POSTGRES_USER: dh
@@ -447,6 +452,10 @@ services:
 
 ##########################################################
 # Services that work with external systems
+# We currently interact with:
+#   * Waiver Forever - for managing waivers
+#   * Stripe - for managing payments (not implemented yet)
+#   * Mailgun - for sending emails (not implemented yet)
 ##########################################################
 
   # PS1 uses Waiver Forever to manage waivers. This service
@@ -455,7 +464,7 @@ services:
   # Note that this service must be accessible from the public
   # internet for Waiver Forever to be able to call it.
   wf2dh:
-    build: ./code/WF2DH
+    build: ./code/external/WF2DH
     restart: unless-stopped
     environment:
       TZ: "America/Chicago"
@@ -477,6 +486,62 @@ services:
       db:
         condition: service_healthy
     container_name: dh_wf2dh
+    networks:
+      - dh_network
+
+  # PS1 uses Stripe to manage payments. This service works with Stripe's
+  # webhook system to get payment information into Deep Harbor. Note that
+  # this service must be accessible from the public internet for Stripe to be able to call it.
+  st2dh:
+    build: ./code/external/ST2DH
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      TZ: "America/Chicago"
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_NAME: deepharbor
+      DATABASE_USER: dh
+      DATABASE_PASSWORD: dh
+      SERVICE_NAME: ST2DH      
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    ports:
+      - "5004:5004"
+    depends_on:
+      db:
+        condition: service_healthy
+    container_name: dh_st2dh
+
+  # PS1 uses Mailgun to send emails. This service provides an API for
+  # other services to send emails via Mailgun. Note that this service must be accessible from the public internet for other services to be able to call it.
+  dh2mg:
+    build: ./code/external/DH2MG
+    restart: unless-stopped    
+    environment:
+      TZ: "America/Chicago"
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_NAME: deepharbor
+      DATABASE_USER: dh
+      DATABASE_PASSWORD: dh
+      SERVICE_NAME: DH2MG      
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    expose:
+      - "8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    container_name: dh_dh2mg
     networks:
       - dh_network
 

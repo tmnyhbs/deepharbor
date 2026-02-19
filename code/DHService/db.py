@@ -314,7 +314,31 @@ def add_update_extras(member_id, extras_dict):
 
 def add_update_notes(member_id, notes_dict):
     last_updated_by = notes_dict.pop("modified_by", None) if isinstance(notes_dict, dict) else None
-    return _update_single_field(member_id, "notes", notes_dict, last_updated_by=last_updated_by)
+    if notes_dict is None or (isinstance(notes_dict, str) and not notes_dict.strip()) or (isinstance(notes_dict, dict) and not notes_dict):
+        return prepare_return_payload(member_id, "No note provided.")
+    # Notes are a special case because we want to append new notes to
+    # existing notes rather than replace them, so we need to get the
+    # existing notes, append the new note, and then update the field
+    # with the combined notes.
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT notes FROM member WHERE id = %s", (member_id,))
+            result = cur.fetchone()
+            existing_notes = result[0] if result and result[0] else []
+            # Normalize existing notes into a list of note objects.
+            if isinstance(existing_notes, dict):
+                existing_notes = [existing_notes]
+            elif isinstance(existing_notes, str):
+                existing_notes = [{"note": existing_notes}]
+
+            # Normalize incoming note into a note object.
+            if isinstance(notes_dict, dict):
+                new_note = notes_dict
+            else:
+                new_note = {"note": notes_dict}
+
+            existing_notes.append(new_note)
+    return _update_single_field(member_id, "notes", existing_notes, last_updated_by=last_updated_by)
 
 def add_update_status(member_id, status_dict):
     last_updated_by = status_dict.pop("modified_by", None) if isinstance(status_dict, dict) else None
@@ -323,6 +347,17 @@ def add_update_status(member_id, status_dict):
 def add_update_authorizations(member_id, authorizations_dict):
     last_updated_by = authorizations_dict.pop("modified_by", None) if isinstance(authorizations_dict, dict) else None
     return _update_single_field(member_id, "authorizations", authorizations_dict, last_updated_by=last_updated_by)
+
+def get_member_authorization_changes(member_id: str) -> dict:
+    logger.debug(f"Getting authorization changes for member ID: {member_id}")
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT get_authorization_changes_for_member(%s)", (member_id,))
+            result = cur.fetchone()
+    if result:
+        return result[0]
+    logger.debug(f"No member found with ID: {member_id} for authorization changes")
+    return {"member_id": member_id, "added": [], "removed": []}
 
 # Simple field getter functions using the generic helper
 def get_member_identity(member_id: str) -> dict | None:
@@ -416,7 +451,7 @@ def get_member_entry_logs(member_id: str) -> list[dict]:
                                 ELSE 'DENIED'
                          END AS access_granted,
                          mal.rfid_tag
-                FROM     member_access_logs mal
+                FROM     member_access_log mal
                 WHERE    mal.member_id = %s
                 ORDER BY mal.timestamp DESC;
                 """,
@@ -434,6 +469,28 @@ def get_member_entry_logs(member_id: str) -> list[dict]:
     logger.debug(f"Retrieved {len(entry_logs)} entry logs for member ID: {member_id}")
     return entry_logs
 
+def get_member_by_stripe_customer_id(stripe_customer_id: str) -> dict | None:
+    logger.debug(f"Getting member by Stripe customer ID: {stripe_customer_id}")
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, first_name, last_name, primary_email, membership_status 
+                FROM   v_member_name_email_status 
+                WHERE  id = (SELECT id 
+                FROM   member
+                WHERE  connections->>'stripe_id' = %s );
+                """,
+                (stripe_customer_id,),
+            )
+            result = cur.fetchone()
+    if result:
+        member_id = result[0]
+        identity = {"first_name": result[1], "last_name": result[2], "primary_email": result[3], "membership_status": result[4]}
+        logger.debug(f"Found member ID: {member_id} for Stripe customer ID: {stripe_customer_id}")
+        return {"member_id": member_id, "identity": identity}
+    logger.debug(f"No member found with Stripe customer ID: {stripe_customer_id}")
+    return None
 
 # This has been a problem for years, so we add a dedicated function to check username availability
 # so we don't end up with screwed up active directory accounts, B2C logins and upset members.
@@ -531,7 +588,8 @@ def get_available_authorizations() -> list[dict]:
     return equipment
 
 ###############################################################################
-# Deep Harbor specific database functions (e.g. user activity on websites)
+# Deep Harbor specific database functions (e.g. user activity on websites,
+# product lookups, etc.)
 ###############################################################################
 def log_user_activity(activity_data: dict):
     # Get the member ID from the activity data
@@ -586,3 +644,65 @@ def search_contacts_by_email(email_address: str) -> list[dict]:
         contacts.append({"contact": contact})
     logger.debug(f"Found {len(contacts)} contacts matching email address: {email_address}")
     return contacts
+
+def get_available_membership_levels() -> list[dict]:
+    logger.debug("Getting all available membership levels.")
+    membership_levels = []
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """SELECT id, name, description
+                   FROM membership_types_lookup"""
+            )
+            results = cur.fetchall()
+    for result in results:
+        membership_levels.append({
+            "membership_level_id": result[0],
+            "name": result[1],
+            "description": result[2],
+        })
+    logger.debug(f"Retrieved {len(membership_levels)} available membership levels from the database.")
+    return membership_levels
+
+def save_stripe_event(event: dict):
+    logger.debug(f"Saving Stripe event to the database: {event}")
+    error_message = "OK"
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                event_sql = """
+                    INSERT INTO subscriptions (details)
+                    VALUES (%s)
+                """
+                cur.execute(event_sql, (json.dumps(event),))
+            conn.commit()
+    except Exception as e:
+        error_message = f"Error saving Stripe event: {e}"
+        logger.error(error_message)
+    return {"message": error_message}
+
+# "Products" in this case are the different subscription options we have in 
+# Stripe, which we want to be able to look up and send to whatever, like
+# ST2DH, that needs to know about them. This is a simple lookup function that
+# gets the product information from the database and it's assumed the
+# caller will know what to do with it (e.g. send it to ST2DH, use it 
+# to match against incoming Stripe events, etc.)
+def get_products() -> list[dict]:
+    logger.debug("Getting all products from the database.")
+    products = []
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """SELECT id, name, description, details
+                   FROM products"""
+            )
+            results = cur.fetchall()
+    for result in results:
+        products.append({
+            "product_id": result[0],
+            "name": result[1],
+            "description": result[2],
+            "details": result[3],        
+            })
+    logger.debug(f"Retrieved {len(products)} products from the database.")
+    return products

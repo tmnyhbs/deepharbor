@@ -46,7 +46,7 @@
             <div class="card wide">
                 {% if contact_found %}
                 <div class="alert alert-info">
-                    Oh, hey! We found your information! Please review and complete the form below.
+                    Oh, hey! We found your information! Please complete the form below.
                 </div>
                 {% endif %}
 
@@ -104,7 +104,7 @@
                                    title="Username can only contain letters, numbers, underscores, and hyphens (no spaces)">
                             <button type="button" class="btn btn-secondary btn-check" onclick="checkUsername()">Check Availability</button>
                         </div>
-                        <div class="help-text">This is for logging into the space computers, the wiki, and other resources.</div>
+                        <div class="help-text">This is for logging into PS1 computers, Canvas, the wiki, etc.</div>
                         <div id="username-message" class="username-message"></div>
                     </div>
 
@@ -134,7 +134,7 @@
             </div>
         </div>
     </div>
-
+    
     <script>
         // Trim all text inputs on form submission to prevent spaces-only submissions
         document.querySelector('form').addEventListener('submit', function(event) {

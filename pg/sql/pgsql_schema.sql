@@ -97,6 +97,14 @@ FROM   member
 WHERE  UPPER((status->>'membership_status')::TEXT) != 'ACTIVE';
 COMMENT ON VIEW v_member_status_counts IS 'This view shows the count of active and inactive members based on the membership_status field in the status JSONB column of the member table.';
 
+-- Helper view to get the primary email for a member
+create view v_member_id_email AS
+SELECT id,
+       jsonb_path_query_first( identity, '$.emails[*] ? (@.type == "primary").email_address' )#>>
+       '{}' AS primary_email
+FROM   member;
+COMMENT ON VIEW v_member_id_email IS 'This view provides a list of member IDs along with their primary email address';
+
 -- Member names and status view
 CREATE VIEW v_member_names_and_status AS
 SELECT id, 
@@ -105,6 +113,20 @@ SELECT id,
        status->>'membership_status' AS membership_status
 FROM   member;
 COMMENT ON VIEW v_member_names_and_status IS 'This view provides a list of member IDs along with their first name, last name, and membership status from the member table.';
+
+-- Similar to v_member_names_and_status but also includes the primary email address for each member, 
+-- which is extracted from the identity JSONB column. This is useful for reports or queries where you 
+-- want to see the member''s name, email, and status together without having to write the JSONB 
+-- extraction logic each time.
+create view v_member_name_email_status as
+SELECT id,
+       identity ->> 'first_name':: TEXT AS first_name,
+       identity ->> 'last_name'::  TEXT AS last_name,
+       jsonb_path_query_first( identity, '$.emails[*] ? (@.type == "primary").email_address' )#>>
+       '{}' AS primary_email,
+       status ->> 'membership_status'::TEXT AS membership_status
+FROM   member;
+COMMENT ON VIEW v_member_name_email_status IS 'This view provides a list of member IDs along with their first name, last name, primary email address, and membership status from the member table.';
 
 -- This view wraps most of the member data for easier querying
 -- and displaying on the member portal
@@ -115,7 +137,7 @@ json_build_object(
         'member_id', m.id,
         'first_name', m.identity ->> 'first_name'::TEXT,
         'last_name', m.identity ->> 'last_name'::TEXT,
-        'primary_email', ((m.identity -> 'emails'::TEXT) -> 0) ->> 'email_address'::TEXT,
+        'primary_email', jsonb_path_query_first( m.identity, '$.emails[*] ? (@.type == "primary").email_address' )#>>'{}',
         'nickname', m.identity ->> 'nickname'::TEXT,
         'active_directory_username', m.identity ->> 'active_directory_username'::TEXT
     ),
@@ -174,7 +196,8 @@ INSERT INTO oauth2_users (client_name, client_secret, client_description) VALUES
 INSERT INTO oauth2_users (client_name, client_secret, client_description) VALUES ('dev-admin-portal', '$2b$12$OcAzWAtVKG0oTtzeZeU42.SlZyABSOLF8153s/dX.yFaDsLDWNK46', 'admin portal application');
 /* The member portal client */
 insert into oauth2_users (client_name, client_secret, client_description) values('dev-member-portal', '$2b$12$17IgUjlVac/yIL4P6lBAlOed37uKM3qce9YgLIGFWhWRNLvU0bNES', 'member portal application');
-
+/* The Stripe integration client */
+insert into oauth2_users (client_name, client_secret, client_description) values('dev-stripe-client', '$2b$12$unL07f/9iLD1OOqhZR9dPuFIOMcEk/MhLDh667rWhmHCnik4E7pF6', 'Stripe integration for membership payments');
 /* 
  * For Wild Apricot sync tracking - this can go away once
  * we're no longer using Wild Apricot 
@@ -853,6 +876,18 @@ insert into membership_types_lookup (id, name) values
         (16, 'Volunteer w/ Free Storage'),
         (17, 'Volunteer w/ Paid Storage');
 
+-- The available_authorizations table holds the various authorization types (e.g. equipment authorizations) 
+-- that can be assigned to members in the system. This is used as a lookup table for the authorizations JSONB 
+-- column in the member table, as well as for managing authorization types in the admin portal.
+-- Note that the 'requires_login' field indicates whether this authorization type requires the member to be 
+-- in a particular OU to be able to log into a particular computer.
+-- PS1 currently has an OU for _all_ items, so theoretically this field is redundant, but we still use
+-- it in case some future system that we don't know about needs to be able to differentiate between 
+-- login-required and non-login-required authorizations. For example, we might have some future piece of 
+-- software that only cares about equipment authorizations and not general member authorizations, and it 
+-- could use this field to filter out the non-login-required authorizations.
+-- TL;DR: we include the 'requires_login' field for future flexibility even though it's not strictly necessary 
+-- for our current use case.
 CREATE TABLE IF NOT EXISTS available_authorizations (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -928,6 +963,153 @@ COMMENT ON TABLE member_access_log IS 'This table logs member access events (i.e
 CREATE UNIQUE INDEX IF NOT EXISTS idx_member_access_log_unique 
 ON member_access_log (rfid_tag, board_tag_num, access_point, access_granted, timestamp);
 COMMENT ON INDEX idx_member_access_log_unique IS 'This unique index ensures that duplicate access log entries are not created for the same RFID tag, board tag number, access point, access granted status, and timestamp combination.';
+
+-- This function compares the current authorizations of a member with the previous version 
+-- in the member_audit table and returns a JSONB object containing the member_id, added authorizations, 
+-- and removed authorizations.
+-- Note that it compares the current state of the member record with the previous version in the 
+-- member_audit table, so it will show what has changed from the last version to the current version. 
+-- If you want to compare two arbitrary versions, you would need to modify the function to take additional 
+-- parameters for the versions to compare.
+CREATE OR REPLACE FUNCTION get_authorization_changes_for_member(member_id integer)
+RETURNS jsonb AS $$
+  WITH current_data AS (
+    SELECT 
+      id,
+      'authorizations' AS auth_type,
+      jsonb_array_elements_text(authorizations->'authorizations') AS auth
+    FROM member
+    WHERE id = member_id
+    UNION ALL
+    SELECT 
+      id,
+      'computer_authorizations' AS auth_type,
+      jsonb_array_elements_text(authorizations->'computer_authorizations') AS auth
+    FROM member
+    WHERE id = member_id
+  ),
+  audit_data AS (
+    SELECT 
+      member_audit.id,
+      'authorizations' AS auth_type,
+      jsonb_array_elements_text(authorizations->'authorizations') AS auth
+    FROM member_audit
+    WHERE member_audit.id = member_id
+      AND version = (
+        SELECT MAX(version) - 1
+        FROM member_audit 
+        WHERE member_audit.id = member_id
+      )
+    UNION ALL
+    SELECT 
+      member_audit.id,
+      'computer_authorizations' AS auth_type,
+      jsonb_array_elements_text(authorizations->'computer_authorizations') AS auth
+    FROM member_audit
+    WHERE member_audit.id = member_id
+      AND version = (
+        SELECT MAX(version) - 1
+        FROM member_audit 
+        WHERE member_audit.id = member_id
+      )
+  ),
+  added AS (
+    SELECT auth_type, auth
+    FROM current_data
+    WHERE (auth_type, auth) NOT IN (SELECT auth_type, auth FROM audit_data)
+  ),
+  removed AS (
+    SELECT auth_type, auth
+    FROM audit_data
+    WHERE (auth_type, auth) NOT IN (SELECT auth_type, auth FROM current_data)
+  )
+  SELECT jsonb_build_object(
+    'member_id', member_id,
+    'added', jsonb_build_object(
+      'authorizations', COALESCE((SELECT jsonb_agg(auth) FROM added WHERE auth_type = 'authorizations'), '[]'::jsonb),
+      'computer_authorizations', COALESCE((SELECT jsonb_agg(auth) FROM added WHERE auth_type = 'computer_authorizations'), '[]'::jsonb)
+    ),
+    'removed', jsonb_build_object(
+      'authorizations', COALESCE((SELECT jsonb_agg(auth) FROM removed WHERE auth_type = 'authorizations'), '[]'::jsonb),
+      'computer_authorizations', COALESCE((SELECT jsonb_agg(auth) FROM removed WHERE auth_type = 'computer_authorizations'), '[]'::jsonb)
+    )
+  );
+$$ LANGUAGE sql;
+COMMENT ON FUNCTION get_authorization_changes_for_member(integer) IS 'This function compares the current authorizations of a member with the previous version in the member_audit table and returns a JSONB object containing the member_id, added authorizations, and removed authorizations.';
+
+-- This function takes a member's authorizations JSONB object and returns a new JSONB object categorizing 
+-- each available authorization as either "authorized" or "not_authorized" based on whether it is present 
+-- in the member's authorizations.
+-- This is a different take on the get_authorization_changes_for_member function above - instead of comparing 
+-- current vs previous authorizations, it just categorizes all available authorizations based on whether the 
+-- member currently has them or not. This is used by the DHAuthorizations service to show the full list of 
+-- authorizations with their current status for a given member, which we pass on to DH2AD to manage 
+-- Active Directory OUs.
+CREATE OR REPLACE FUNCTION get_member_authorization_status(member_auths jsonb)
+RETURNS jsonb AS $$
+  WITH all_auths AS (
+    SELECT 
+      name,
+      requires_login,
+      CASE 
+        WHEN requires_login THEN 'computer_authorizations'
+        ELSE 'authorizations'
+      END AS auth_type
+    FROM available_authorizations
+  ),
+  member_auths_expanded AS (
+    SELECT 
+      'authorizations' AS auth_type,
+      jsonb_array_elements_text(member_auths->'authorizations') AS auth_name
+    UNION ALL
+    SELECT 
+      'computer_authorizations' AS auth_type,
+      jsonb_array_elements_text(member_auths->'computer_authorizations') AS auth_name
+  ),
+  categorized AS (
+    SELECT 
+      a.name,
+      a.auth_type,
+      CASE 
+        WHEN m.auth_name IS NOT NULL THEN 'authorized'
+        ELSE 'not_authorized'
+      END AS status
+    FROM all_auths a
+    LEFT JOIN member_auths_expanded m 
+      ON a.name = m.auth_name AND a.auth_type = m.auth_type
+  )
+  SELECT jsonb_build_object(
+    'authorized', jsonb_build_object(
+      'authorizations', COALESCE(
+        (SELECT jsonb_agg(name ORDER BY name) 
+         FROM categorized 
+         WHERE status = 'authorized' AND auth_type = 'authorizations'), 
+        '[]'::jsonb
+      ),
+      'computer_authorizations', COALESCE(
+        (SELECT jsonb_agg(name ORDER BY name) 
+         FROM categorized 
+         WHERE status = 'authorized' AND auth_type = 'computer_authorizations'), 
+        '[]'::jsonb
+      )
+    ),
+    'not_authorized', jsonb_build_object(
+      'authorizations', COALESCE(
+        (SELECT jsonb_agg(name ORDER BY name) 
+         FROM categorized 
+         WHERE status = 'not_authorized' AND auth_type = 'authorizations'), 
+        '[]'::jsonb
+      ),
+      'computer_authorizations', COALESCE(
+        (SELECT jsonb_agg(name ORDER BY name) 
+         FROM categorized 
+         WHERE status = 'not_authorized' AND auth_type = 'computer_authorizations'), 
+        '[]'::jsonb
+      )
+    )
+  );
+$$ LANGUAGE sql;
+COMMENT ON FUNCTION get_member_authorization_status(jsonb) IS 'This function takes a member''s authorizations JSONB object and returns a new JSONB object categorizing each available authorization as either "authorized" or "not_authorized" based on whether it is present in the member''s authorizations.';
 
 /* Helper function to find member by RFID tag */
 CREATE OR REPLACE FUNCTION get_member_by_rfid_tag(p_tag_number BIGINT)
@@ -1015,7 +1197,7 @@ COMMENT ON TABLE roles IS 'This table holds the various roles defined in the Dee
  * in the DHAdminPortal interface. Check index.html in that project to see them in  
  * the filterTabsByPermissions() function.
  */
-INSERT INTO roles (name, permission) VALUES ('Authorizer', '{"view": ["identity", "authorizations"], "change": ["authorizations"]}');
+INSERT INTO roles (name, permission) VALUES ('Authorizer', '{"view": ["identity", "authorizations", "notes"], "change": ["authorizations", "notes"]}');
 INSERT INTO roles (name, permission) VALUES ('Administrator', '{"view": ["identity", "status", "roles", "forms", "connections", "extras", "authorizations", "notes", "access", "entry"], "change": ["identity", "status", "roles", "forms", "connections", "extras", "authorizations", "notes", "access"]}');
 INSERT into roles (name, permission) VALUES ('Board', '{"view": ["identity", "status", "notes", "entry"], "change": ["status", "notes"]}');
 
@@ -1024,8 +1206,8 @@ INSERT into roles (name, permission) VALUES ('Board', '{"view": ["identity", "st
  * member can have a role, the assumption that the membership is responsible for everything.
  */
 CREATE TABLE member_to_role (
-    role_id    INTEGER,
-    member_id  INTEGER,
+    role_id    INTEGER NOT NULL,
+    member_id  INTEGER NOT NULL,
     date_added TIMESTAMP(6) WITH TIME ZONE DEFAULT now() NOT NULL,
     CONSTRAINT membertorole_fk1 FOREIGN KEY (role_id) REFERENCES "roles"
     ("id"),
@@ -1033,6 +1215,10 @@ CREATE TABLE member_to_role (
     ("id") on delete cascade
 );
 COMMENT ON TABLE member_to_role IS 'This table maps members to their assigned roles in the Deep Harbor system, allowing for role-based access control.';
+
+-- Unique index to prevent duplicate role assignments for the same member
+ALTER TABLE member_to_role ADD CONSTRAINT membertorole_ix1 UNIQUE ("role_id", "member_id");
+
 
 /*
  * User activity logging table - this logs user activity in the DH system
@@ -1117,3 +1303,88 @@ CREATE OR REPLACE VIEW v_waivers AS
             phone_number, 
             date_added DESC;
 COMMENT ON VIEW v_waivers IS 'This view simplifies querying waiver details by extracting first name, last name, email address, phone number, and signed at datetime from the waivers table, returning the most recent waiver for each unique combination of these fields.';
+
+/*
+ * Stripe Integration Tables
+ */
+CREATE TABLE subscriptions
+(
+  id INTEGER NOT NULL GENERATED ALWAYS AS IDENTITY,
+  details jsonb NOT NULL,
+  date_added TIMESTAMP WITH TIME zone DEFAULT now() NOT NULL,
+  PRIMARY KEY (id)
+);
+COMMENT ON TABLE subscriptions IS 'This table stores subscription details received from Stripe webhooks via ST2DH, including the subscription data in JSONB format and the date it was added.';
+
+-- Products table to store details about the products that members can subscribe to. 
+-- This is used in conjunction with the Stripe integration to manage subscriptions and billing.
+CREATE TABLE products
+(
+    id              INTEGER NOT NULL GENERATED ALWAYS AS identity,
+    name            TEXT NOT NULL,
+    details         jsonb NOT NULL,
+    description     TEXT,
+    date_added      TIMESTAMP WITH TIME zone DEFAULT now() NOT NULL,
+    date_modified   TIMESTAMP WITH TIME zone DEFAULT now() NOT NULL,
+    PRIMARY KEY (id)
+);
+COMMENT ON TABLE products IS 'This table stores details about the products that members can subscribe to.';
+
+-- And let's insert some initial products that correspond to the membership types we have in the system, 
+-- so that we can link them to Stripe products for billing purposes.
+-- Note the stripe_product_id is specific to a test Stripe environment and will need to be updated for 
+-- production use. (This is left as an exercise for the reader to set up your own Stripe products and 
+-- update these values accordingly)
+INSERT INTO products (name, details, description) VALUES ('Basic Membership', '{"stripe_product_id": "prod_Tws7udZJSXI9DU"}', 'Basic membership without storage');
+INSERT INTO products (name, details, description) VALUES ('Membership with Storage', '{"stripe_product_id": "prod_TwsAMgaH3iLJ9c"}', 'Membership with storage');
+
+
+/*
+ * Email Templates Table
+ * This table stores email templates that can be used for various 
+ * notifications in the system, such as membership renewal reminders, 
+ * event notifications, etc. The 'use_for' field indicates what the 
+ * template is used for (e.g. 'membership_renewal', 'event_notification', 
+ * etc.) so that the system can select the appropriate template when 
+ * sending emails.
+ */
+CREATE TABLE email_templates
+(
+    id            INTEGER NOT NULL GENERATED ALWAYS AS identity,
+    name          TEXT NOT NULL,
+    use_for       TEXT NOT NULL,
+    subject       TEXT NOT NULL,
+    date_added    TIMESTAMP WITH TIME zone DEFAULT now() NOT NULL,
+    date_modified TIMESTAMP WITH TIME zone DEFAULT now() NOT NULL,
+    PRIMARY KEY (id)
+);
+COMMENT ON TABLE email_templates IS 'This table stores email templates that can be used for various notifications in the system, such as membership renewal reminders, event notifications, etc. The ''use_for'' field indicates what the template is used for (e.g. ''membership_renewal'', ''event_notification'', etc.) so that the system can select the appropriate template when sending emails.';
+
+-- Sample data
+insert into email_templates (name, use_for, subject) values ('dh-welcome-to-ps1', 'Pending membership', 'Welcome to PS1!');
+insert into email_templates (name, use_for, subject) values ('dh-you-are-now-a-member', 'Active membership', 'You are now a PS1 member!');
+insert into email_templates (name, use_for, subject) values ('dh-happy-trails-to-you', 'Inactive membership', 'Happy trails to you!');
+
+
+-- And this table defines the parameters that can be used in the email templates, 
+-- including the parameter name, type, whether it is required, default value, 
+-- and description. It references the email_templates table to associate parameters 
+-- with specific templates.
+CREATE TABLE email_template_parameters (
+    id SERIAL PRIMARY KEY,
+    template_id INTEGER REFERENCES email_templates(id),
+    parameter_name VARCHAR(100) NOT NULL,
+    parameter_type VARCHAR(50),
+    is_required BOOLEAN DEFAULT true,
+    default_value TEXT,
+    description TEXT
+);
+COMMENT ON TABLE email_template_parameters IS 'This table defines the parameters that can be used in email templates, including the parameter name, type, whether it is required, default value, and description. It references the email_templates table to associate parameters with specific templates.';
+CREATE INDEX idx_template_params ON email_template_parameters(template_id);
+
+-- Sample data for email template parameters
+-- (assumes the sample email templates inserted above have IDs 1, 2, and 3 respectively)
+insert into email_template_parameters (template_id, parameter_name, parameter_type) values(1, 'first_name', 'string');
+insert into email_template_parameters (template_id, parameter_name, parameter_type) values(2, 'first_name', 'string');
+insert into email_template_parameters (template_id, parameter_name, parameter_type) values(3, 'first_name', 'string');
+insert into email_template_parameters (template_id, parameter_name, parameter_type) values(3, 'email_address', 'string');

@@ -175,6 +175,13 @@ def get_available_authorizations(access_token: str):
     response.raise_for_status()
     return response.json()
 
+def get_available_membership_levels(access_token: str):
+    url = f"{DH_API_BASE_URL}/v1/membership_levels/available/"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    return response.json()
+
 #
 # Endpoints to save changes to member data
 #

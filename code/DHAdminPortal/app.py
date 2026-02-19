@@ -496,6 +496,9 @@ def api_member_extras():
             dhservices.DH_CLIENT_SECRET
         )
         extras = dhservices.get_member_extras(access_token, member_id)
+        # They may not have any extras, so return empty dict instead of null
+        if extras is None:
+            extras = {}
         return extras
     except Exception as e:
         print(f"Error getting member extras: {e}")
@@ -516,6 +519,9 @@ def api_member_authorizations():
             dhservices.DH_CLIENT_SECRET
         )
         authorizations = dhservices.get_member_authorizations(access_token, member_id)
+        if authorizations is None:
+            # They may not have any authorizations, so return empty list instead of null
+            authorizations = []
         return authorizations
     except Exception as e:
         print(f"Error getting member authorizations: {e}")
@@ -576,6 +582,10 @@ def api_member_access():
             dhservices.DH_CLIENT_SECRET
         )
         access = dhservices.get_member_access(access_token, member_id)
+        if access is None:
+            # They may not have any access records (e.g. new member)
+            # so return empty list instead of null
+            access = []
         return access
     except Exception as e:
         print(f"Error getting member access: {e}")
@@ -595,6 +605,22 @@ def api_available_authorizations():
         return available_auths
     except Exception as e:
         print(f"Error getting available authorizations: {e}")
+        return {"error": str(e)}, 500
+
+@app.route("/api/membership_levels/available")
+def api_available_membership_levels():
+    if not session.get("user"):
+        return {"error": "Not authenticated"}, 401
+
+    try:
+        access_token = dhservices.get_access_token(
+            dhservices.DH_CLIENT_ID,
+            dhservices.DH_CLIENT_SECRET
+        )
+        levels = dhservices.get_available_membership_levels(access_token)
+        return levels
+    except Exception as e:
+        print(f"Error getting available membership levels: {e}")
         return {"error": str(e)}, 500
 
 # POST endpoints for updating member data

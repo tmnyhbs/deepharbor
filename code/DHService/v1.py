@@ -2,6 +2,8 @@
 # This file contains all the v1 services
 # *******************************************************************************
 
+from datetime import datetime
+from time import time
 from typing import Annotated
 from fastapi import Depends, Request, Header
 
@@ -126,6 +128,16 @@ async def get_member_entry_logs(current_user: AuthenticatedClient, member_id: st
     """Get member entry logs."""
     return {"entry_logs": db.get_member_entry_logs(member_id)}
 
+@app.get("/v1/member/authorization_changes/")
+async def get_member_authorization_changes(current_user: AuthenticatedClient, member_id: str):
+    """Get member authorization changes."""
+    return db.get_member_authorization_changes(member_id)
+
+@app.get("/v1/member/by_stripe_customer_id/")
+async def get_member_by_stripe_customer_id(current_user: AuthenticatedClient, stripe_customer_id: str):
+    """Get member by Stripe customer ID."""
+    return db.get_member_by_stripe_customer_id(stripe_customer_id)
+
 ###############################################################################
 # Member POST endpoints
 ###############################################################################
@@ -212,8 +224,16 @@ async def update_member_notes(
     x_member_id: Annotated[str, Header()],
 ):
     """Add or update member notes."""
+    # So, here's how this works. The client will send us a JSON object with the following structure:
+    # {
+    #     "note": "This is a new note about the member.",
+    #     "from": "Member Portal"  # or whatever the source of the note is,
+    #     "timestamp": "2024-06-01T12:00:00Z"  # optional, if not provided we can use the current time
+    # }    
     data = await request.json()
     logger.debug(f"In update_member_notes with {data}")
+    if "timestamp" not in data:
+        data["timestamp"] = datetime.now().isoformat()
     return db.add_update_notes(x_member_id, data)
 
 @app.post("/v1/member/authorizations/")
@@ -251,6 +271,11 @@ async def get_available_authorizations(current_user: AuthenticatedClient):
     """Get all available authorizations."""
     return {"available_authorizations": db.get_available_authorizations()}
 
+@app.get("/v1/membership_levels/available/")
+async def get_available_membership_levels(current_user: AuthenticatedClient):   
+    """Get all available membership levels."""
+    return {"available_membership_levels": db.get_available_membership_levels()}
+
 ###############################################################################
 # Deep Harbor specific endpoints (e.g. user activity on websites)
 ###############################################################################
@@ -277,3 +302,25 @@ async def log_user_activity(
 async def search_contacts_by_email(current_user: AuthenticatedClient, email_address: str):
     """Search for contacts based on an email address."""
     return db.search_contacts_by_email(email_address)
+
+##############################################################################
+# Payment endpoints (e.g. for Stripe webhooks)
+##############################################################################
+
+@app.post("/v1/payment/stripe_webhook/")
+async def handle_stripe_webhook(request: Request):
+    """ We are passed the Stripe payload from ST2DH, and we want 
+        to log it and then handle it as needed."""
+    payload = await request.body()
+    # We log the raw payload to the database, and then we can parse it and handle it as needed. 
+    # This way we have a record of all Stripe events that we can refer back to if needed, and 
+    # we can also analyze them later if we want to look for trends or patterns.
+    return db.save_stripe_event(payload.decode("utf-8"))
+
+# This endpoint is to get the list of products from our database, 
+# which we can use to match the Stripe product ID to the membership level
+# (among other things)
+@app.get("/v1/products/")
+async def get_products(current_user: AuthenticatedClient):
+    """Get all products."""
+    return {"products": db.get_products()}

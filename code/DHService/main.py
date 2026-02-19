@@ -45,7 +45,6 @@ async def list_routes():
 # Our endpoints for oauth2
 ###############################################################################
 
-
 # This is the token endpoint for oauth2
 @app.post("/token")
 async def login_for_access_token(
@@ -77,46 +76,6 @@ async def reauthenticate(
         data={"sub": current_client.client_name}, expires_delta=access_token_expires
     )
     return auth.Token(access_token=access_token, token_type="bearer")
-
-###############################################################################
-# Endpoints for member passwords
-###############################################################################
-
-# Set the password for a member
-@app.post("/set_member_password")
-async def set_member_password(
-    member_id: str,
-    new_password: str,
-    current_client: auth.Client = Depends(auth.get_current_active_client),
-):
-    logger.debug(
-        "Client %s is setting password for member %s",
-        current_client.client_name,
-        member_id,
-    )
-    # Here you would implement the logic to set the member's password
-    # For now, we just log and return success
-    logger.info("Password for member %s has been set.", member_id)
-    return {"status": "success", "member_id": member_id}
-
-# Change the password for a member
-@app.post("/change_member_password")
-async def change_member_password(
-    member_id: str,
-    old_password: str,
-    new_password: str,
-    current_client: auth.Client = Depends(auth.get_current_active_client),
-):
-    logger.debug(
-        "Client %s is changing password for member %s",
-        current_client.client_name,
-        member_id,
-    )
-    # Here you would implement the logic to change the member's password
-    # For now, we just log and return success
-    logger.info("Password for member %s has been changed.", member_id)
-    return {"status": "success", "member_id": member_id}
-
 
 ###############################################################################
 # HEY! All other endpoints are in the py file that matches their version number

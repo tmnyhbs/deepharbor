@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Member Dashboard - Deep Harbor</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+    <style>
+        .member-editable.form-control {
+            font-size: 1rem;
+            padding: 0.5rem 0.75rem;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -20,7 +26,16 @@
         <div class="content dashboard">
             <!-- Member Information Card -->
             <div class="card">
-                <h2>Member Information</h2>
+                <div class="card-header-actions">
+                    <h2>Member Information</h2>
+                    {% if identity %}
+                    <div class="card-actions">
+                        <button type="button" class="btn btn-secondary btn-sm" id="memberEditBtn">Edit</button>
+                        <button type="submit" class="btn btn-primary btn-sm" id="memberSaveBtn" form="memberProfileForm" style="display: none;">Save</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="memberCancelBtn" style="display: none;">Cancel</button>
+                    </div>
+                    {% endif %}
+                </div>
                 
                 {% if status %}
                 <div class="info-group">
@@ -45,6 +60,7 @@
                 {% endif %}
 
                 {% if identity %}
+                <form id="memberProfileForm" method="POST" action="{{ url_for('member_update_profile') }}">
                 <div class="info-group">
                     <label>Member ID</label>
                     <div class="info-value">{{ session.member_id or 'Not available' }}</div>
@@ -52,20 +68,27 @@
 
                 <div class="info-group">
                     <label>First Name</label>
-                    <div class="info-value">{{ identity.first_name or 'Not available' }}</div>
+                    <div class="info-value">
+                        <input type="text" class="form-control member-editable" name="first_name"
+                               value="{{ identity.first_name or '' }}" readonly>
+                    </div>
                 </div>
 
                 <div class="info-group">
                     <label>Last Name</label>
-                    <div class="info-value">{{ identity.last_name or 'Not available' }}</div>
+                    <div class="info-value">
+                        <input type="text" class="form-control member-editable" name="last_name"
+                               value="{{ identity.last_name or '' }}" readonly>
+                    </div>
                 </div>
 
-                {% if identity.nickname %}
                 <div class="info-group">
                     <label>Preferred Name/Nickname</label>
-                    <div class="info-value">{{ identity.nickname }}</div>
+                    <div class="info-value">
+                        <input type="text" class="form-control member-editable" name="nickname"
+                               value="{{ identity.nickname or '' }}" readonly>
+                    </div>
                 </div>
-                {% endif %}
 
                 <div class="info-group">
                     <label>Email</label>
@@ -121,20 +144,45 @@
                 </div>
                 {% endif %}
 
-                {% if identity.rfid_tags %}
+                {% set rfid_tags_list = [] %}
+                {% if access and access.rfid_tags is string %}
+                    {% set rfid_tags_list = access.rfid_tags.split(',') if access.rfid_tags else [] %}
+                {% elif access and access.rfid_tags is iterable %}
+                    {% set rfid_tags_list = access.rfid_tags %}
+                {% elif access and access.rfid_tags %}
+                    {% set rfid_tags_list = [access.rfid_tags] %}
+                {% endif %}
                 <div class="info-group">
                     <label>RFID Tag(s)</label>
                     <div class="info-value">
-                        {% if identity.rfid_tags is string %}
-                            {{ identity.rfid_tags }}
-                        {% elif identity.rfid_tags is iterable %}
-                            {{ identity.rfid_tags | join(', ') }}
-                        {% else %}
-                            {{ identity.rfid_tags }}
-                        {% endif %}
+                        <table class="table" id="rfidTagsTable" style="margin-bottom: 0.5rem;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 85%;">Tag Number</th>
+                                    <th style="width: 15%; text-align: center;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rfidTagsTableBody">
+                                {% if rfid_tags_list|length > 0 %}
+                                    {% for tag in rfid_tags_list %}
+                                    <tr>
+                                        <td><input type="text" class="form-control rfid-tag-input" value="{{ tag.strip() }}" readonly></td>
+                                        <td style="text-align: center;"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn" style="display: none;">Delete</button></td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td><input type="text" class="form-control rfid-tag-input" value="" readonly></td>
+                                        <td style="text-align: center;"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn" style="display: none;">Delete</button></td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn btn-secondary btn-sm" id="addRfidTagBtn" style="display: none;">Add Tag</button>
+                        <input type="hidden" name="rfid_tags" id="rfidTagsHidden">
                     </div>
                 </div>
-                {% endif %}
+                </form>
                 {% else %}
                 <p class="no-data">Unable to load member information.</p>
                 {% endif %}
@@ -258,5 +306,184 @@
             </div>
         </div>
     </div>
+
+    <script>
+        const editBtn = document.getElementById('memberEditBtn');
+        const saveBtn = document.getElementById('memberSaveBtn');
+        const cancelBtn = document.getElementById('memberCancelBtn');
+        const editableInputs = document.querySelectorAll('.member-editable');
+        const profileForm = document.getElementById('memberProfileForm');
+        const saveBtnLabel = saveBtn ? saveBtn.textContent : '';
+
+        if (editBtn && saveBtn && cancelBtn) {
+            editableInputs.forEach(input => {
+                input.dataset.originalValue = input.value;
+            });
+            
+            // Store original RFID tags
+            const getOriginalRfidTags = () => {
+                const rfidInputs = document.querySelectorAll('.rfid-tag-input');
+                return Array.from(rfidInputs).map(input => input.value.trim()).filter(v => v !== '');
+            };
+            let originalRfidTags = getOriginalRfidTags();
+
+            const updateSaveState = () => {
+                // Check for changes in member-editable inputs
+                const hasEditableChanges = Array.from(editableInputs).some(input => {
+                    const originalValue = input.dataset.originalValue || '';
+                    return input.value !== originalValue;
+                });
+                
+                // Check for changes in RFID tags
+                const currentRfidTags = Array.from(document.querySelectorAll('.rfid-tag-input'))
+                    .map(input => input.value.trim())
+                    .filter(v => v !== '');
+                const hasRfidChanges = JSON.stringify(originalRfidTags.sort()) !== JSON.stringify(currentRfidTags.sort());
+                
+                if (saveBtn) {
+                    saveBtn.disabled = !(hasEditableChanges || hasRfidChanges);
+                }
+            };
+
+            editBtn.addEventListener('click', () => {
+                editableInputs.forEach(input => input.removeAttribute('readonly'));
+                document.querySelectorAll('.rfid-tag-input').forEach(input => input.removeAttribute('readonly'));
+                document.querySelectorAll('.delete-rfid-btn').forEach(btn => btn.style.display = 'inline-block');
+                document.getElementById('addRfidTagBtn').style.display = 'inline-block';
+                editBtn.style.display = 'none';
+                saveBtn.style.display = 'inline-block';
+                cancelBtn.style.display = 'inline-block';
+                saveBtn.disabled = true; // Start disabled until changes are made
+                updateSaveState();
+            });
+
+            editableInputs.forEach(input => {
+                input.addEventListener('input', updateSaveState);
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                editableInputs.forEach(input => {
+                    const originalValue = input.dataset.originalValue || '';
+                    input.value = originalValue;
+                    input.setAttribute('readonly', 'readonly');
+                });
+                // Restore original RFID tags
+                location.reload();
+                cancelBtn.style.display = 'none';
+                saveBtn.style.display = 'none';
+                editBtn.style.display = 'inline-block';
+                saveBtn.disabled = true;
+            });
+
+            const showMessage = (message, type) => {
+                const messageEl = document.createElement('div');
+                messageEl.className = `alert alert-${type} text-center fw-bold`;
+                messageEl.textContent = message;
+                messageEl.style.fontSize = '1.1rem';
+                profileForm.parentElement.insertBefore(messageEl, profileForm);
+                setTimeout(() => {
+                    messageEl.remove();
+                }, 3000);
+            };
+
+            // RFID tag management
+            const addRfidTagBtn = document.getElementById('addRfidTagBtn');
+            const rfidTagsTableBody = document.getElementById('rfidTagsTableBody');
+            
+            if (addRfidTagBtn) {
+                addRfidTagBtn.addEventListener('click', () => {
+                    const newRow = document.createElement('tr');
+                    newRow.innerHTML = `
+                        <td><input type="text" class="form-control rfid-tag-input" value=""></td>
+                        <td style="text-align: center;"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn">Delete</button></td>
+                    `;
+                    rfidTagsTableBody.appendChild(newRow);
+                    
+                    // Add delete handler to the new delete button
+                    const deleteBtn = newRow.querySelector('.delete-rfid-btn');
+                    deleteBtn.addEventListener('click', () => {
+                        newRow.remove();
+                        updateSaveState();
+                    });
+                    
+                    updateSaveState();
+                });
+            }
+            
+            // Add delete handlers to existing delete buttons
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('delete-rfid-btn')) {
+                    const row = e.target.closest('tr');
+                    if (rfidTagsTableBody.children.length > 1) {
+                        row.remove();
+                    } else {
+                        // If it's the last row, just clear the input
+                        row.querySelector('.rfid-tag-input').value = '';
+                    }
+                    updateSaveState();
+                }
+            });
+            
+            // Monitor RFID input changes
+            document.addEventListener('input', (e) => {
+                if (e.target.classList.contains('rfid-tag-input')) {
+                    updateSaveState();
+                }
+            });
+
+            if (profileForm) {
+                profileForm.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+                    
+                    // Collect all RFID tags from the table
+                    const rfidInputs = document.querySelectorAll('.rfid-tag-input');
+                    const rfidTags = Array.from(rfidInputs)
+                        .map(input => input.value.trim())
+                        .filter(tag => tag !== '')
+                        .join(', ');
+                    document.getElementById('rfidTagsHidden').value = rfidTags;
+
+                    editBtn.disabled = true;
+                    saveBtn.disabled = true;
+                    saveBtn.textContent = 'Saving...';
+
+                    try {
+                        const response = await fetch(profileForm.action, {
+                            method: 'POST',
+                            body: new FormData(profileForm)
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Failed to update profile');
+                        }
+
+                        editableInputs.forEach(input => {
+                            input.dataset.originalValue = input.value;
+                            input.setAttribute('readonly', 'readonly');
+                        });
+                        
+                        // Update original RFID tags and make inputs readonly
+                        originalRfidTags = getOriginalRfidTags();
+                        document.querySelectorAll('.rfid-tag-input').forEach(input => input.setAttribute('readonly', 'readonly'));
+                        document.querySelectorAll('.delete-rfid-btn').forEach(btn => btn.style.display = 'none');
+                        document.getElementById('addRfidTagBtn').style.display = 'none';
+
+                        cancelBtn.style.display = 'none';
+                        saveBtn.style.display = 'none';
+                        editBtn.style.display = 'inline-block';
+                        editBtn.disabled = false;
+                        saveBtn.textContent = saveBtnLabel;
+
+                        showMessage('Profile updated successfully.', 'success');
+                    } catch (error) {
+                        editBtn.disabled = false;
+                        saveBtn.textContent = saveBtnLabel;
+                        updateSaveState();
+                        showMessage('Unable to update profile.', 'danger');
+                    }
+                });
+            }
+        }
+    </script>
 </body>
 </html>
