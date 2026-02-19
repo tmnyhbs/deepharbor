@@ -4,6 +4,7 @@ import os
 import glob
 import uuid
 import datetime
+import ipaddress
 
 # The actual library that knows how to talk to the DH2 RFID board
 # https://github.com/uhppoted/uhppoted-lib-python
@@ -41,7 +42,13 @@ board_debug = False
 # uhppote library expects it that way. Got this from the sticker
 # on the back of the RFID board and converted it to an integer.
 BOARD_SERIAL_NUM = int(config['rfid_board']['BOARD_SERIAL_NUMBER_AS_INT'])
-
+BOARD_IP = config['rfid_board']['BOARD_IP']
+BOARD_IP_PORT = config['rfid_board']['BOARD_PORT']
+# Now we put everything together in a tuple to use with the board
+# library because we want to talk to the board directly via its IP 
+# address instead of relying on broadcast discovery
+host_addr = ipaddress.IPv4Address(BOARD_IP)  # IPv4 address of host machine
+board_tuple = (BOARD_SERIAL_NUM, str(host_addr), 'tcp')
 
 ###############################################################################
 # UHPPOTED RFID Board Interaction Functions
@@ -63,7 +70,7 @@ def perform_board_operation(operation: str, tag_id: str = '', converted_tag: str
         end_date = start_date.replace(year=start_date.year + 25)
         # Add the card to the board - we're enabling for all doors, all times
         # which is reprsented as being from now till 25 years from now
-        response = board.put_card(BOARD_SERIAL_NUM, 
+        response = board.put_card(board_tuple, 
                                   int(converted_tag), 
                                   start_date, 
                                   end_date, 
@@ -75,7 +82,7 @@ def perform_board_operation(operation: str, tag_id: str = '', converted_tag: str
         logger.info(f"Response from adding card: {response}")
     elif operation == "remove":
         # Remove the card from the board
-        board.delete_card(BOARD_SERIAL_NUM, int(converted_tag))
+        board.delete_card(board_tuple, int(converted_tag))
         logger.info(f"Removed card with converted tag: {converted_tag}")
     else:
         logger.error(f"Unknown operation: {operation}")
@@ -92,13 +99,13 @@ def set_datetime():
                             broadcast=broadcast, 
                             listen=listen, 
                             debug=board_debug)
-    record = board.get_controller(BOARD_SERIAL_NUM)
+    record = board.get_controller(board_tuple)
     logger.info(f"Controller record: {record}")
     
     # We may time out, so keep trying until we get a response
     while True:
         try:            
-            set_time_response = board.set_time(BOARD_SERIAL_NUM, current_time)
+            set_time_response = board.set_time(board_tuple, current_time)
             break
         except Exception as e:
             logger.warning(f"Timeout getting device info, retrying... Error: {e}")
@@ -113,19 +120,21 @@ def get_datetime():
                             broadcast=broadcast, 
                             listen=listen, 
                             debug=board_debug)
-    record = board.get_controller(BOARD_SERIAL_NUM)
+    
+    record = board.get_controller(board_tuple)
     logger.info(f"Controller record: {record}")
     
     # We may time out, so keep trying until we get a response
     while True:
         try:            
-            current_time = board.get_time(BOARD_SERIAL_NUM)
+            current_time = board.get_time(board_tuple)
             break
         except Exception as e:
             logger.warning(f"Timeout getting device info, retrying... Error: {e}")
     
     logger.info(f"Current date and time from board: {current_time.datetime.strftime('%Y-%m-%d %H:%M:%S')}")    
     return {"status": "success", "current_time": current_time.datetime.strftime('%Y-%m-%d %H:%M:%S')}
+
 
 ###############################################################################
 # Message Queue Interaction Functions

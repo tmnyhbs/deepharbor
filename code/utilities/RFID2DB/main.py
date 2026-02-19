@@ -3,6 +3,7 @@ import datetime
 import psycopg2
 from uhppoted import uhppote
 from pprint import pprint
+import ipaddress
 
 from config import config
 from dhs_logging import logger
@@ -19,6 +20,10 @@ board_debug = False
 # uhppote library expects it that way. Got this from the sticker
 # on the back of the RFID board and converted it to an integer.
 BOARD_SERIAL = int(config['rfid_board']['BOARD_SERIAL_NUMBER_AS_INT'])
+BOARD_IP = config['rfid_board']['BOARD_IP']
+BOARD_IP_PORT = config['rfid_board']['BOARD_PORT']
+host_addr = ipaddress.IPv4Address(BOARD_IP)  # IPv4 address of host machine
+board_tuple = (BOARD_SERIAL, str(host_addr), 'tcp')
 
 # Initialize the uhppote board instance
 board = uhppote.Uhppote(bind=bind, 
@@ -120,7 +125,7 @@ def get_board_time(max_retries=3):
     retry_count = 0
     while retry_count < max_retries:
         try:
-            response = board.get_time(BOARD_SERIAL)
+            response = board.get_time(board_tuple)
             return response.datetime.strftime("%m-%d-%Y %H:%M:%S")
         except Exception as e:
             retry_count += 1
@@ -136,7 +141,7 @@ def get_events_after(timestamp):
     Retries from current position if any error occurs.
     """
     # Get the current event index
-    status = board.get_status(BOARD_SERIAL)
+    status = board.get_status(board_tuple)
     events_index = status.event_index
     
     events_found = 0
@@ -151,7 +156,7 @@ def get_events_after(timestamp):
         # Try to get the event at current_index with retries
         while retry_count < max_retries and not success:
             try:                
-                event = board.get_event(BOARD_SERIAL, current_index)
+                event = board.get_event(board_tuple, current_index)
                 
                 # Check if event has a valid timestamp and the tag number is not 10
                 if event.timestamp and event.card != 10:
@@ -207,7 +212,7 @@ def main():
     record = None
     while retry_count < max_retries and record is None:
         try:
-            record = board.get_controller(BOARD_SERIAL)
+            record = board.get_controller(board_tuple)
             pprint(record.__dict__, indent=2, width=1)
         except Exception as e:
             retry_count += 1
@@ -250,7 +255,7 @@ def main():
 
     logger.info("Now monitoring for new RFID events...")
     # Get the current event index to start from
-    status = board.get_status(BOARD_SERIAL)
+    status = board.get_status(board_tuple)
     last_event_index = status.event_index
     max_retries = 3
     
@@ -261,12 +266,12 @@ def main():
         
         while retry_count < max_retries and not success:
             try:
-                status = board.get_status(BOARD_SERIAL)
+                status = board.get_status(board_tuple)
                 current_event_index = status.event_index
                 
                 if current_event_index > last_event_index:
                     logger.info(f"New events detected: {current_event_index - last_event_index}")
-                    event = board.get_event(BOARD_SERIAL, current_event_index)
+                    event = board.get_event(board_tuple, current_event_index)
                     # Log new events
                     conn = None
                     try:
