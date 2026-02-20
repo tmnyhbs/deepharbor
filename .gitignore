@@ -1,7 +1,12 @@
 config.ini
+.env
 __pycache__/
+*.pyc
 wa2dh.log
 .vscode/
 *~
 flask_session/
 *.swp
+.serena
+.claude
+*.code-workspace
