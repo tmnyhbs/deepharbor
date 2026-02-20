@@ -1,0 +1,91 @@
+# Dev override for Deep Harbor.
+# Use this alongside the main compose file to run locally
+# without hardware dependencies and with bridge networking:
+#
+#   docker compose -f docker-compose.yaml -f docker-compose.dev.yml up --build -d
+#
+# This file does three things:
+#   1. Disables hardware-dependent services (AD controller, RFID reader, RFID2DB)
+#   2. Moves host-network services onto the bridge network so they can
+#      talk to other containers by name (gateway, db, etc.)
+#   3. Mounts the seed data SQL file into the database init directory
+
+services:
+
+  #########################################################
+  # Database — mount seed data
+  # The init order is:
+  #   init.sql (extensions) → 01-pgsql_schema.sql (schema) → 02-seed_data.sql (seed data)
+  # The seed data file is created in issue #12. This just
+  # wires up the mount point so that issue doesn't need
+  # to touch this file.
+  #########################################################
+
+  db:
+    volumes:
+      - ./pg/sql/seed_data.sql:/docker-entrypoint-initdb.d/02-seed_data.sql
+
+  #########################################################
+  # Front-end services — move from host network to bridge
+  # The portals use network_mode: host in production so
+  # they can reach services on the host. In dev we put
+  # them on the bridge network instead, where they reach
+  # DHService through the nginx gateway container.
+  #########################################################
+
+  dhmemberportal:
+    network_mode: !reset ""
+    networks:
+      - dh_network
+    ports:
+      - "5002:5002"
+    environment:
+      DH_API_BASE_URL: "http://gateway/dh/service"
+      AUTH_MODE: dev
+
+  dhadminportal:
+    network_mode: !reset ""
+    networks:
+      - dh_network
+    ports:
+      - "5001:5001"
+    environment:
+      DH_API_BASE_URL: "http://gateway/dh/service"
+      AUTH_MODE: dev
+
+  #########################################################
+  # External services — move st2dh from host to bridge
+  # ST2DH is the Stripe webhook receiver. It talks to
+  # DHService via HTTP, not directly to the database.
+  # The DATABASE_* env vars in the main compose are unused
+  # (see issue #21) so we don't repeat them here.
+  #########################################################
+
+  st2dh:
+    network_mode: !reset ""
+    networks:
+      - dh_network
+    ports:
+      - "5004:5004"
+    environment:
+      DH_API_BASE_URL: "http://gateway/dh/service"
+
+  #########################################################
+  # Hardware-dependent services — disabled for dev
+  # These need physical hardware or host network access
+  # that doesn't exist in a dev environment. They're
+  # gated behind the "hardware" profile so they only
+  # start if you explicitly pass --profile hardware.
+  #########################################################
+
+  dhadcontroller:
+    profiles:
+      - hardware
+
+  dhrfidreader:
+    profiles:
+      - hardware
+
+  rfid2db:
+    profiles:
+      - hardware
