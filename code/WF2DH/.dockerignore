@@ -1,5 +1,0 @@
-.venv
-Dockerfile
-start_services.sh
-client_test.py
-__pycache__
