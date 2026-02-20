@@ -8,7 +8,9 @@
 #   1. Disables hardware-dependent services (AD controller, RFID reader, RFID2DB)
 #   2. Moves host-network services onto the bridge network so they can
 #      talk to other containers by name (gateway, db, etc.)
-#   3. Mounts the seed data SQL file into the database init directory
+#   3. Sets DEV_MODE on worker services so they don't timeout waiting
+#      for the disabled hardware controllers
+#   4. Mounts the seed data SQL file into the database init directory
 
 services:
 
@@ -69,6 +71,23 @@ services:
       - "5004:5004"
     environment:
       DH_API_BASE_URL: "http://gateway/dh/service"
+
+  #########################################################
+  # Worker services — set DEV_MODE so they short-circuit
+  # instead of trying to talk to the disabled hardware
+  # controllers via shared volume queues. Without this
+  # they'd timeout after 10s and return 500s, which
+  # cascades through the whole dispatcher pipeline.
+  # The actual code to respect DEV_MODE is in issue #18.
+  #########################################################
+
+  dh2ad:
+    environment:
+      DEV_MODE: "true"
+
+  dh2rfid:
+    environment:
+      DEV_MODE: "true"
 
   #########################################################
   # Hardware-dependent services — disabled for dev
