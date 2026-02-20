@@ -14,6 +14,17 @@ from dhs_logging import logger
 # Our FastAPI app
 app = FastAPI()
 
+###############################################################################
+# Dev Mode Configuration
+###############################################################################
+
+# When DEV_MODE is set, we skip the file queue and controller communication
+# and return simulated success responses instead. This lets us run without
+# DHRFIDReader in the dev environment.
+DEV_MODE = os.environ.get("DEV_MODE", "").lower() in ("true", "1", "yes")
+if DEV_MODE:
+    logger.info("DEV_MODE is enabled — controller communication will be simulated")
+
 #
 # Okay, why are we not just talking to the board directly here?
 # Because this worker is designed to be run in a containerized environment
@@ -92,9 +103,23 @@ def perform_board_operation(operation, tag_id=None, converted_tag=None, timeout=
         "tag_id": tag_id,
         "converted_tag": converted_tag
     }
-    
+
+    # In dev mode, skip the file queue and return a simulated success
+    # so we don't need the DHRFIDReader service running
+    if DEV_MODE:
+        logger.info(f"DEV_MODE active — skipping controller, returning simulated success for '{operation}'")
+        return True, {
+            "result": "success",
+            "status": "success",
+            "data": {
+                "current_time": datetime.datetime.now().isoformat(),
+                "tag_id": tag_id,
+                "operation": operation
+            }
+        }
+
     msg_id = send_message_async(payload)
-    
+
     # Now wait for response
     start_time = time.time()
     while time.time() - start_time < timeout:
@@ -102,7 +127,7 @@ def perform_board_operation(operation, tag_id=None, converted_tag=None, timeout=
         if msg_id in completed:
             return True, data
         time.sleep(0.5)
-    
+
     logger.error(f"Timeout waiting for response for message {msg_id}")
     return False, None
 
