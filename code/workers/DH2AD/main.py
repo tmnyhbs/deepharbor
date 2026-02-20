@@ -13,6 +13,17 @@ from config import config
 # Our FastAPI app
 app = FastAPI()
 
+###############################################################################
+# Dev Mode Configuration
+###############################################################################
+
+# When DEV_MODE is set, we skip the file queue and controller communication
+# and return simulated success responses instead. This lets us run without
+# DHADController in the dev environment.
+DEV_MODE = os.environ.get("DEV_MODE", "").lower() in ("true", "1", "yes")
+if DEV_MODE:
+    logger.info("DEV_MODE is enabled — controller communication will be simulated")
+
 #
 # Okay, we do *not* talk to Active Directory or B2C directly here.
 # Because this worker is designed to be run in a containerized environment
@@ -85,10 +96,25 @@ def check_responses(sent_ids):
 def perform_ad_operation(operation, payload=None, timeout=10):
     if payload is None:
         payload = {}
-    payload["operation"] = operation    
-    
+    payload["operation"] = operation
+
+    # In dev mode, skip the file queue and return a simulated success
+    # so we don't need the DHADController service running
+    if DEV_MODE:
+        logger.info(f"DEV_MODE active — skipping controller, returning simulated success for '{operation}'")
+        mock_payload = dict(payload)
+        mock_payload["current_time"] = datetime.datetime.now().isoformat()
+        return True, {
+            "result": "success",
+            "status": "success",
+            "data": {
+                "status": "success",
+                "data": mock_payload
+            }
+        }
+
     msg_id = send_message_async(payload)
-    
+
     # Now wait for response
     start_time = time.time()
     while time.time() - start_time < timeout:
@@ -96,7 +122,7 @@ def perform_ad_operation(operation, payload=None, timeout=10):
         if msg_id in completed:
             return True, data
         time.sleep(0.5)
-    
+
     logger.error(f"Timeout waiting for response for message {msg_id}")
     return False, None
 
