@@ -498,12 +498,7 @@ services:
     network_mode: host
     environment:
       TZ: "America/Chicago"
-      DATABASE_HOST: db
-      DATABASE_PORT: 5432
-      DATABASE_NAME: deepharbor
-      DATABASE_USER: dh
-      DATABASE_PASSWORD: dh
-      SERVICE_NAME: ST2DH      
+      SERVICE_NAME: ST2DH
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5004/health"]
       interval: 30s
