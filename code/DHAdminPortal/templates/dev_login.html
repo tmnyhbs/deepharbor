@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Dev Login - Admin Portal{% endblock %}
+{% block content %}
+
+<style>
+    .dev-banner {
+        background: #fef3c7;
+        border: 2px solid #f59e0b;
+        border-radius: 8px;
+        padding: 12px 20px;
+        margin-bottom: 24px;
+        text-align: center;
+        color: #92400e;
+        font-weight: 600;
+    }
+    .dev-user-card {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+    }
+    .dev-user-card:hover {
+        border-color: #ff69b4;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .dev-role-badge {
+        font-size: 0.8em;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-weight: 500;
+    }
+    .role-administrator { background: #dbeafe; color: #1e40af; }
+    .role-authorizer { background: #d1fae5; color: #065f46; }
+    .role-board { background: #ede9fe; color: #5b21b6; }
+</style>
+
+<h1>Pumping Station: One Administration Portal</h1>
+
+<div class="dev-banner">
+    DEV MODE — Authentication bypass active. Select a user to log in as.
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h3 class="text-center mb-4">Select a Dev User</h3>
+
+        <div class="row g-3 mb-4">
+            {% for user in preset_users %}
+            <div class="col-md-4">
+                <form method="POST" action="{{ url_for('dev_login_select') }}">
+                    <input type="hidden" name="member_id" value="{{ user.member_id }}">
+                    <div class="card dev-user-card" onclick="this.closest('form').submit()">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">{{ user.name }}</h5>
+                            <span class="dev-role-badge role-{{ user.role|lower }}">{{ user.role }}</span>
+                            <p class="card-text mt-2"><small class="text-muted">ID: {{ user.member_id }}</small></p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+
+        <hr>
+
+        <h5 class="text-center mb-3">Or enter a member ID manually</h5>
+        <form method="POST" action="{{ url_for('dev_login_select') }}" class="d-flex justify-content-center gap-2">
+            <input type="number" name="member_id" class="form-control" style="max-width: 200px;"
+                   placeholder="Member ID" min="1" required>
+            <button type="submit" class="btn btn-primary">Log In</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

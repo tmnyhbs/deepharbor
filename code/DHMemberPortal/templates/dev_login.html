@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dev Login - Member Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+    <style>
+        .dev-banner {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin-bottom: 24px;
+            text-align: center;
+            color: #92400e;
+            font-weight: 600;
+        }
+        .dev-description {
+            font-size: 0.85em;
+            color: var(--secondary-color);
+            margin-top: 4px;
+            margin-bottom: 0;
+        }
+        .manual-login {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        .manual-login-form {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .manual-login-form input {
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            width: 160px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Pumping Station: One</h1>
+            <p class="tagline">Member Portal</p>
+        </div>
+
+        <div class="dev-banner">
+            DEV MODE — Authentication bypass active. Select a user to log in as.
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ 'error' if category == 'error' else 'info' }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="content">
+            {% for user in preset_users %}
+            <div class="card">
+                <h2>{{ user.name }}</h2>
+                <p>{{ user.description }}</p>
+                <p class="dev-description">ID: {{ user.member_id }} | {{ user.email }}</p>
+                <form method="POST" action="{{ url_for('dev_login_select') }}">
+                    <input type="hidden" name="member_id" value="{{ user.member_id }}">
+                    <button type="submit" class="btn btn-primary full-width">Log In as {{ user.name.split()[0] }}</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="manual-login">
+            <h2 style="text-align: center; margin-bottom: 0.5rem;">Manual Login</h2>
+            <p style="text-align: center; color: var(--secondary-color);">Enter any member ID from the seed data</p>
+            <form method="POST" action="{{ url_for('dev_login_select') }}" class="manual-login-form">
+                <input type="number" name="member_id" placeholder="Member ID" min="1" required>
+                <button type="submit" class="btn btn-secondary">Log In</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
