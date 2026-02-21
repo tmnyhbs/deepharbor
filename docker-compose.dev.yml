@@ -45,6 +45,8 @@ services:
     environment:
       DH_API_BASE_URL: "http://gateway/dh/service"
       AUTH_MODE: dev
+      DH_CLIENT_ID: "dev-member-portal"
+      DH_CLIENT_SECRET: "hQgPvJW9RU48tRSQKS8SladAZsKHS34fKetbNr_443E"
 
   dhadminportal:
     network_mode: !reset ""
@@ -55,6 +57,8 @@ services:
     environment:
       DH_API_BASE_URL: "http://gateway/dh/service"
       AUTH_MODE: dev
+      DH_CLIENT_ID: "dev-admin-portal"
+      DH_CLIENT_SECRET: "ikactyRLicKoI8VHiD9KZEwTrOIhtYjfzm1h6YUjj7M"
 
   #########################################################
   # External services — move st2dh from host to bridge
