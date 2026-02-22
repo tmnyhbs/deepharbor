@@ -3,6 +3,9 @@
 # Get the current directory name and convert to lowercase
 SERVICE=$(basename "$PWD" | tr '[:upper:]' '[:lower:]')
 
+# Set up the git version string from the current commit
+echo "GIT_VERSION=$(git branch --show-current)-$(git rev-parse --short HEAD)" > .env
+
 # Rebuild the Docker image
 echo "Rebuilding image for service: $SERVICE"
 docker compose build "$SERVICE"

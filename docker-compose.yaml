@@ -61,7 +61,10 @@ services:
   
   # Member Portal Service
   dhmemberportal:
-    build: ./code/DHMemberPortal
+    build: 
+      context: ./code/DHMemberPortal
+      args:
+        GIT_VERSION: "${GIT_VERSION}"
     restart: unless-stopped
     network_mode: host
     healthcheck:
@@ -80,7 +83,10 @@ services:
 
   # The admin portal service
   dhadminportal:
-    build: ./code/DHAdminPortal
+    build: 
+      context: ./code/DHAdminPortal
+      args:
+        GIT_VERSION: "${GIT_VERSION}"
     restart: unless-stopped
     network_mode: host
     healthcheck:
@@ -96,6 +102,7 @@ services:
     container_name: dh_admin_portal
     environment:
       TZ: "America/Chicago"
+    
 
   #########################################################
   # Main Application Service - this is the core
@@ -498,7 +505,12 @@ services:
     network_mode: host
     environment:
       TZ: "America/Chicago"
-      SERVICE_NAME: ST2DH
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_NAME: deepharbor
+      DATABASE_USER: dh
+      DATABASE_PASSWORD: dh
+      SERVICE_NAME: ST2DH      
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5004/health"]
       interval: 30s
