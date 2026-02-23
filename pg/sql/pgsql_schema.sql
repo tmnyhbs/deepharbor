@@ -1324,18 +1324,18 @@ COMMENT ON TABLE subscriptions IS 'This table stores subscription details receiv
 
 -- View to extract relevant subscription event details from the subscriptions table and join it with member information
 CREATE OR REPLACE VIEW v_subscription_events AS
-SELECT   m.id AS member_id, 
+SELECT   m.id AS member_id,
          m.identity->>'first_name' AS first_name,
          m.identity->>'last_name' AS last_name, ( SELECT elem->>'email_address'
          FROM    jsonb_array_elements(m.identity->'emails') AS elem
          WHERE   elem->>'type' = 'primary'
-         LIMIT   1 ) AS email, (s.details #>> '{}')::jsonb ->> 'id' AS event_id, (s.details #>> 
-         '{}') ::jsonb -> 'data' -> 'object' ->> 'customer' AS customer_id, (s.details #>> '{}'):: 
-         jsonb -> 'data' -> 'object' ->> 'id' AS subscription_id, (s.details #>> '{}')::jsonb -> 
-         'data' -> 'object' -> 'plan' ->> 'product' AS product_id, (s.details #>> '{}')::jsonb -> 
-         'type' AS event_type
+         LIMIT   1 ) AS email, s.id AS sub_event_id, (s.details #>> '{}')::jsonb ->> 'id' AS 
+         event_id, (s.details #>> '{}') ::jsonb -> 'data' -> 'object' ->> 'customer' AS customer_id 
+         , (s.details #>> '{}'):: jsonb -> 'data' -> 'object' ->> 'id' AS subscription_id, 
+         (s.details #>> '{}')::jsonb -> 'data' -> 'object' -> 'plan' ->> 'product' AS product_id, 
+         (s.details #>> '{}')::jsonb -> 'type' AS event_type
 FROM     subscriptions s
-JOIN     member m ON m.connections->>'stripe_id' = (s.details #>> '{}')::jsonb -> 'data' -> 
+JOIN     member m ON m.connections->>'stripe_id' = (s.details #>> '{}')::jsonb -> 'data' ->
          'object' ->> 'customer'
 ORDER BY s.date_added;
 COMMENT ON VIEW v_subscription_events IS 'This view extracts relevant subscription event details from the subscriptions table and joins it with member information to provide a comprehensive view of subscription events, including member name, email, event ID, customer ID, subscription ID, product ID, and event type.';
