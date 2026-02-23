@@ -73,7 +73,7 @@ def get_member_email(member_id: str) -> str:
     logger.debug(f"Fetching member email from database for member id {member_id}")
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
-            cursor.execute("select primary_email from v_member_email where id = %s", (member_id,))
+            cursor.execute("select primary_email from v_member_id_email where id = %s", (member_id,))
             result = cursor.fetchone()
             if result:
                 return result[0]
