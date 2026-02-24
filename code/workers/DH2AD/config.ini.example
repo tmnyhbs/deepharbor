@@ -17,3 +17,6 @@ extensions_app_id=
 member_DN=
 # Base DN for groups that a user can be added to
 tool_base_DN=
+
+[shared]
+SHARED_VOLUME_PATH=/app/shared

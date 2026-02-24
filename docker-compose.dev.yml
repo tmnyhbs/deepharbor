@@ -4,13 +4,14 @@
 #
 #   docker compose -f docker-compose.yaml -f docker-compose.dev.yml up --build -d
 #
-# This file does three things:
+# This file:
 #   1. Disables hardware-dependent services (AD controller, RFID reader, RFID2DB)
 #   2. Moves host-network services onto the bridge network so they can
 #      talk to other containers by name (gateway, db, etc.)
 #   3. Sets DEV_MODE on worker services so they don't timeout waiting
 #      for the disabled hardware controllers
 #   4. Mounts the seed data SQL file into the database init directory
+#   5. Remaps gateway (80→8808) and Grafana (3000→3300) to avoid host port conflicts
 
 services:
 
@@ -88,6 +89,22 @@ services:
   dh2rfid:
     environment:
       DEV_MODE: "true"
+
+  #########################################################
+  # Gateway — remap to avoid host port 80 conflicts
+  #########################################################
+
+  gateway:
+    ports: !override
+      - "8808:80"
+
+  #########################################################
+  # Grafana — remap to avoid host port 3000 conflicts
+  #########################################################
+
+  grafana:
+    ports: !override
+      - "3300:3000"
 
   #########################################################
   # Hardware-dependent services — disabled for dev
