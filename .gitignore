@@ -11,3 +11,4 @@ flask_session/
 .claude
 *.code-workspace
 pg/db-init/02-seed_data.sql
+pg/sql/seed_data.local.sql
