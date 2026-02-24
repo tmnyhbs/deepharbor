@@ -26,7 +26,7 @@ services:
 
   db:
     volumes:
-      - ./pg/sql/seed_data.sql:/docker-entrypoint-initdb.d/02-seed_data.sql
+      - ./pg/sql/seed_data.local.sql:/docker-entrypoint-initdb.d/02-seed_data.sql
 
   #########################################################
   # Front-end services — move from host network to bridge
