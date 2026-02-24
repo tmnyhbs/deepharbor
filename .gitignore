@@ -10,3 +10,4 @@ flask_session/
 .serena
 .claude
 *.code-workspace
+pg/db-init/02-seed_data.sql
