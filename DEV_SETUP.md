@@ -196,6 +196,35 @@ Browser
         (no-op in dev)   (no-op in dev)
 ```
 
+## Pulling the Latest Changes
+
+If you already have a copy of the repo and want to update it:
+
+```bash
+cd deepharbor
+git pull origin dev
+./dh_dev.sh start
+```
+
+That's it — `git pull` downloads the latest code and `dh_dev.sh start`
+rebuilds everything so your local environment matches.
+
+If git complains about conflicts with your local edits, stash them
+first, pull, then restore:
+
+```bash
+git stash
+git pull origin dev
+git stash pop
+```
+
+If the pull included database changes (someone will mention this in
+the PR or commit message), do a full reset instead of `start`:
+
+```bash
+./dh_dev.sh reset
+```
+
 ## Troubleshooting
 
 **Containers keep restarting**
