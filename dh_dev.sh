@@ -74,11 +74,11 @@ cmd_setup() {
         target="${example%.example}"
         if [[ -f "$target" ]]; then
             echo "  SKIP: $target (already exists)"
-            ((skip_count++))
+            ((skip_count++)) || true
         else
             cp "$example" "$target"
             echo "  COPY: $example"
-            ((config_count++))
+            ((config_count++)) || true
         fi
     done < <(find code -name "config.ini.example" -type f | sort)
     echo "  Copied: $config_count, Skipped: $skip_count"
