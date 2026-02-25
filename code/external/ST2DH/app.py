@@ -277,7 +277,7 @@ def handle_message(stripe_event):
     if matching_product is None:
         logger.warning(f"Received a subscription event for a product we don't recognize: {product_id}")
         return
-    logger.info(f"They're subscribing to DH product: {matching_product['name']} (ID: {matching_product['product_id']})")
+    logger.info(f"DH product: {matching_product['name']} (ID: {matching_product['product_id']})")
     member.dh_product_name = matching_product["name"]
     
     # The type of message we got determines whether the member is active
