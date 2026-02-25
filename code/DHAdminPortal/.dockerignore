@@ -1,3 +1,4 @@
+.env
 .venv
 Dockerfile
 start_services.sh

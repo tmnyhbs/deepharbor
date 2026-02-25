@@ -2,7 +2,7 @@
 # docker build -t dhservice:latest .
 #
 
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 # Install uv.
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
@@ -16,6 +16,12 @@ COPY . /app
 
 # Install the application dependencies.
 WORKDIR /app
+
+ARG GIT_VERSION=unknown
+
+RUN awk -v ver="$GIT_VERSION" 'BEGIN{ingit=0} /^\[git\]$/{ingit=1} /^\[/{if($0!="[git]") ingit=0} ingit && /^version=/{sub(/^version=.*/, "version=" ver)} {print}' config.ini > config.ini.tmp \
+  && mv config.ini.tmp config.ini
+
 RUN uv sync --frozen --no-cache
 
 # Set Flask environment variables

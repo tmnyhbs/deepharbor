@@ -9,6 +9,7 @@ import msal
 import dhservices
 from dhs_logging import logger
 import app_config
+from config import config
 
 ### Dev mode flag — read from app_config so we only check the env var once
 AUTH_MODE = app_config.AUTH_MODE
@@ -30,6 +31,10 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 @app.route("/health")
 def health():
     return "OK", 200
+
+@app.route("/version")
+def version():
+    return {"version": config["git"]["version"]}, 200
 
 ###############################################################################
 # Flask routes for B2C flows, including login and logout
