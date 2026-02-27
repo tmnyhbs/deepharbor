@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Pumping Station: One Administration Portal{% endblock %}
+{% block title %}Deep Harbor Administration Portal{% endblock %}
 {% block content %}
 
 <style>
@@ -59,7 +59,7 @@
     }
 </style>
 
-<h1>Pumping Station: One Administration Portal</h1>
+<h1>Deep Harbor Administration Portal</h1>
 
 {% if user %}
 <!-- We're logged in -->
@@ -120,6 +120,7 @@
         <span id="memberHeaderName"></span>
         <span class="mx-2">|</span>
         <span id="memberHeaderEmail"></span>
+        <span id="memberHeaderId" class="d-block mt-1"></span>
     </div>
     
     <!-- Tabs Navigation -->
@@ -1355,8 +1356,9 @@ function updateMemberHeaderInfo(member) {
     const header = document.getElementById('memberHeaderInfo');
     const nameEl = document.getElementById('memberHeaderName');
     const emailEl = document.getElementById('memberHeaderEmail');
+    const memberIdEl = document.getElementById('memberHeaderId');
 
-    if (!header || !nameEl || !emailEl) {
+    if (!header || !nameEl || !emailEl || !memberIdEl) {
         return;
     }
 
@@ -1364,6 +1366,7 @@ function updateMemberHeaderInfo(member) {
         header.style.display = 'none';
         nameEl.textContent = '';
         emailEl.textContent = '';
+        memberIdEl.textContent = '';
         return;
     }
 
@@ -1371,7 +1374,9 @@ function updateMemberHeaderInfo(member) {
     const lastName = member.last_name || '';
     const fullName = `${firstName} ${lastName}`.trim();
     const email = member.primary_email_address || '';
+    const memberId = member.member_id || '';
 
+    memberIdEl.textContent = `ID: ${memberId}`;
     nameEl.textContent = fullName || 'Member';
     emailEl.textContent = email || 'No email on file';
     header.style.display = 'block';
