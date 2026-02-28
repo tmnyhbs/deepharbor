@@ -1675,6 +1675,27 @@ function fetchTabData(tabName, memberId) {
         return;
     }
 
+    // Special handling for access tab
+    if (tabName === 'access') {
+        fetch(`/api/member/${tabName}?member_id=${encodeURIComponent(memberId)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch ${tabName} data`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                dataEl.innerHTML = formatAccessData(data);
+            })
+            .catch(error => {
+                dataEl.innerHTML = '<div class="alert alert-danger">Error: ' + error.message + '</div>';
+            })
+            .finally(() => {
+                loadingEl.style.display = 'none';
+            });
+        return;
+    }
+
     // Special handling for notes tab
     if (tabName === 'notes') {
         fetch(`/api/member/${tabName}?member_id=${encodeURIComponent(memberId)}`)
