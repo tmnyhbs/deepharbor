@@ -336,8 +336,20 @@ DECLARE
 
     v_FinalNum varchar(16) := '';
 BEGIN
+ -- Return NULL if input is NULL
+    IF p_num IS NULL THEN
+        RETURN NULL;
+    END IF;
+
     -- Convert the number passed to us as a binary string
     v_baseVal := CAST(p_num::bit(24)::VARCHAR AS VARCHAR(24));
+
+    -- Validate that we have at least 5 digits (for user code)
+    IF length(v_baseVal) < 5 THEN
+        --RAISE EXCEPTION 'Invalid Wiegand number: % (must be at least 5 digits)', p_num;
+        RETURN NULL;
+    END IF;
+
     -- Okay, we need two parts, the facility code, and the user code
     v_fc := SUBSTRING(v_baseVal from 1 for 8);
     v_uc := SUBSTRING(v_baseVal from 9);
@@ -376,7 +388,7 @@ BEGIN
                      WHERE  m.id = p_member_id
              )
         SELECT   at.tag,
-                 converttowiegand(at.tag::INTEGER) WIEGAND_TAG_NUM,
+                 converttowiegand(at.tag::BIGINT) WIEGAND_TAG_NUM,
                  CASE
                           WHEN EXISTS (    SELECT 1
                                            FROM    member m
@@ -385,8 +397,6 @@ BEGIN
                           THEN 'ACTIVE'
                           ELSE 'INACTIVE'
                  END AS status
-	WHERE    at.tag IS NOT NULL
-        AND      TRIM(at.tag) <> ''
         FROM     all_tags at
         WHERE    at.tag IS NOT NULL
         AND      TRIM(at.tag) <> ''
