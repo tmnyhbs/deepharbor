@@ -261,10 +261,10 @@ async def update_wa_sync_time(
 # Bulk endpoints
 ###############################################################################
 
-@app.get("/v1/members/names_and_emails/")
-async def get_all_member_names_and_emails(current_user: AuthenticatedClient):
-    """Get names and email addresses for all members."""
-    return {"members": db.get_all_member_names_and_emails()}
+@app.get("/v1/members/active_names_and_emails/")
+async def get_all_active_member_names_and_emails(current_user: AuthenticatedClient):
+    """Get names and email addresses for all active members."""
+    return {"members": db.get_active_member_names_and_emails()}
 
 @app.get("/v1/authorizations/available/")
 async def get_available_authorizations(current_user: AuthenticatedClient):
