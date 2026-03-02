@@ -544,17 +544,20 @@ def update_last_wa_sync_time(sync_time):
 ###############################################################################
 # Bulk Database Functions
 ###############################################################################
-def get_all_member_names_and_emails() -> list[dict]:
-    logger.debug("Getting names and email addresses for all members.")
+def get_active_member_names_and_emails() -> list[dict]:
+    logger.debug("Getting names and email addresses for all active members.")
     members = []
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                """SELECT id,
+                """
+                SELECT id,
                           identity ->> 'first_name' AS first_name,
                           identity ->> 'last_name' AS last_name,
                           identity -> 'emails' -> 0 ->> 'email_address' AS primary_email_address
-                   FROM member"""
+                   FROM member
+                   WHERE status ->> 'membership_status' = 'active'
+                """
             )
             results = cur.fetchall()
     for result in results:
@@ -564,7 +567,7 @@ def get_all_member_names_and_emails() -> list[dict]:
             "last_name": result[2],
             "primary_email_address": result[3]
         })
-    logger.debug(f"Retrieved {len(members)} members from the database.")
+    logger.debug(f"Retrieved {len(members)} active members from the database.")
     return members
 
 def get_available_authorizations() -> list[dict]:
