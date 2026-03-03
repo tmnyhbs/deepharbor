@@ -89,9 +89,9 @@ def get_member_tags(member_id: str) -> list:
         with conn.cursor() as cursor:
             # Calls the stored procedure to get all tags for the member
             tag_sql = f"""
-                select tag, wiegand_tag_num, status from get_all_tags_for_member({member_id});
+                select tag, wiegand_tag_num, status from get_all_tags_for_member(%s);
             """
-            cursor.execute(tag_sql)
+            cursor.execute(tag_sql, (member_id,))
             results = cursor.fetchall()
             tags = []
             for row in results:
