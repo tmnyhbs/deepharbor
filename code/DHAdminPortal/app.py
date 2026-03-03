@@ -16,11 +16,6 @@ AUTH_MODE = app_config.AUTH_MODE
 if AUTH_MODE == "dev":
     logger.info("AUTH_MODE=dev — B2C authentication bypassed, dev login enabled")
 
-### Dev mode flag — read from app_config so we only check the env var once
-AUTH_MODE = app_config.AUTH_MODE
-if AUTH_MODE == "dev":
-    logger.info("AUTH_MODE=dev — B2C authentication bypassed, dev login enabled")
-
 app = Flask(__name__)
 app.config.from_object(app_config)
 Session(app)
