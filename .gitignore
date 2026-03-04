@@ -1,8 +1,14 @@
-.env
 config.ini
+.env
 __pycache__/
+*.pyc
 wa2dh.log
 .vscode/
 *~
 flask_session/
 *.swp
+.serena
+.claude
+*.code-workspace
+pg/db-init/02-seed_data.sql
+pg/sql/seed_data.local.sql
