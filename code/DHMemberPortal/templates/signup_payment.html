@@ -21,7 +21,8 @@
                 <!-- Stripe integration here -->
 		<script async src="https://js.stripe.com/v3/pricing-table.js"></script>
 		<stripe-pricing-table pricing-table-id="prctbl_1PpEnYJFw8qo37G3YaEY7bm4"
-			publishable-key="pk_live_51BxeY8JFw8qo37G3PKaKG3g1rCoptTQxjkYtxzGHEXXI33gbkVLRYeR63mZCKzDs02IeCMAywlaCSUMGTBg6YIek00Ubohq1rJ">
+			publishable-key="pk_live_51BxeY8JFw8qo37G3PKaKG3g1rCoptTQxjkYtxzGHEXXI33gbkVLRYeR63mZCKzDs02IeCMAywlaCSUMGTBg6YIek00Ubohq1rJ" {% if email %}
+                        customer-email="{{ email }}"{% endif %}>
 		</stripe-pricing-table>
             </div>
         </div>
