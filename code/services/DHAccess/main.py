@@ -65,9 +65,9 @@ def get_member_status(member_id: str) -> str:
             status_sql = f"""
                 SELECT  trim(both '"' FROM (SELECT status->'membership_status' 
                 FROM    member 
-                WHERE   id = {member_id})::TEXT) membership_status;
+                WHERE   id = %s)::TEXT) membership_status;
             """
-            cursor.execute(status_sql)
+            cursor.execute(status_sql, (member_id,))
             result = cursor.fetchone()
             if result:
                 return result[0]
@@ -81,9 +81,9 @@ def get_member_tags(member_id: str) -> list:
         with conn.cursor() as cursor:
             # Calls the stored procedure to get all tags for the member
             tag_sql = f"""
-                select tag, wiegand_tag_num, status from get_all_tags_for_member({member_id});
+                select tag, wiegand_tag_num, status from get_all_tags_for_member(%s);
             """
-            cursor.execute(tag_sql)
+            cursor.execute(tag_sql, (member_id,))
             results = cursor.fetchall()
             tags = []
             for row in results:
@@ -93,7 +93,6 @@ def get_member_tags(member_id: str) -> list:
 ###############################################################################
 # Healthcheck endpoint
 ###############################################################################
-
 
 @app.get("/health")
 async def health_check():
@@ -106,7 +105,6 @@ async def health_check():
 ###############################################################################
 # Endpoint to sync authorizations
 ###############################################################################
-
 
 @app.post("/v1/change_access")
 async def change_access(request: dict):
@@ -140,7 +138,7 @@ async def change_access(request: dict):
         logger.info(f"We're going to be performing a {access_operation} operation for member id {first_name} {last_name} (member id: {member_id})")
 
         # Now we need to get the RFID tags associated with this member. This will
-        # come back as a list of tags with their status (active/inactive).
+        # come back as a list of tags with their status (active/suspended).
         tags = get_member_tags(member_id)
         logger.info(f"Fetched {len(tags)} tags for {first_name} {last_name} (id {member_id}) : {tags}")
         if not tags:
@@ -149,7 +147,7 @@ async def change_access(request: dict):
         else:        
             # Okay, cool, if we're here that means we have tags to process. What we set the
             # tags to depend on whether we're adding or removing access. Tags that are
-            # marked as "INACTIVE" should always be sent to the "remove" endpoint, while the
+            # marked as "SUSPENDED" should always be sent to the "remove" endpoint, while the
             # "ACTIVE" tags should be sent to the "add" endpoint _IF THE MEMBER STATUS IS ACTIVE_,
             # otherwise they should be sent to the "remove" endpoint.
             
@@ -176,7 +174,7 @@ async def change_access(request: dict):
                 tag = tag_entry.get("tag")
                 converted_tag = tag_entry.get("converted_tag")
                 tag_status = tag_entry.get("status")
-                if access_operation == "add" and tag_status == "ACTIVE":
+                if access_operation.lower() == "add" and tag_status.upper() == "ACTIVE":
                     # We need to add this tag
                     dh2rfid_request["tag"] = tag
                     dh2rfid_request["converted_tag"] = converted_tag

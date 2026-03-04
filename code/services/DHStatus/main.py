@@ -19,7 +19,7 @@ app = FastAPI()
 # DH2MG when sending emails based on status changes in this service.
 class MembershipStatus(Enum):
     ACTIVE = (1, "Active membership")
-    INACTIVE = (2, "Inactive membership")
+    SUSPENDED = (2, "Suspended membership")
     PENDING = (3, "Pending membership")
     def __init__(self, value, description):
         self._value_ = value
@@ -169,7 +169,7 @@ def perform_status_changes(member_id: str, change_type: str, membership_level: s
             dh2rfid_url += config["DH2RFID"]["add_tags_endpoint"]
         else:
             # For any status change that is not active, we will remove 
-            # the tags from the board controller. This includes "Inactive", 
+            # the tags from the board controller. This includes "Suspended", 
             # "Banned", etc.
             dh2rfid_url += config["DH2RFID"]["remove_tags_endpoint"]        
 
@@ -296,8 +296,8 @@ def perform_status_changes(member_id: str, change_type: str, membership_level: s
     - "Active"
         The member is active and should have an active directory account enabled 
         and their RFID tags added to the board controller.
-    - Everything else (e.g. "Inactive", "Banned", etc.)
-        The member is inactive and should have an active directory account 
+    - Everything else (e.g. "Suspended", "Banned", etc.)
+        The member is suspended and should have an active directory account 
         disabled and their RFID tags removed from the board controller.
     """
     
@@ -326,7 +326,7 @@ def perform_status_changes(member_id: str, change_type: str, membership_level: s
             return False, f"Failed to send pending email via DH2MG: {email_error_message}"
         return True, None
      
-    # Perform active directory changes for both "Active" and "Inactive"/"Banned" 
+    # Perform active directory changes for both "Active" and "Suspended"/"Banned" 
     # status changes. The logic for what to change in active directory 
     # is handled in the DH2AD worker, so we just need to call it 
     # with the necessary information and let it handle the rest.
@@ -336,7 +336,7 @@ def perform_status_changes(member_id: str, change_type: str, membership_level: s
         return False, f"Failed to perform active directory changes: {ad_error_message}"
 
     # Perform RFID tag changes for both "Active" 
-    # and "Inactive"/"Banned" status changes. The logic for 
+    # and "Suspended"/"Banned" status changes. The logic for 
     # what to change in RFID tags is handled in the DH2RFID worker, 
     # so we just need to call it with the necessary information and 
     # let it handle the rest.
@@ -345,11 +345,11 @@ def perform_status_changes(member_id: str, change_type: str, membership_level: s
         logger.error(f"Failed to perform RFID tag changes for member id {member_id}: {rfid_error_message}")
         return False, f"Failed to perform RFID tag changes: {rfid_error_message}"
     
-    # Send email via DH2MG for "Active" and "Inactive"
+    # Send email via DH2MG for "Active" and "Suspended"
     # We do not send an email if the status is "Banned"
     if change_type.lower() != "banned":
         logger.info(f"Member {first_name} {last_name} (ID {member_id}) status changed to {change_type}. Sending email notification via DH2MG.")
-        email_sent, email_error_message = send_email(MembershipStatus.ACTIVE if change_type.lower() == "active" else MembershipStatus.INACTIVE)
+        email_sent, email_error_message = send_email(MembershipStatus.ACTIVE if change_type.lower() == "active" else MembershipStatus.SUSPENDED)
         if email_sent is False:
             logger.error(f"Failed to send status change email via DH2MG for member id {member_id}: {email_error_message}")
             return False, f"Failed to send status change email via DH2MG: {email_error_message}"
