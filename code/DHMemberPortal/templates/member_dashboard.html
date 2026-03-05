@@ -24,10 +24,10 @@
                 <h2>Membership</h2>
                 <ul class="menu-list">
                     <li><a href="{{ url_for('member_profile') }}" class="menu-item"><i class="fa-solid fa-user"></i> Profile</a></li>
-                    <li><a href="{{ url_for('member_keys') }}" class="menu-item"><i class="fa-solid fa-key"></i> Keys</a></li>
+                    <li><a href="{{ url_for('member_keys') }}" class="menu-item"><i class="fa-solid fa-key"></i> Keys & Access</a></li>
                     <li><a href="https://billing.stripe.com/p/login/cN27vM18zeI35wI9AA" class="menu-item" target="_blank"><i class="fa-solid fa-credit-card"></i> Billing</a></li>
                     <li><a href="{{ url_for('member_auths') }}" class="menu-item"><i class="fa-solid fa-certificate"></i> Authorizations</a></li>
-                    <li><a href="{{ url_for('member_storage') }}" class="menu-item"><i class="fa-solid fa-boxes-stacked"></i> Storage & Info</a></li>
+                    <li><a href="{{ url_for('member_storage') }}" class="menu-item"><i class="fa-solid fa-circle-info"></i> Member Info & Storage</a></li>
                 </ul>
             </div>
 
@@ -35,16 +35,16 @@
             <div class="menu-section">
                 <h2>Useful Links</h2>
                 <ul class="menu-list">
-                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-solid fa-rocket"></i> Membership Quick Start Guide</a></li>
-                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-brands fa-discord"></i> Discord</a></li>
-                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-solid fa-book"></i> Wiki</a></li>
-                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-solid fa-calendar-days"></i> Events Calendar</a></li>
-                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-solid fa-newspaper"></i> Blog</a></li>
-                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-solid fa-graduation-cap"></i> How to Authorize</a></li>
-                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-solid fa-chalkboard"></i> Canvas</a></li>
-                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-solid fa-file-contract"></i> Membership Agreement</a></li>
-                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-solid fa-scale-balanced"></i> Community Standards</a></li>
-                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-solid fa-circle-question"></i> Get More Help</a></li>
+                    <li><a href="https://wiki.pumpingstationone.org/wiki/New_Member_Quick_Start_Guide" class="menu-item" target="_blank"><i class="fa-solid fa-rocket"></i> Membership Quick Start Guide</a></li>
+                    <li><a href="https://wiki.pumpingstationone.org/wiki/Community_Standards" class="menu-item" target="_blank"><i class="fa-solid fa-shield-heart"></i> Community Standards</a></li>
+                    <li><a href="https://ps1.link/discord" class="menu-item" target="_blank"><i class="fa-brands fa-discord"></i> Discord Invite</a></li>
+                    <li><a href="https://wiki.pumpingstationone.org" class="menu-item" target="_blank"><i class="fa-solid fa-book"></i> Wiki</a></li>
+                    <li><a href="https://pumpingstationone.org/events/" class="menu-item" target="_blank"><i class="fa-solid fa-calendar-days"></i> Events Calendar</a></li>
+                    <li><a href="https://wiki.pumpingstationone.org/wiki/Authorizations" class="menu-item" target="_blank"><i class="fa-solid fa-graduation-cap"></i> How to get Authorized</a></li>
+                    <li><a href="https://canvas.pumpingstationone.org" class="menu-item" target="_blank"><i class="fa-solid fa-chalkboard"></i> Canvas</a></li>
+                    <li><a href="https://wiki.pumpingstationone.org/wiki/Membership_agreement" class="menu-item" target="_blank"><i class="fa-solid fa-file-contract"></i> Membership Agreement</a></li>
+                    <li><a href="https://wiki.pumpingstationone.org/wiki/How_can_I_help" class="menu-item" target="_blank"><i class="fa-solid fa-hand-holding-heart"></i> How To Help & Volunteer</a></li>
+                    <li><a href="https://wiki.pumpingstationone.org/wiki/Do_you_need_help" class="menu-item" target="_blank"><i class="fa-solid fa-circle-question"></i> Get More Help</a></li>
                 </ul>
             </div>
 
@@ -52,8 +52,16 @@
             <div class="menu-section">
                 <h2>Social Media</h2>
                 <ul class="menu-list">
-                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-brands fa-instagram"></i> Instagram</a></li>
-                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-brands fa-facebook"></i> Facebook</a></li>
+                    <li><a href="https://pumpingstationone.org/blog" class="menu-item" target="_blank"><i class="fa-solid fa-newspaper"></i> Blog</a></li>
+                    <li><a href="https://bsky.app/profile/pumpingstationone.bsky.social" class="menu-item" target="_blank"><i class="fa-brands fa-bluesky"></i> Bluesky</a></li>
+                    <li><a href="https://www.facebook.com/PumpingStationOne" class="menu-item" target="_blank"><i class="fa-brands fa-facebook"></i> Facebook</a></li>
+                    <li><a href="https://www.instagram.com/pumpingstationone/" class="menu-item" target="_blank"><i class="fa-brands fa-instagram"></i> Instagram</a></li>
+                    <li><a href="https://www.linkedin.com/company/pumping-station-one/" class="menu-item" target="_blank"><i class="fa-brands fa-linkedin"></i> LinkedIn</a></li>
+                    <li><a href="https://masto.hackers.town/@pumpingstationone" class="menu-item" target="_blank"><i class="fa-brands fa-mastodon"></i> Mastodon</a></li>
+                    <li><a href="https://www.meetup.com/pumping-station-one/" class="menu-item" target="_blank"><i class="fa-brands fa-meetup"></i> Meetup</a></li>
+                    <li><a href="https://www.threads.com/@pumpingstationone" class="menu-item" target="_blank"><i class="fa-brands fa-threads"></i> Threads</a></li>
+                    <li><a href="https://www.tiktok.com/@pumpingstationone" class="menu-item" target="_blank"><i class="fa-brands fa-tiktok"></i> TikTok</a></li>
+                    <li><a href="https://x.com/PumpingStation1" class="menu-item" target="_blank"><i class="fa-brands fa-x-twitter"></i> X</a></li>
                 </ul>
             </div>
 {% endblock %}

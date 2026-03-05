@@ -37,7 +37,7 @@ body {
 
 .header {
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
 }
 
 .header-logo {
@@ -405,7 +405,7 @@ body {
     padding: 0.75rem 1.25rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border-left: 4px solid;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
 }
 
 .dashboard-status.active {
@@ -510,7 +510,8 @@ body {
 
 /* Back-to-dashboard button */
 .header-actions .btn-secondary.btn-sm {
-    padding: 0.35rem 1.25rem;
+    margin-top: 0.5rem;
+    padding: 0.1em 2rem;
 }
 
 /* Add Tag button */

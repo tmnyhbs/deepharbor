@@ -435,7 +435,7 @@ def member_storage():
     if error:
         return error
 
-    return render_template('dashboard_storage.html',
+    return render_template('dashboard_info_storage.html',
                          extras=member_info.get('extras', {}) if isinstance(member_info, dict) else {},
                          forms=member_info.get('forms', {}) if isinstance(member_info, dict) else {},
                          status=member_info.get('status', {}) if isinstance(member_info, dict) else {},
