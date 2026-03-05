@@ -9,6 +9,9 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    {% if auth_mode == "dev" %}
+    <div class="dev-banner">DEV MODE — {{ git_version }}</div>
+    {% endif %}
     <div class="container">
         <div class="header">
             <img src="{{ url_for('static', filename='images/ps1-logo-horizontal.svg') }}" alt="Pumping Station: One" class="header-logo">
