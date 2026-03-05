@@ -12,13 +12,13 @@ body {
     min-height: 100vh;
     padding: 20px;
     position: relative;
-    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /* Bubblegum bubbles background animation */
 body::before {
     content: '';
-    position: absolute;
+    position: fixed;
     width: 200px;
     height: 200px;
     background: rgba(255, 255, 255, 0.1);
@@ -26,11 +26,12 @@ body::before {
     top: -100px;
     left: 10%;
     animation: float 8s infinite ease-in-out;
+    pointer-events: none;
 }
 
 body::after {
     content: '';
-    position: absolute;
+    position: fixed;
     width: 150px;
     height: 150px;
     background: rgba(255, 182, 230, 0.15);
@@ -38,6 +39,7 @@ body::after {
     bottom: -75px;
     right: 15%;
     animation: float 10s infinite ease-in-out;
+    pointer-events: none;
 }
 
 @keyframes float {
@@ -49,11 +51,12 @@ body::after {
     }
 }
 
-h1 {
+/* Scope bubblegum content styles to .body-content only */
+.body-content h1 {
     color: #ff69b4;
     font-size: 3em;
     text-align: center;
-    text-shadow: 
+    text-shadow:
         3px 3px 0px #ff1493,
         6px 6px 0px rgba(255, 105, 180, 0.3);
     margin-bottom: 30px;
@@ -61,7 +64,7 @@ h1 {
     background: white;
     border-radius: 50px;
     border: 5px solid #ff69b4;
-    box-shadow: 
+    box-shadow:
         0 8px 20px rgba(255, 105, 180, 0.4),
         inset 0 2px 10px rgba(255, 255, 255, 0.8);
     animation: bounce 2s infinite;
@@ -74,11 +77,11 @@ h1 {
         transform: translateY(0);
     }
     50% {
-        transform: translateY(-10px);
+        transform: translateY(10px);
     }
 }
 
-p {
+.body-content p {
     color: #ff1493;
     font-size: 1.5em;
     text-align: center;
@@ -86,7 +89,7 @@ p {
     padding: 25px 40px;
     border-radius: 30px;
     border: 4px dashed #ff69b4;
-    box-shadow: 
+    box-shadow:
         0 6px 15px rgba(255, 105, 180, 0.3),
         inset 0 2px 5px rgba(255, 192, 229, 0.5);
     max-width: 600px;
@@ -95,9 +98,9 @@ p {
     z-index: 1;
 }
 
-/* Add cute sparkle effects */
-h1::before,
-p::before {
+/* Add cute sparkle effects to content area only */
+.body-content h1::before,
+.body-content p::before {
     content: '✨';
     position: absolute;
     top: -10px;
@@ -106,8 +109,8 @@ p::before {
     animation: sparkle 1.5s infinite;
 }
 
-h1::after,
-p::after {
+.body-content h1::after,
+.body-content p::after {
     content: '💕';
     position: absolute;
     bottom: -10px;
@@ -133,5 +136,144 @@ p::after {
     }
     50% {
         transform: scale(1.3);
+    }
+}
+
+/* Header */
+.header {
+    text-align: center;
+    /* margin-bottom: 1.5rem; */
+    position: relative;
+    z-index: 1;
+}
+
+.header-logo {
+    max-width: 320px;
+    width: 100%;
+    height: auto;
+}
+
+.header-tagline {
+    color: #ff1493;
+    font-size: 1em;
+    background: none;
+    border: none;
+    box-shadow: none;
+    /* padding: 0.5rem 0; */
+    max-width: none;
+}
+
+/* User info section above footer */
+.user-info p {
+    color: #ff1493;
+    font-size: 1em;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    box-shadow: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    max-width: none;
+    text-align: center;
+}
+
+.user-info a {
+    color: #ff69b4;
+}
+
+.user-info a:hover {
+    color: #ff1493;
+}
+
+/* Footer */
+.footer {
+    margin-top: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.footer hr {
+    border: none;
+    border-top: 2px dashed #ff69b4;
+    margin-bottom: 1.5rem;
+}
+
+.footer-content {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    justify-content: center;
+}
+
+.footer-logo {
+    width: 64px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.footer-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.footer-text p {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.3;
+    color: #ff1493;
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    max-width: none;
+    text-align: left;
+    border-radius: 0;
+}
+
+.footer a {
+    color: #ff69b4;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    color: #ff1493;
+}
+
+.footer-help a {
+    margin-left: 0.5rem;
+    font-size: 1rem;
+}
+
+.footer-text p.footer-build {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.65rem;
+}
+
+.footer-build a {
+    font-size: 0.875rem;
+}
+
+/* Responsive sizing for mobile */
+@media (max-width: 768px) {
+    .body-content h1 {
+        font-size: 1.5em;
+        padding: 12px 20px;
+        border-radius: 30px;
+        border-width: 3px;
+        text-shadow: 1px 1px 0px #ff1493;
+    }
+
+    .body-content h1::before,
+    .body-content p::before,
+    .body-content h1::after,
+    .body-content p::after {
+        display: none;
+    }
+
+    .body-content p {
+        font-size: 1.1em;
+        padding: 15px 20px;
     }
 }
