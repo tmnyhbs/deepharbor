@@ -1,19 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up Payment - Pumping Station: One</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Pumping Station: One</h1>
-            <p class="tagline">Complete Your Membership</p>
-        </div>
-
-        <div class="content">
+{% extends "base.html" %}
+{% block title %}Sign Up Payment - Pumping Station: One{% endblock %}
+{% block tagline %}Complete Your Membership{% endblock %}
+{% block content %}
             <div class="card">
                 <h2>Membership Payment</h2>
                 <p>Please select a membership plan to complete your signup.</p>
@@ -25,7 +13,4 @@
                         customer-email="{{ email }}"{% endif %}>
                 </stripe-pricing-table>
             </div>
-        </div>
-    </div>
-</body>
-</html>
+{% endblock %}

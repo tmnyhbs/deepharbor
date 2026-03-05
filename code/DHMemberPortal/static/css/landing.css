@@ -37,7 +37,14 @@ body {
 
 .header {
     text-align: center;
-    margin-bottom: 3rem;
+    margin-bottom: 1.5rem;
+}
+
+.header-logo {
+    max-width: 320px;
+    width: 100%;
+    height: auto;
+    margin-bottom: 1rem;
 }
 
 .header h1 {
@@ -49,6 +56,7 @@ body {
 .tagline {
     font-size: 1.2rem;
     color: var(--secondary-color);
+    font-weight: bold;
 }
 
 .content {
@@ -67,7 +75,7 @@ body {
 .card {
     background: var(--card-bg);
     border-radius: 8px;
-    padding: 2rem;
+    padding: 1.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     flex: 1;
     min-width: 300px;
@@ -200,11 +208,64 @@ body {
 }
 
 .footer {
-    text-align: center;
     margin-top: 3rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--border-color);
     color: var(--secondary-color);
+    font-size: 0.875rem;
+}
+
+.footer hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+}
+
+.footer-content {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    justify-content: center;
+}
+
+.footer-logo {
+    width: 64px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.footer-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.footer-text p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--secondary-color);
+}
+
+.footer a {
+    color: var(--secondary-color);
+    text-decoration: none;
+}
+
+.footer a:hover {
+    color: var(--primary-color);
+}
+
+.footer-help a {
+    margin-left: 0.5rem;
+    font-size: 1rem;
+}
+
+.footer-build {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.footer-build a {
+    font-size: 1rem;
 }
 
 .header-actions {

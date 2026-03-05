@@ -1,10 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Complete Sign Up - Pumping Station: One</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+{% extends "base.html" %}
+{% block title %}Complete Sign Up - Pumping Station: One{% endblock %}
+{% block tagline %}Complete Your Application{% endblock %}
+{% block extra_css %}
     <style>
         .username-check {
             display: flex;
@@ -34,15 +31,9 @@
             margin-top: 0.25rem;
         }
     </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Pumping Station: One</h1>
-            <p class="tagline">Complete Your Application</p>
-        </div>
-
-        <div class="content centered">
+{% endblock %}
+{% block content_class %}content centered{% endblock %}
+{% block content %}
             <div class="card wide">
                 {% if contact_found %}
                 <div class="alert alert-info">
@@ -53,12 +44,12 @@
                 <form method="POST" action="{{ url_for('signup_submit') }}">
                     <input type="hidden" name="email" value="{{ email }}">
                     <input type="hidden" name="waiver_signed_at" value="{{ contact.signed_at_datetime if contact else '' }}">
-                    
+
                     <div class="info-group">
                         <label>Email Address</label>
                         <div class="info-value">{{ email }}</div>
                     </div>
-                    
+
                     {% if contact and contact.signed_at_datetime %}
                     <div class="alert alert-info">
                         <strong>Waiver Found:</strong> You signed a waiver on {{ contact.signed_at_datetime }}
@@ -67,7 +58,7 @@
 
                     <div class="form-group">
                         <label for="first_name">First Name *</label>
-                        <input type="text" id="first_name" name="first_name" required 
+                        <input type="text" id="first_name" name="first_name" required
                                pattern=".*\S+.*"
                                title="Cannot be empty or contain only spaces"
                                value="{{ contact.first_name if contact else '' }}">
@@ -75,7 +66,7 @@
 
                     <div class="form-group">
                         <label for="last_name">Last Name *</label>
-                        <input type="text" id="last_name" name="last_name" required 
+                        <input type="text" id="last_name" name="last_name" required
                                pattern=".*\S+.*"
                                title="Cannot be empty or contain only spaces"
                                value="{{ contact.last_name if contact else '' }}">
@@ -83,7 +74,7 @@
 
                     <div class="form-group">
                         <label for="preferred_name">Preferred Name/Nickname</label>
-                        <input type="text" id="preferred_name" name="preferred_name" 
+                        <input type="text" id="preferred_name" name="preferred_name"
                                pattern=".*\S+.*|^$"
                                title="Cannot contain only spaces"
                                value="{{ contact.preferred_name if contact else '' }}">
@@ -92,15 +83,15 @@
 
                     <div class="form-group">
                         <label for="birthday">Birthday *</label>
-                        <input type="date" id="birthday" name="birthday" required 
+                        <input type="date" id="birthday" name="birthday" required
                                value="{{ contact.birthday if contact else '' }}">
                     </div>
 
                     <div class="form-group">
                         <label for="username">Username *</label>
                         <div class="username-check">
-                            <input type="text" id="username" name="username" required 
-                                   pattern="[a-zA-Z0-9_-]+" 
+                            <input type="text" id="username" name="username" required
+                                   pattern="[a-zA-Z0-9_-]+"
                                    title="Username can only contain letters, numbers, underscores, and hyphens (no spaces)">
                             <button type="button" class="btn btn-secondary btn-check" onclick="checkUsername()">Check Availability</button>
                         </div>
@@ -118,7 +109,7 @@
 
                     <div class="form-group">
                         <label for="discord_handle">Discord Handle</label>
-                        <input type="text" id="discord_handle" name="discord_handle" 
+                        <input type="text" id="discord_handle" name="discord_handle"
                                pattern=".*\S+.*|^$"
                                title="Cannot contain only spaces"
                                placeholder="username#1234"
@@ -132,19 +123,18 @@
                     <a href="{{ url_for('index') }}">Cancel</a>
                 </div>
             </div>
-        </div>
-    </div>
-    
+{% endblock %}
+{% block scripts %}
     <script>
         // Trim all text inputs on form submission to prevent spaces-only submissions
         document.querySelector('form').addEventListener('submit', function(event) {
             const textInputs = this.querySelectorAll('input[type="text"], input[type="tel"]');
             let hasError = false;
-            
+
             textInputs.forEach(input => {
                 // Trim the value
                 input.value = input.value.trim();
-                
+
                 // Check if required field is now empty after trimming
                 if (input.hasAttribute('required') && input.value === '') {
                     input.setCustomValidity('This field cannot be empty or contain only spaces');
@@ -153,7 +143,7 @@
                     input.setCustomValidity('');
                 }
             });
-            
+
             if (hasError) {
                 event.preventDefault();
                 this.reportValidity();
@@ -194,5 +184,4 @@
         // Also check on blur
         document.getElementById('username').addEventListener('blur', checkUsername);
     </script>
-</body>
-</html>
+{% endblock %}
