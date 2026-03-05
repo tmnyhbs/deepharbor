@@ -7,7 +7,7 @@
 }
 
 body {
-    font-family: 'Comic Sans MS', 'Marker Felt', cursive, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     background: linear-gradient(135deg, #ffd6e8 0%, #ffc0e5 50%, #ffb3e6 100%);
     min-height: 100vh;
     padding: 20px;
@@ -53,6 +53,7 @@ body::after {
 
 /* Scope bubblegum content styles to .body-content only */
 .body-content h1 {
+    font-family: 'Comic Neue', cursive;
     color: #ff69b4;
     font-size: 3em;
     text-align: center;
