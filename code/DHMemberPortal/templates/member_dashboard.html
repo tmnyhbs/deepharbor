@@ -9,12 +9,7 @@
         }
     </style>
 {% endblock %}
-{% block header_actions %}
-            <div class="header-actions">
-                <span class="welcome">Welcome, {{ identity.nickname or identity.first_name or user.name or 'Member' }}!</span>
-                <a href="{{ url_for('logout') }}" class="btn btn-secondary btn-sm">Logout</a>
-            </div>
-{% endblock %}
+{% block header_actions %}{% endblock %}
 {% block content_class %}content dashboard{% endblock %}
 {% block content %}
             <!-- Member Information Card -->
@@ -296,6 +291,11 @@
                     <div class="info-value">{{ forms.orientation_completion_date }}</div>
                 </div>
                 {% endif %}
+            </div>
+
+            <div style="margin-top: 0.5rem; text-align: center;">
+                <p style="margin-bottom: 0.5rem;">Logged in as {{ identity.email or session.email or user.email or 'Unknown Member' }}</p>
+                <a href="{{ url_for('logout') }}" class="btn btn-secondary btn-sm">Logout</a>
             </div>
 {% endblock %}
 {% block scripts %}
