@@ -13,11 +13,9 @@
 
             <!-- Status header -->
             {% if status %}
-            <div class="dashboard-status">
-                <span class="status-badge {% if status.membership_status == 'active' %}status-active{% else %}status-inactive{% endif %}">
-                    {{ 'Active Member' if status.membership_status == 'active' else 'Inactive' }}
-                </span>
-                <span class="membership-level">{{ status.membership_level or 'Member' }}</span>
+            <div class="dashboard-status {% if status.membership_status == 'active' %}active{% else %}inactive{% endif %}">
+                <div class="status-text">{{ 'Membership Active' if status.membership_status == 'active' else 'Membership Inactive' }}</div>
+                <div class="level-text">{{ status.membership_level or 'Member' }}</div>
             </div>
             {% endif %}
 
@@ -27,7 +25,7 @@
                 <ul class="menu-list">
                     <li><a href="{{ url_for('member_profile') }}" class="menu-item"><i class="fa-solid fa-user"></i> Profile</a></li>
                     <li><a href="{{ url_for('member_keys') }}" class="menu-item"><i class="fa-solid fa-key"></i> Keys</a></li>
-                    <li><a href="#" class="menu-item disabled"><i class="fa-solid fa-credit-card"></i> Billing <small>Coming soon</small></a></li>
+                    <li><a href="https://billing.stripe.com/p/login/cN27vM18zeI35wI9AA" class="menu-item" target="_blank"><i class="fa-solid fa-credit-card"></i> Billing</a></li>
                     <li><a href="{{ url_for('member_auths') }}" class="menu-item"><i class="fa-solid fa-certificate"></i> Authorizations</a></li>
                     <li><a href="{{ url_for('member_storage') }}" class="menu-item"><i class="fa-solid fa-boxes-stacked"></i> Storage & Info</a></li>
                 </ul>

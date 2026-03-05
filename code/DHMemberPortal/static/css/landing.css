@@ -55,8 +55,9 @@ body {
 
 .tagline {
     font-size: 1.2rem;
-    color: var(--secondary-color);
+    color: #d11242;
     font-weight: bold;
+    margin-bottom: 0.5rem;
 }
 
 .content {
@@ -132,7 +133,7 @@ body {
 }
 
 .btn-sm {
-    padding: 0.5rem 1rem;
+    padding: 0.3em 1.5rem;
     font-size: 0.9rem;
 }
 
@@ -364,9 +365,8 @@ body {
 
 .status-badge {
     display: inline-block;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 1.1rem;
 }
 
 .no-data {
@@ -400,17 +400,38 @@ body {
 }
 
 .dashboard-status {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    justify-content: center;
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 0.75rem 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid;
     margin-bottom: 0.5rem;
 }
 
-.membership-level {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-color);
+.dashboard-status.active {
+    border-left-color: var(--success-color);
+}
+
+.dashboard-status.inactive {
+    border-left-color: var(--error-color);
+}
+
+.dashboard-status .status-text {
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.dashboard-status.active .status-text {
+    color: var(--success-color);
+}
+
+.dashboard-status.inactive .status-text {
+    color: var(--error-color);
+}
+
+.dashboard-status .level-text {
+    font-size: 0.875rem;
+    color: var(--secondary-color);
 }
 
 .menu-section h2 {
@@ -447,10 +468,10 @@ body {
 }
 
 .menu-item i {
-    width: 1.25rem;
+    width: 1.5rem;
     text-align: center;
     color: var(--primary-color);
-    font-size: 1rem;
+    font-size: 1.25rem;
 }
 
 .menu-item small {
@@ -474,6 +495,34 @@ body {
     margin-bottom: 1rem;
     font-size: 0.875rem;
     color: var(--secondary-color);
+}
+
+.footer-session .btn-logout {
+    background-color: #94a3b8;
+    color: white;
+    padding: 0.35rem 1rem;
+    font-size: 0.85rem;
+}
+
+.footer-session .btn-logout:hover {
+    background-color: #64748b;
+}
+
+/* Back-to-dashboard button */
+.header-actions .btn-secondary.btn-sm {
+    padding: 0.35rem 1.25rem;
+}
+
+/* Add Tag button */
+.btn-outline {
+    background-color: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+}
+
+.btn-outline:hover {
+    background-color: var(--primary-color);
+    color: white;
 }
 
 /* Dev mode banner */
