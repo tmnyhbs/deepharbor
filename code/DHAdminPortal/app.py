@@ -1,8 +1,9 @@
 import uuid
 import requests
 import json
+from datetime import datetime
 from flask import Flask, render_template, session, request, redirect, url_for, make_response
-from flask_session import Session  
+from flask_session import Session
 import msal
 
 # Our stuff
@@ -303,6 +304,8 @@ def _get_token_from_cache(scope=None):
         return result
 
 app.jinja_env.globals.update(_build_auth_code_flow=_build_auth_code_flow)  # Used in template
+app.jinja_env.globals.update(git_version=config.get("git", "version", fallback="unknown"))  # Used in footer
+app.jinja_env.globals.update(now=datetime.now)  # Used in footer for dynamic year
 
 
 ###############################################################################
