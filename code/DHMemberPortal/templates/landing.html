@@ -1,19 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pumping Station: One Member Portal</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Pumping Station: One</h1>
-            <p class="tagline">Member Portal</p>
-        </div>
-
-        <div class="content">
+{% extends "base.html" %}
+{% block title %}Pumping Station: One Member Portal{% endblock %}
+{% block tagline %}Member Portal{% endblock %}
+{% block content %}
             <div class="card">
                 <h2>Already a Member?</h2>
                 <p>Access your member dashboard and manage your account.</p>
@@ -25,7 +13,4 @@
                 <p>Join our community and start your membership journey.</p>
                 <a href="{{ url_for('signup_start') }}" class="btn btn-secondary">Sign Up</a>
             </div>
-        </div>
-    </div>
-</body>
-</html>
+{% endblock %}

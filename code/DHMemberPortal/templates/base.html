@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Pumping Station: One{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{ url_for('static', filename='images/ps1-logo-horizontal.svg') }}" alt="Pumping Station: One" class="header-logo">
+            <h1>Pumping Station: One</h1>
+            <p class="tagline">{% block tagline %}{% endblock %}</p>
+            {% block header_actions %}{% endblock %}
+        </div>
+        {% block body %}
+        <div class="{% block content_class %}content{% endblock %}">
+            {% block content %}{% endblock %}
+        </div>
+        {% endblock %}
+    </div>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
