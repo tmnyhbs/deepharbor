@@ -17,6 +17,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+export GIT_VERSION="$(git branch --show-current)-$(git rev-parse --short HEAD) $(date +%Y-%m-%d)"
+
 COMPOSE="docker compose -f docker-compose.yaml -f docker-compose.dev.yml"
 
 usage() {
