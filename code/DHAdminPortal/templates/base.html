@@ -21,6 +21,9 @@
 </head>
 
 <body>
+    {% if auth_mode == "dev" %}
+    <div class="dev-banner">DEV MODE — {{ git_version }}</div>
+    {% endif %}
     <div class="header">
         <p class="header-tagline">{% block tagline %}{% endblock %}</p>
         {% block header_actions %}{% endblock %}

@@ -3,16 +3,6 @@
 {% block tagline %}Member Portal{% endblock %}
 {% block extra_css %}
     <style>
-        .dev-banner {
-            background: #fef3c7;
-            border: 2px solid #f59e0b;
-            border-radius: 8px;
-            padding: 12px 20px;
-            margin-bottom: 24px;
-            text-align: center;
-            color: #92400e;
-            font-weight: 600;
-        }
         .dev-description {
             font-size: 0.85em;
             color: var(--secondary-color);
@@ -41,10 +31,6 @@
     </style>
 {% endblock %}
 {% block body %}
-        <div class="dev-banner">
-            DEV MODE — Authentication bypass active. Select a user to log in as.
-        </div>
-
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}

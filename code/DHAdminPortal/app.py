@@ -306,6 +306,7 @@ def _get_token_from_cache(scope=None):
 app.jinja_env.globals.update(_build_auth_code_flow=_build_auth_code_flow)  # Used in template
 app.jinja_env.globals.update(git_version=config.get("git", "version", fallback="unknown"))  # Used in footer
 app.jinja_env.globals.update(now=datetime.now)  # Used in footer for dynamic year
+app.jinja_env.globals.update(auth_mode=AUTH_MODE)  # Used in dev banner
 
 
 ###############################################################################
