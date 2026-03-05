@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Storage & Info - Pumping Station: One{% endblock %}
+{% block tagline %}Storage & Info{% endblock %}
+{% block header_actions %}
+<a href="{{ url_for('member_dashboard') }}" class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+{% endblock %}
+{% block content_class %}content dashboard{% endblock %}
+{% block content %}
+            <div class="card">
+                <h2>Member Info</h2>
+
+                <div class="info-group">
+                    <label>Member ID</label>
+                    <div class="info-value">{{ session.member_id or 'Not available' }}</div>
+                </div>
+
+                {% if status.member_since %}
+                <div class="info-group">
+                    <label>Member Since</label>
+                    {% set ms = status.member_since|string %}
+                    <div class="info-value">{{ ms[5:7] }}/{{ ms[8:10] }}/{{ ms[0:4] }}</div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="card">
+                <h2>Storage</h2>
+
+                {% if extras %}
+                {% if extras.storage_id %}
+                <div class="info-group">
+                    <label>Storage ID</label>
+                    <div class="info-value">{{ extras.storage_id }}</div>
+                </div>
+                {% endif %}
+
+                {% if extras.storage_area %}
+                <div class="info-group">
+                    <label>Storage Location</label>
+                    <div class="info-value">{{ extras.storage_area }}</div>
+                </div>
+                {% endif %}
+
+                {% if extras.ip_addresses %}
+                <div class="info-group">
+                    <label>Dedicated IPs</label>
+                    <div class="info-value">
+                        {% if extras.ip_addresses is string %}
+                            {{ extras.ip_addresses }}
+                        {% elif extras.ip_addresses is iterable %}
+                            {{ extras.ip_addresses | join(', ') }}
+                        {% else %}
+                            {{ extras.ip_addresses }}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if not extras.storage_id and not extras.storage_area and not extras.ip_addresses %}
+                <p class="no-data">No storage information on file.</p>
+                {% endif %}
+                {% else %}
+                <p class="no-data">No storage information on file.</p>
+                {% endif %}
+            </div>
+
+            <div class="card">
+                <h2>Forms</h2>
+
+                {% if forms %}
+                {% if forms.id_check_1 %}
+                <div class="info-group">
+                    <label>ID Check 1</label>
+                    <div class="info-value">{{ forms.id_check_1 }}</div>
+                </div>
+                {% endif %}
+
+                {% if forms.id_check_2 %}
+                <div class="info-group">
+                    <label>ID Check 2</label>
+                    <div class="info-value">{{ forms.id_check_2 }}</div>
+                </div>
+                {% endif %}
+
+                {% if forms.terms_of_use_accepted %}
+                <div class="info-group">
+                    <label>Terms of Use Accepted</label>
+                    <div class="info-value">{{ forms.terms_of_use_accepted }}</div>
+                </div>
+                {% endif %}
+
+                {% if forms.essentials_form %}
+                <div class="info-group">
+                    <label>Essentials Form</label>
+                    <div class="info-value">{{ forms.essentials_form }}</div>
+                </div>
+                {% endif %}
+
+                {% if forms.waiver_signed_date %}
+                <div class="info-group">
+                    <label>Waiver Signed Date</label>
+                    <div class="info-value">{{ forms.waiver_signed_date }}</div>
+                </div>
+                {% endif %}
+
+                {% if forms.orientation_completion_date %}
+                <div class="info-group">
+                    <label>Orientation Completion Date</label>
+                    <div class="info-value">{{ forms.orientation_completion_date }}</div>
+                </div>
+                {% endif %}
+
+                {% if not forms.id_check_1 and not forms.id_check_2 and not forms.terms_of_use_accepted and not forms.essentials_form and not forms.waiver_signed_date and not forms.orientation_completion_date %}
+                <p class="no-data">No forms data on file.</p>
+                {% endif %}
+                {% else %}
+                <p class="no-data">No forms data on file.</p>
+                {% endif %}
+            </div>
+{% endblock %}

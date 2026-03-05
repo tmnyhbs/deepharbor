@@ -350,53 +350,97 @@ def authorized():
     
     return redirect(url_for("index"))
 
-@app.route('/dashboard')
-def member_dashboard():
-    """Show member dashboard with identity and authorizations"""
-    logger.info(f"Dashboard accessed - user in session: {session.get('user') is not None}, " +
-                f"access_token in session: {session.get('access_token') is not None}, " +
-                f"member_id in session: {session.get('member_id')}")
-    
+def _get_authenticated_member_info():
+    """Shared helper for dashboard pages. Returns (member_info, error_redirect).
+    If error_redirect is not None, the caller should return it."""
     if not session.get("user"):
         logger.warning("No user in session, redirecting to login")
-        return redirect(url_for("index") if AUTH_MODE == "dev" else url_for("login"))
+        return None, redirect(url_for("index") if AUTH_MODE == "dev" else url_for("login"))
 
     if 'access_token' not in session or 'member_id' not in session:
         logger.warning("Missing access_token or member_id in session, redirecting to login")
-        return redirect(url_for("index") if AUTH_MODE == "dev" else url_for("login"))
-    
+        return None, redirect(url_for("index") if AUTH_MODE == "dev" else url_for("login"))
+
     access_token = session['access_token']
     user_email = session['email']
-    
+
     try:
         logger.info(f"Fetching member data for user: {user_email}")
-                
-        # Get member information
         member_data = dhservices.get_member_id(access_token, user_email)
         member_id = member_data.get("member_id")
-        
         member_info = dhservices.get_full_member_info(access_token, member_id)
-        logger.info(f"Member info: {member_info}")
-        
-        # Split authorizations into computer and physical
-        computer_auths = member_info.get('authorizations', {}).get('computer_authorizations', []) if isinstance(member_info, dict) else []
-        physical_auths = member_info.get('authorizations', {}).get('physical_authorizations', []) if isinstance(member_info, dict) else []
-        
-        logger.info(f"Dashboard loaded successfully for member {member_id}")
-        
-        return render_template('member_dashboard.html',
-                             identity=member_info.get('identity', {}) if isinstance(member_info, dict) else {},
-                             authorizations_computer_authorizations=computer_auths,
-                             authorizations_physical_authorizations=physical_auths,
-                             status=member_info.get('status', {}) if isinstance(member_info, dict) else {},
-                             access=member_info.get('access', {}) if isinstance(member_info, dict) else {},
-                             extras=member_info.get('extras', {}) if isinstance(member_info, dict) else {},
-                             forms=member_info.get('forms', []) if isinstance(member_info, dict) else {},
-                             user=session.get('user'))
+        logger.info(f"Member info loaded for member {member_id}")
+        return member_info, None
     except Exception as e:
-        logger.error(f"Dashboard error: {str(e)}", exc_info=True)
-        flash('Error loading dashboard', 'error')
-        return redirect(url_for('login'))
+        logger.error(f"Error fetching member data: {str(e)}", exc_info=True)
+        flash('Error loading member data', 'error')
+        return None, redirect(url_for('login'))
+
+@app.route('/dashboard')
+def member_dashboard():
+    """Show member dashboard menu"""
+    member_info, error = _get_authenticated_member_info()
+    if error:
+        return error
+
+    return render_template('member_dashboard.html',
+                         status=member_info.get('status', {}) if isinstance(member_info, dict) else {},
+                         user=session.get('user'))
+
+@app.route('/dashboard/profile')
+def member_profile():
+    """Show member profile - name, nickname, email, username"""
+    member_info, error = _get_authenticated_member_info()
+    if error:
+        return error
+
+    return render_template('dashboard_profile.html',
+                         identity=member_info.get('identity', {}) if isinstance(member_info, dict) else {},
+                         status=member_info.get('status', {}) if isinstance(member_info, dict) else {},
+                         access=member_info.get('access', {}) if isinstance(member_info, dict) else {},
+                         user=session.get('user'))
+
+@app.route('/dashboard/keys')
+def member_keys():
+    """Show member keys - RFID tags, future Doorbot"""
+    member_info, error = _get_authenticated_member_info()
+    if error:
+        return error
+
+    return render_template('dashboard_keys.html',
+                         access=member_info.get('access', {}) if isinstance(member_info, dict) else {},
+                         identity=member_info.get('identity', {}) if isinstance(member_info, dict) else {},
+                         user=session.get('user'))
+
+@app.route('/dashboard/auths')
+def member_auths():
+    """Show member authorizations"""
+    member_info, error = _get_authenticated_member_info()
+    if error:
+        return error
+
+    computer_auths = member_info.get('authorizations', {}).get('computer_authorizations', []) if isinstance(member_info, dict) else []
+    physical_auths = member_info.get('authorizations', {}).get('physical_authorizations', []) if isinstance(member_info, dict) else []
+
+    return render_template('dashboard_auths.html',
+                         computer_auths=computer_auths,
+                         physical_auths=physical_auths,
+                         status=member_info.get('status', {}) if isinstance(member_info, dict) else {},
+                         user=session.get('user'))
+
+@app.route('/dashboard/storage')
+def member_storage():
+    """Show storage, misc info, and forms data"""
+    member_info, error = _get_authenticated_member_info()
+    if error:
+        return error
+
+    return render_template('dashboard_storage.html',
+                         extras=member_info.get('extras', {}) if isinstance(member_info, dict) else {},
+                         forms=member_info.get('forms', {}) if isinstance(member_info, dict) else {},
+                         status=member_info.get('status', {}) if isinstance(member_info, dict) else {},
+                         identity=member_info.get('identity', {}) if isinstance(member_info, dict) else {},
+                         user=session.get('user'))
 
 @app.route('/dashboard/update-profile', methods=['POST'])
 def member_update_profile():
@@ -443,7 +487,11 @@ def member_update_profile():
         logger.error(f"Error updating member profile: {str(e)}", exc_info=True)
         flash('Error updating profile', 'error')
 
-    return redirect(url_for('member_dashboard'))
+    # Redirect back to the page that submitted the form
+    source_page = request.form.get('source_page', 'profile')
+    if source_page == 'keys':
+        return redirect(url_for('member_keys'))
+    return redirect(url_for('member_profile'))
 
 @app.route("/logout")
 def logout():

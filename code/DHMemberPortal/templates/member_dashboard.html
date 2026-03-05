@@ -1,480 +1,61 @@
 {% extends "base.html" %}
 {% block title %}Member Dashboard - Pumping Station: One{% endblock %}
 {% block tagline %}Member Dashboard{% endblock %}
-{% block extra_css %}
-    <style>
-        .member-editable.form-control {
-            font-size: 1rem;
-            padding: 0.5rem 0.75rem;
-        }
-    </style>
-{% endblock %}
-{% block header_actions %}{% endblock %}
-{% block content_class %}content dashboard{% endblock %}
+{% block content_class %}content dashboard-menu{% endblock %}
 {% block content %}
-            <!-- Member Information Card -->
-            <div class="card">
-                <div class="card-header-actions">
-                    <h2>Member Information</h2>
-                    {% if identity %}
-                    <div class="card-actions">
-                        <button type="button" class="btn btn-secondary btn-sm" id="memberEditBtn">Edit</button>
-                        <button type="submit" class="btn btn-primary btn-sm" id="memberSaveBtn" form="memberProfileForm" style="display: none;">Save</button>
-                        <button type="button" class="btn btn-secondary btn-sm" id="memberCancelBtn" style="display: none;">Cancel</button>
-                    </div>
-                    {% endif %}
-                </div>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
 
-                {% if status %}
-                <div class="info-group">
-                    <label>Membership Level</label>
-                    <div class="info-value">{{ status.membership_level or 'Not specified' }}</div>
-                </div>
+            <!-- Status header -->
+            {% if status %}
+            <div class="dashboard-status">
+                <span class="status-badge {% if status.membership_status == 'active' %}status-active{% else %}status-inactive{% endif %}">
+                    {{ 'Active Member' if status.membership_status == 'active' else 'Inactive' }}
+                </span>
+                <span class="membership-level">{{ status.membership_level or 'Member' }}</span>
+            </div>
+            {% endif %}
 
-                <div class="info-group">
-                    <label>Membership Status</label>
-                    <div class="info-value status-badge {% if status.membership_status == "active" %}status-active{% else %}status-inactive{% endif %}">
-                        {{ 'Active Member' if status.membership_status == "active" else 'Inactive' }}
-                    </div>
-                </div>
-
-                {% if status.member_since %}
-                <div class="info-group">
-                    <label>Member Since</label>
-                    {% set ms = status.member_since|string %}
-                    <div class="info-value">{{ ms[5:7] }}/{{ ms[8:10] }}/{{ ms[0:4] }}</div>
-                </div>
-                {% endif %}
-                {% endif %}
-
-                {% if identity %}
-                <form id="memberProfileForm" method="POST" action="{{ url_for('member_update_profile') }}">
-                <div class="info-group">
-                    <label>Member ID</label>
-                    <div class="info-value">{{ session.member_id or 'Not available' }}</div>
-                </div>
-
-                <div class="info-group">
-                    <label>First Name</label>
-                    <div class="info-value">
-                        <input type="text" class="form-control member-editable" name="first_name"
-                               value="{{ identity.first_name or '' }}" readonly>
-                    </div>
-                </div>
-
-                <div class="info-group">
-                    <label>Last Name</label>
-                    <div class="info-value">
-                        <input type="text" class="form-control member-editable" name="last_name"
-                               value="{{ identity.last_name or '' }}" readonly>
-                    </div>
-                </div>
-
-                <div class="info-group">
-                    <label>Preferred Name/Nickname</label>
-                    <div class="info-value">
-                        <input type="text" class="form-control member-editable" name="nickname"
-                               value="{{ identity.nickname or '' }}" readonly>
-                    </div>
-                </div>
-
-                <div class="info-group">
-                    <label>Email</label>
-                    <div class="info-value">{{ identity.email or session.email or user.email or 'Not available' }}</div>
-                </div>
-
-                {% if identity.phone %}
-                <div class="info-group">
-                    <label>Phone</label>
-                    <div class="info-value">{{ identity.phone }}</div>
-                </div>
-                {% endif %}
-
-                {% if identity.birthday %}
-                <div class="info-group">
-                    <label>Birthday</label>
-                    <div class="info-value">{{ identity.birthday }}</div>
-                </div>
-                {% endif %}
-
-                {% if identity.org_role %}
-                <div class="info-group">
-                    <label>Organization Role</label>
-                    <div class="info-value">{{ identity.org_role }}</div>
-                </div>
-                {% endif %}
-
-                {% if identity.active_directory_username %}
-                <div class="info-group">
-                    <label>Username</label>
-                    <div class="info-value">{{ identity.active_directory_username }}</div>
-                </div>
-                {% endif %}
-
-                {% if identity.waiver_signed_date %}
-                <div class="info-group">
-                    <label>Waiver Signed Date</label>
-                    <div class="info-value">{{ identity.waiver_signed_date }}</div>
-                </div>
-                {% endif %}
-
-                {% if identity.id_check_1 %}
-                <div class="info-group">
-                    <label>ID Check #1</label>
-                    <div class="info-value">{{ identity.id_check_1 }}</div>
-                </div>
-                {% endif %}
-
-                {% if identity.id_check_2 %}
-                <div class="info-group">
-                    <label>ID Check #2</label>
-                    <div class="info-value">{{ identity.id_check_2 }}</div>
-                </div>
-                {% endif %}
-
-                {% set rfid_tags_list = [] %}
-                {% if access and access.rfid_tags is string %}
-                    {% set rfid_tags_list = access.rfid_tags.split(',') if access.rfid_tags else [] %}
-                {% elif access and access.rfid_tags is iterable %}
-                    {% set rfid_tags_list = access.rfid_tags %}
-                {% elif access and access.rfid_tags %}
-                    {% set rfid_tags_list = [access.rfid_tags] %}
-                {% endif %}
-                <div class="info-group">
-                    <label>RFID Tag(s)</label>
-                    <div class="info-value">
-                        <table class="table" id="rfidTagsTable" style="margin-bottom: 0.5rem;">
-                            <thead>
-                                <tr>
-                                    <th style="width: 85%;">Tag Number</th>
-                                    <th style="width: 15%; text-align: center;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="rfidTagsTableBody">
-                                {% if rfid_tags_list|length > 0 %}
-                                    {% for tag in rfid_tags_list %}
-                                    <tr>
-                                        <td><input type="text" class="form-control rfid-tag-input" value="{{ tag.strip() }}" readonly></td>
-                                        <td style="text-align: center;"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn" style="display: none;">Delete</button></td>
-                                    </tr>
-                                    {% endfor %}
-                                {% else %}
-                                    <tr>
-                                        <td><input type="text" class="form-control rfid-tag-input" value="" readonly></td>
-                                        <td style="text-align: center;"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn" style="display: none;">Delete</button></td>
-                                    </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
-                        <button type="button" class="btn btn-secondary btn-sm" id="addRfidTagBtn" style="display: none;">Add Tag</button>
-                        <input type="hidden" name="rfid_tags" id="rfidTagsHidden">
-                    </div>
-                </div>
-                </form>
-                {% else %}
-                <p class="no-data">Unable to load member information.</p>
-                {% endif %}
+            <!-- Membership -->
+            <div class="menu-section">
+                <h2>Membership</h2>
+                <ul class="menu-list">
+                    <li><a href="{{ url_for('member_profile') }}" class="menu-item"><i class="fa-solid fa-user"></i> Profile</a></li>
+                    <li><a href="{{ url_for('member_keys') }}" class="menu-item"><i class="fa-solid fa-key"></i> Keys</a></li>
+                    <li><a href="#" class="menu-item disabled"><i class="fa-solid fa-credit-card"></i> Billing <small>Coming soon</small></a></li>
+                    <li><a href="{{ url_for('member_auths') }}" class="menu-item"><i class="fa-solid fa-certificate"></i> Authorizations</a></li>
+                    <li><a href="{{ url_for('member_storage') }}" class="menu-item"><i class="fa-solid fa-boxes-stacked"></i> Storage & Info</a></li>
+                </ul>
             </div>
 
-            <!-- Authorizations Card -->
-            <div class="card">
-                <h2>Authorizations</h2>
-                <h3>Computer-based Authorizations</h3>
-                {% if authorizations_computer_authorizations and authorizations_computer_authorizations|length > 0 %}
-                <div class="info-group">
-                    <div class="info-value">
-                        <ul style="margin: 0; padding-left: 1.5rem;">
-                        {% for auth in authorizations_computer_authorizations %}
-                            <li>{{ auth.authorization_name or auth.name or auth }}</li>
-                        {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-                {% else %}
-                <p class="no-data">You don't have any authorizations yet.</p>
-                {% endif %}
-                <h3>Non-computer Authorizations</h3>
-                {% if authorizations_physical_authorizations and authorizations_physical_authorizations|length > 0 %}
-                <div class="info-group">
-                    <div class="info-value">
-                        <ul style="margin: 0; padding-left: 1.5rem;">
-                        {% for auth in authorizations_physical_authorizations %}
-                            <li>{{ auth.authorization_name or auth.name or auth }}</li>
-                        {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-                {% else %}
-                <p class="no-data">You don't have any physical authorizations yet.</p>
-                {% endif %}
+            <!-- Useful Links -->
+            <div class="menu-section">
+                <h2>Useful Links</h2>
+                <ul class="menu-list">
+                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-solid fa-rocket"></i> Membership Quick Start Guide</a></li>
+                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-brands fa-discord"></i> Discord</a></li>
+                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-solid fa-book"></i> Wiki</a></li>
+                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-solid fa-calendar-days"></i> Events Calendar</a></li>
+                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-solid fa-newspaper"></i> Blog</a></li>
+                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-solid fa-graduation-cap"></i> How to Authorize</a></li>
+                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-solid fa-chalkboard"></i> Canvas</a></li>
+                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-solid fa-file-contract"></i> Membership Agreement</a></li>
+                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-solid fa-scale-balanced"></i> Community Standards</a></li>
+                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-solid fa-circle-question"></i> Get More Help</a></li>
+                </ul>
             </div>
 
-            <!-- Miscellaneous Card -->
-            <div class="card">
-                <h2>Miscellaneous</h2>
-
-                {% if extras %}
-                {% if extras.storage_id %}
-                <div class="info-group">
-                    <label>Storage ID</label>
-                    <div class="info-value">{{ identity.storage_id }}</div>
-                </div>
-                {% endif %}
-
-                {% if extras.ip_addresses %}
-                <div class="info-group">
-                    <label>Dedicated IPs</label>
-                    <div class="info-value">
-                        {% if extras.ip_addresses is string %}
-                            {{ extras.ip_addresses }}
-                        {% elif extras.ip_addresses is iterable %}
-                            {{ extras.ip_addresses | join(', ') }}
-                        {% else %}
-                            {{ extras.ip_addresses }}
-                        {% endif %}
-                    </div>
-                </div>
-                {% endif %}
-
-                {% if extras.storage_area %}
-                <div class="info-group">
-                    <label>Storage Location</label>
-                    <div class="info-value">{{ extras.storage_area }}</div>
-                </div>
-                {% endif %}
-
-                {% else %}no-data">Unable to load miscellaneous information.</p>
-                <p class="no-data">Unable to load miscellaneous information.</p>
-                {% endif %}
+            <!-- Social Media -->
+            <div class="menu-section">
+                <h2>Social Media</h2>
+                <ul class="menu-list">
+                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-brands fa-instagram"></i> Instagram</a></li>
+                    <li><a href="#" class="menu-item" target="_blank"><i class="fa-brands fa-facebook"></i> Facebook</a></li>
+                </ul>
             </div>
-            <div class="card">
-                <h2>Forms</h2>
-
-                {% if forms.id_check_1 %}
-                <div class="info-group">
-                    <label>ID Check 1</label>
-                    <div class="info-value">{{ forms.id_check_1 }}</div>
-                </div>
-                {% endif %}
-
-                {% if forms.id_check_2 %}
-                <div class="info-group">
-                    <label>ID Check 2</label>
-                    <div class="info-value">{{ forms.id_check_2 }}</div>
-                </div>
-                {% endif %}
-
-                {% if forms.terms_of_use_accepted %}
-                <div class="info-group">
-                    <label>Terms of Use Accepted</label>
-                    <div class="info-value">{{ forms.terms_of_use_accepted }}</div>
-                </div>
-                {% endif %}
-
-                {% if forms.essentials_form %}
-                <div class="info-group">
-                    <label>Essentials Form</label>
-                    <div class="info-value">{{ forms.essentials_form }}</div>
-                </div>
-                {% endif %}
-
-                {% if forms.waiver_signed_date %}
-                <div class="info-group">
-                    <label>Waiver Signed Date</label>
-                    <div class="info-value">{{ forms.waiver_signed_date }}</div>
-                </div>
-                {% endif %}
-
-                {% if forms.orientation_completion_date %}
-                <div class="info-group">
-                    <label>Orientation Completion Date</label>
-                    <div class="info-value">{{ forms.orientation_completion_date }}</div>
-                </div>
-                {% endif %}
-            </div>
-
-            <div style="margin-top: 0.5rem; text-align: center;">
-                <p style="margin-bottom: 0.5rem;">Logged in as {{ identity.email or session.email or user.email or 'Unknown Member' }}</p>
-                <a href="{{ url_for('logout') }}" class="btn btn-secondary btn-sm">Logout</a>
-            </div>
-{% endblock %}
-{% block scripts %}
-    <script>
-        const editBtn = document.getElementById('memberEditBtn');
-        const saveBtn = document.getElementById('memberSaveBtn');
-        const cancelBtn = document.getElementById('memberCancelBtn');
-        const editableInputs = document.querySelectorAll('.member-editable');
-        const profileForm = document.getElementById('memberProfileForm');
-        const saveBtnLabel = saveBtn ? saveBtn.textContent : '';
-
-        if (editBtn && saveBtn && cancelBtn) {
-            editableInputs.forEach(input => {
-                input.dataset.originalValue = input.value;
-            });
-
-            // Store original RFID tags
-            const getOriginalRfidTags = () => {
-                const rfidInputs = document.querySelectorAll('.rfid-tag-input');
-                return Array.from(rfidInputs).map(input => input.value.trim()).filter(v => v !== '');
-            };
-            let originalRfidTags = getOriginalRfidTags();
-
-            const updateSaveState = () => {
-                // Check for changes in member-editable inputs
-                const hasEditableChanges = Array.from(editableInputs).some(input => {
-                    const originalValue = input.dataset.originalValue || '';
-                    return input.value !== originalValue;
-                });
-
-                // Check for changes in RFID tags
-                const currentRfidTags = Array.from(document.querySelectorAll('.rfid-tag-input'))
-                    .map(input => input.value.trim())
-                    .filter(v => v !== '');
-                const hasRfidChanges = JSON.stringify(originalRfidTags.sort()) !== JSON.stringify(currentRfidTags.sort());
-
-                if (saveBtn) {
-                    saveBtn.disabled = !(hasEditableChanges || hasRfidChanges);
-                }
-            };
-
-            editBtn.addEventListener('click', () => {
-                editableInputs.forEach(input => input.removeAttribute('readonly'));
-                document.querySelectorAll('.rfid-tag-input').forEach(input => input.removeAttribute('readonly'));
-                document.querySelectorAll('.delete-rfid-btn').forEach(btn => btn.style.display = 'inline-block');
-                document.getElementById('addRfidTagBtn').style.display = 'inline-block';
-                editBtn.style.display = 'none';
-                saveBtn.style.display = 'inline-block';
-                cancelBtn.style.display = 'inline-block';
-                saveBtn.disabled = true; // Start disabled until changes are made
-                updateSaveState();
-            });
-
-            editableInputs.forEach(input => {
-                input.addEventListener('input', updateSaveState);
-            });
-
-            cancelBtn.addEventListener('click', () => {
-                editableInputs.forEach(input => {
-                    const originalValue = input.dataset.originalValue || '';
-                    input.value = originalValue;
-                    input.setAttribute('readonly', 'readonly');
-                });
-                // Restore original RFID tags
-                location.reload();
-                cancelBtn.style.display = 'none';
-                saveBtn.style.display = 'none';
-                editBtn.style.display = 'inline-block';
-                saveBtn.disabled = true;
-            });
-
-            const showMessage = (message, type) => {
-                const messageEl = document.createElement('div');
-                messageEl.className = `alert alert-${type} text-center fw-bold`;
-                messageEl.textContent = message;
-                messageEl.style.fontSize = '1.1rem';
-                profileForm.parentElement.insertBefore(messageEl, profileForm);
-                setTimeout(() => {
-                    messageEl.remove();
-                }, 3000);
-            };
-
-            // RFID tag management
-            const addRfidTagBtn = document.getElementById('addRfidTagBtn');
-            const rfidTagsTableBody = document.getElementById('rfidTagsTableBody');
-
-            if (addRfidTagBtn) {
-                addRfidTagBtn.addEventListener('click', () => {
-                    const newRow = document.createElement('tr');
-                    newRow.innerHTML = `
-                        <td><input type="text" class="form-control rfid-tag-input" value=""></td>
-                        <td style="text-align: center;"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn">Delete</button></td>
-                    `;
-                    rfidTagsTableBody.appendChild(newRow);
-
-                    // Add delete handler to the new delete button
-                    const deleteBtn = newRow.querySelector('.delete-rfid-btn');
-                    deleteBtn.addEventListener('click', () => {
-                        newRow.remove();
-                        updateSaveState();
-                    });
-
-                    updateSaveState();
-                });
-            }
-
-            // Add delete handlers to existing delete buttons
-            document.addEventListener('click', (e) => {
-                if (e.target.classList.contains('delete-rfid-btn')) {
-                    const row = e.target.closest('tr');
-                    if (rfidTagsTableBody.children.length > 1) {
-                        row.remove();
-                    } else {
-                        // If it's the last row, just clear the input
-                        row.querySelector('.rfid-tag-input').value = '';
-                    }
-                    updateSaveState();
-                }
-            });
-
-            // Monitor RFID input changes
-            document.addEventListener('input', (e) => {
-                if (e.target.classList.contains('rfid-tag-input')) {
-                    updateSaveState();
-                }
-            });
-
-            if (profileForm) {
-                profileForm.addEventListener('submit', async (event) => {
-                    event.preventDefault();
-
-                    // Collect all RFID tags from the table
-                    const rfidInputs = document.querySelectorAll('.rfid-tag-input');
-                    const rfidTags = Array.from(rfidInputs)
-                        .map(input => input.value.trim())
-                        .filter(tag => tag !== '')
-                        .join(', ');
-                    document.getElementById('rfidTagsHidden').value = rfidTags;
-
-                    editBtn.disabled = true;
-                    saveBtn.disabled = true;
-                    saveBtn.textContent = 'Saving...';
-
-                    try {
-                        const response = await fetch(profileForm.action, {
-                            method: 'POST',
-                            body: new FormData(profileForm)
-                        });
-
-                        if (!response.ok) {
-                            throw new Error('Failed to update profile');
-                        }
-
-                        editableInputs.forEach(input => {
-                            input.dataset.originalValue = input.value;
-                            input.setAttribute('readonly', 'readonly');
-                        });
-
-                        // Update original RFID tags and make inputs readonly
-                        originalRfidTags = getOriginalRfidTags();
-                        document.querySelectorAll('.rfid-tag-input').forEach(input => input.setAttribute('readonly', 'readonly'));
-                        document.querySelectorAll('.delete-rfid-btn').forEach(btn => btn.style.display = 'none');
-                        document.getElementById('addRfidTagBtn').style.display = 'none';
-
-                        cancelBtn.style.display = 'none';
-                        saveBtn.style.display = 'none';
-                        editBtn.style.display = 'inline-block';
-                        editBtn.disabled = false;
-                        saveBtn.textContent = saveBtnLabel;
-
-                        showMessage('Profile updated successfully.', 'success');
-                    } catch (error) {
-                        editBtn.disabled = false;
-                        saveBtn.textContent = saveBtnLabel;
-                        updateSaveState();
-                        showMessage('Unable to update profile.', 'danger');
-                    }
-                });
-            }
-        }
-    </script>
 {% endblock %}

@@ -25,6 +25,12 @@
         {% endblock %}
         {% block footer %}
         <footer class="footer">
+            {% if session.user %}
+            <div class="footer-session">
+                <span>Logged in as {{ session.email or 'Unknown' }}</span>
+                <a href="{{ url_for('logout') }}" class="btn btn-secondary btn-sm">Logout</a>
+            </div>
+            {% endif %}
             <hr>
             <div class="footer-content">
                 <a href="https://pumpingstationone.org"><img src="{{ url_for('static', filename='images/ps1-logo-square.svg') }}" alt="Pumping Station: One" class="footer-logo"></a>
