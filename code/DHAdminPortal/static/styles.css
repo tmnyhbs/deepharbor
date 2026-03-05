@@ -12,13 +12,13 @@ body {
     min-height: 100vh;
     padding: 20px;
     position: relative;
-    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /* Bubblegum bubbles background animation */
 body::before {
     content: '';
-    position: absolute;
+    position: fixed;
     width: 200px;
     height: 200px;
     background: rgba(255, 255, 255, 0.1);
@@ -26,11 +26,12 @@ body::before {
     top: -100px;
     left: 10%;
     animation: float 8s infinite ease-in-out;
+    pointer-events: none;
 }
 
 body::after {
     content: '';
-    position: absolute;
+    position: fixed;
     width: 150px;
     height: 150px;
     background: rgba(255, 182, 230, 0.15);
@@ -38,6 +39,7 @@ body::after {
     bottom: -75px;
     right: 15%;
     animation: float 10s infinite ease-in-out;
+    pointer-events: none;
 }
 
 @keyframes float {
@@ -75,7 +77,7 @@ body::after {
         transform: translateY(0);
     }
     50% {
-        transform: translateY(-10px);
+        transform: translateY(10px);
     }
 }
 
@@ -140,7 +142,7 @@ body::after {
 /* Header */
 .header {
     text-align: center;
-    margin-bottom: 1.5rem;
+    /* margin-bottom: 1.5rem; */
     position: relative;
     z-index: 1;
 }
@@ -157,7 +159,7 @@ body::after {
     background: none;
     border: none;
     box-shadow: none;
-    padding: 0.5rem 0;
+    /* padding: 0.5rem 0; */
     max-width: none;
 }
 
@@ -251,4 +253,27 @@ body::after {
 
 .footer-build a {
     font-size: 0.875rem;
+}
+
+/* Responsive sizing for mobile */
+@media (max-width: 768px) {
+    .body-content h1 {
+        font-size: 1.5em;
+        padding: 12px 20px;
+        border-radius: 30px;
+        border-width: 3px;
+        text-shadow: 1px 1px 0px #ff1493;
+    }
+
+    .body-content h1::before,
+    .body-content p::before,
+    .body-content h1::after,
+    .body-content p::after {
+        display: none;
+    }
+
+    .body-content p {
+        font-size: 1.1em;
+        padding: 15px 20px;
+    }
 }
