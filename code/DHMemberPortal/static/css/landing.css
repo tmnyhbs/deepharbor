@@ -235,12 +235,13 @@ body {
 .footer-text {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.1rem;
 }
 
 .footer-text p {
     margin: 0;
     font-size: 0.875rem;
+    line-height: 1.3;
     color: var(--secondary-color);
 }
 
@@ -258,14 +259,15 @@ body {
     font-size: 1rem;
 }
 
-.footer-build {
+.footer-text p.footer-build {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
+    font-size: 0.65rem;
 }
 
 .footer-build a {
-    font-size: 1rem;
+    font-size: 0.875rem;
 }
 
 .header-actions {

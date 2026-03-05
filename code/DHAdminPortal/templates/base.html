@@ -48,7 +48,7 @@
 
     {% if user %}
     <hr />
-    <footer class="container"> 
+    <footer class="container">
         <p>Logged in as: {{user.name}} ({{ user.email }}){% if user_role %} <br/> Role: {{ user_role }}{% endif %} <br/> <a href="{{ url_for('logout') }}">Logout</a></p>
     </footer>
     {% endif %}
