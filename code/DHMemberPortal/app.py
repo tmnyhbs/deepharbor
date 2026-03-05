@@ -551,6 +551,8 @@ def _get_token_from_cache(scope=None):
 app.jinja_env.globals.update(_build_auth_code_flow=_build_auth_code_flow)  # Used in template
 # We want to show formatted dates in the dashboard
 app.jinja_env.globals.update(format_date=format_date)  # Used in template
+app.jinja_env.globals.update(git_version=config.get("git", "version", fallback="unknown"))  # Used in footer
+app.jinja_env.globals.update(now=datetime.now)  # Used in footer for dynamic year
 
 
 ###############################################################################
