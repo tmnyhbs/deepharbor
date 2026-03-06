@@ -3,9 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/favicon-ps1-member.svg') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
+    <meta name="theme-color" content="#009fc2">
     <title>{% block title %}Pumping Station: One{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -15,6 +22,7 @@
     <div class="container">
         <div class="header">
             <img src="{{ url_for('static', filename='images/ps1-logo-horizontal.svg') }}" alt="Pumping Station: One" class="header-logo">
+            <p class="sub-tagline" id="sub-tagline"></p>
             <p class="tagline">{% block tagline %}{% endblock %}</p>
             {% block header_actions %}{% endblock %}
         </div>
@@ -25,6 +33,12 @@
         {% endblock %}
         {% block footer %}
         <footer class="footer">
+            {% if session.user %}
+            <div class="footer-session">
+                <span>Logged in as {{ session.email or 'Unknown' }}</span>
+                <a href="{{ url_for('logout') }}" class="btn btn-logout btn-sm">Logout</a>
+            </div>
+            {% endif %}
             <hr>
             <div class="footer-content">
                 <a href="https://pumpingstationone.org"><img src="{{ url_for('static', filename='images/ps1-logo-square.svg') }}" alt="Pumping Station: One" class="footer-logo"></a>
@@ -37,6 +51,12 @@
         </footer>
         {% endblock %}
     </div>
+    <script>
+    (function() {
+        var phrases = ["Your Chicago Hackerspace", "Your Chicago Makerspace"];
+        document.getElementById('sub-tagline').textContent = phrases[Math.floor(Math.random() * phrases.length)];
+    })();
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
