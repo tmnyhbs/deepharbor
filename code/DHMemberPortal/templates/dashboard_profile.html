@@ -49,9 +49,19 @@
 
                 <div class="info-group">
                     <label>Preferred Name/Nickname</label>
+                    <span class="info-label-desc">Used instead of your first name by various awesome PS1 internal services and tools, included the name tag printer.</span>
                     <div class="info-value">
                         <input type="text" class="form-control" name="nickname"
                                value="{{ identity.nickname or '' }}">
+                    </div>
+                </div>
+
+                <div class="info-group">
+                    <label>Pronouns</label>
+                    <span class="info-label-desc">Used by various awesome PS1 internal services and tools, included the name tag printer.</span>
+                    <div class="info-value">
+                        <input type="text" class="form-control" name="pronouns"
+                               value="Coming soon!" disabled>
                     </div>
                 </div>
 

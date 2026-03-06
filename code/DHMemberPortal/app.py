@@ -376,6 +376,11 @@ def _get_authenticated_member_info():
         flash('Error loading member data', 'error')
         return None, redirect(url_for('login'))
 
+@app.route('/dashboard/preview')
+def dashboard_preview():
+    """Static design preview page — no auth required"""
+    return render_template('dashboard_preview.html')
+
 @app.route('/dashboard')
 def member_dashboard():
     """Show member dashboard menu"""
@@ -480,16 +485,27 @@ def member_update_profile():
     rfid_tags = [tag.strip() for tag in rfid_tags_raw.split(',') if tag.strip()]
     access_data = {"rfid_tags": rfid_tags}
 
+    # Validate RFID tags: must be exactly 10 numeric digits
+    for tag in rfid_tags:
+        if not tag.isdigit() or len(tag) != 10:
+            flash('Each card or fob number must be exactly 10 digits.', 'error')
+            source_page = request.form.get('source_page', 'profile')
+            if source_page == 'keys':
+                return redirect(url_for('member_keys'))
+            return redirect(url_for('member_profile'))
+
+    # Determine source page for redirect
+    source_page = request.form.get('source_page', 'profile')
+
     try:
         dhservices.update_member_identity(access_token, member_id, identity_data)
         dhservices.update_member_access(access_token, member_id, access_data)
         flash('Profile updated successfully', 'success')
+        if source_page == 'keys':
+            flash('Remember to test your new keys before leaving the building, hearing the key reader beep does not mean the key works. Ask for help so you don\'t get locked out.', 'warning')
     except Exception as e:
         logger.error(f"Error updating member profile: {str(e)}", exc_info=True)
         flash('Error updating profile', 'error')
-
-    # Redirect back to the page that submitted the form
-    source_page = request.form.get('source_page', 'profile')
     if source_page == 'keys':
         return redirect(url_for('member_keys'))
     return redirect(url_for('member_profile'))
