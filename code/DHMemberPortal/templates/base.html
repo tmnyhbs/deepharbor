@@ -15,6 +15,7 @@
     <div class="container">
         <div class="header">
             <img src="{{ url_for('static', filename='images/ps1-logo-horizontal.svg') }}" alt="Pumping Station: One" class="header-logo">
+            <p class="sub-tagline" id="sub-tagline"></p>
             <p class="tagline">{% block tagline %}{% endblock %}</p>
             {% block header_actions %}{% endblock %}
         </div>
@@ -43,6 +44,12 @@
         </footer>
         {% endblock %}
     </div>
+    <script>
+    (function() {
+        var phrases = ["Your Chicago Hackerspace", "Your Chicago Makerspace"];
+        document.getElementById('sub-tagline').textContent = phrases[Math.floor(Math.random() * phrases.length)];
+    })();
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

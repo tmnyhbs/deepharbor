@@ -60,6 +60,16 @@ body {
     margin-bottom: 0.5rem;
 }
 
+.sub-tagline {
+    font-size: 0.65rem;
+    font-style: italic;
+    color: var(--secondary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: -0.1rem;
+    margin-bottom: 0.5rem;
+}
+
 .content {
     display: flex;
     gap: 2rem;
