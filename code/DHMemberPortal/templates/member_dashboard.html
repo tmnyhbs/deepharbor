@@ -11,13 +11,7 @@
             {% endif %}
             {% endwith %}
 
-            <!-- Status header -->
-            {% if status %}
-            <div class="dashboard-status {% if status.membership_status == 'active' %}active{% else %}inactive{% endif %}">
-                <div class="status-text">{{ 'Membership Active' if status.membership_status == 'active' else 'Membership Inactive' }}</div>
-                <div class="level-text">{{ status.membership_level or 'Member' }}</div>
-            </div>
-            {% endif %}
+            {% include '_status_box.html' %}
 
             <!-- Membership -->
             <div class="menu-section">

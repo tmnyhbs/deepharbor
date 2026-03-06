@@ -6,6 +6,8 @@
 {% endblock %}
 {% block content_class %}content dashboard{% endblock %}
 {% block content %}
+            {% include '_status_box.html' %}
+
             <div class="card">
                 <h2>Computer-based Authorizations</h2>
                 {% if computer_auths and computer_auths|length > 0 %}

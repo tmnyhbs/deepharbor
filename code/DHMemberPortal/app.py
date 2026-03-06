@@ -410,6 +410,7 @@ def member_keys():
     return render_template('dashboard_keys.html',
                          access=member_info.get('access', {}) if isinstance(member_info, dict) else {},
                          identity=member_info.get('identity', {}) if isinstance(member_info, dict) else {},
+                         status=member_info.get('status', {}) if isinstance(member_info, dict) else {},
                          user=session.get('user'))
 
 @app.route('/dashboard/auths')
