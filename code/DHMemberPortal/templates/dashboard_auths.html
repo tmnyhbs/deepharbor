@@ -8,6 +8,14 @@
 {% block content %}
             {% include '_status_box.html' %}
 
+            <div class="alert alert-info">
+                Interested in getting authorized on new equipment? Check out the <a href="https://wiki.pumpingstationone.org/wiki/Authorizations" target="_blank"><strong>Authorizations wiki page</strong></a> for instructions on how to get started.
+            </div>
+
+            <div class="alert alert-warning">
+                Some authorizations may not be displayed due to a system update. Your existing authorizations are still valid. For help, ask in <a href="https://discord.com/channels/1270929620224704544/1271316721688379456" target="_blank"><strong>#help-me</strong></a> on Discord.
+            </div>
+
             <div class="card">
                 <h2>Computer-based Authorizations</h2>
                 {% if computer_auths and computer_auths|length > 0 %}
