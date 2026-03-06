@@ -484,6 +484,21 @@ body {
     font-size: 1.25rem;
 }
 
+.social-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.5rem;
+}
+
+.social-grid .menu-item {
+    justify-content: center;
+    padding: 0.75rem;
+}
+
+.social-grid .menu-item i {
+    font-size: 1.5rem;
+}
+
 .menu-item small {
     font-size: 0.75rem;
     color: var(--secondary-color);
