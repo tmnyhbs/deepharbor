@@ -376,11 +376,6 @@ def _get_authenticated_member_info():
         flash('Error loading member data', 'error')
         return None, redirect(url_for('login'))
 
-@app.route('/dashboard/preview')
-def dashboard_preview():
-    """Static design preview page — no auth required"""
-    return render_template('dashboard_preview.html')
-
 @app.route('/dashboard')
 def member_dashboard():
     """Show member dashboard menu"""

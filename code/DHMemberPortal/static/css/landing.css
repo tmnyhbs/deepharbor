@@ -577,24 +577,6 @@ body {
     width: 100%;
 }
 
-/* ===================================================================
-   PREVIEW PAGE STYLES
-   =================================================================== */
-
-.preview-section-title {
-    font-size: 1.75rem;
-    color: var(--primary-color);
-    margin: 2rem 0 0.5rem 0;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid var(--primary-color);
-}
-
-.preview-section-intro {
-    color: var(--secondary-color);
-    margin-bottom: 1.5rem;
-    font-size: 0.95rem;
-}
-
 /* Disabled form fields */
 .form-control:disabled {
     background-color: var(--bg-color);

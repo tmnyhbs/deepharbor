@@ -34,9 +34,15 @@
                     {% set rfid_tags_list = [access.rfid_tags] %}
                 {% endif %}
 
+                <div class="img-card img-card-horizontal" style="margin-bottom: 1rem;">
+                    <img src="{{ url_for('static', filename='images/rfidkeynumber.png') }}" alt="Key card number location" class="img-card-image">
+                    <div class="img-card-body">
+                        <p>Enter the first 10 digits on your key card or key fob. Do not give your keys away.</p>
+                    </div>
+                </div>
+
                 <div class="info-group">
                     <label>Key cards & fobs</label>
-                    <p class="info-label-desc">Enter in the first 10 digits of the key card or fob. Do not give your keys away.</p>
                     <div class="info-value">
                         <div id="keysValidationError" class="alert alert-error" style="display: none;"></div>
                         <table class="table" id="rfidTagsTable" style="margin-bottom: 0.5rem;">
