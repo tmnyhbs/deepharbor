@@ -81,7 +81,7 @@
             <div class="d-flex align-items-center justify-content-center gap-3">
                 <a href="https://pumpingstationone.org"><img src="{{ url_for('static', filename='images/ps1-logo-square.svg') }}" alt="Pumping Station: One" class="dh-footer-logo"></a>
                 <div>
-                    <p class="mb-0 footer-help">Get help: <a href="https://ps1.link/discord"><i class="fa-brands fa-discord"></i></a> <a href="mailto:info@pumpingstationone.org"><i class="fa-solid fa-envelope"></i></a></p>
+                    <p class="mb-0 footer-help">Get help: {% if session.user %}<a href="https://ps1.link/discord"><i class="fa-brands fa-discord"></i></a> {% endif %}<a href="mailto:info@pumpingstationone.org"><i class="fa-solid fa-envelope"></i></a></p>
                     <p class="mb-0">&copy; {{ now().year }} Pumping Station: One NFP</p>
                     <p class="mb-0 footer-build"><a href="https://github.com/pumpingstationone/deepharbor"><i class="fa-brands fa-github"></i></a> {{ git_version }}</p>
                 </div>
