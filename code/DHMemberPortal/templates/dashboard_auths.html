@@ -1,52 +1,44 @@
-{% extends "base.html" %}
+{% extends "_dashboard_base.html" %}
 {% block title %}Authorizations - Pumping Station: One{% endblock %}
-{% block tagline %}<i class="fa-solid fa-certificate"></i> Authorizations{% endblock %}
-{% block header_actions %}
-<a href="{{ url_for('member_dashboard') }}" class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
-{% endblock %}
-{% block content_class %}content dashboard{% endblock %}
-{% block content %}
-            {% include '_status_box.html' %}
-
+{% block page_title %}<i class="fa-solid fa-clipboard-check ic-auths"></i> Authorizations{% endblock %}
+{% block dashboard_content %}
             <div class="alert alert-info">
-                Interested in getting authorized on new equipment? Check out the <a href="https://wiki.pumpingstationone.org/wiki/Authorizations" target="_blank"><strong>Authorizations wiki page</strong></a> for instructions on how to get started.
+                <i class="fa-solid fa-circle-info me-1"></i>
+                Interested in getting authorized on new equipment? Check out the <a href="https://wiki.pumpingstationone.org/wiki/Authorizations" target="_blank" class="alert-link">Authorizations wiki page</a> for instructions on how to get started.
             </div>
 
             <div class="alert alert-warning">
-                Some authorizations may not be displayed due to a system update. Your existing authorizations are still valid. For help, ask in <a href="https://discord.com/channels/1270929620224704544/1271316721688379456" target="_blank"><strong>#help-me</strong></a> on Discord.
+                <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                Some authorizations may not be displayed due to a system update. Your existing authorizations are still valid. For help, ask in <a href="https://discord.com/channels/1270929620224704544/1271316721688379456" target="_blank" class="alert-link">#help-me</a> on Discord.
             </div>
 
-            <div class="card">
-                <h2>Computer-based Authorizations</h2>
-                {% if computer_auths and computer_auths|length > 0 %}
-                <div class="info-group">
-                    <div class="info-value">
-                        <ul style="margin: 0; padding-left: 1.5rem;">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h2 class="card-title mb-3">Computer-based Authorizations</h2>
+                    {% if computer_auths and computer_auths|length > 0 %}
+                    <ul class="list-group list-group-flush">
                         {% for auth in computer_auths %}
-                            <li>{{ auth.authorization_name or auth.name or auth }}</li>
+                        <li class="list-group-item">{{ auth.authorization_name or auth.name or auth }}</li>
                         {% endfor %}
-                        </ul>
-                    </div>
+                    </ul>
+                    {% else %}
+                    <p class="no-data">You don't have any computer-based authorizations yet.</p>
+                    {% endif %}
                 </div>
-                {% else %}
-                <p class="no-data">You don't have any computer-based authorizations yet.</p>
-                {% endif %}
             </div>
 
-            <div class="card">
-                <h2>Non-computer Authorizations</h2>
-                {% if physical_auths and physical_auths|length > 0 %}
-                <div class="info-group">
-                    <div class="info-value">
-                        <ul style="margin: 0; padding-left: 1.5rem;">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h2 class="card-title mb-3">Non-computer Authorizations</h2>
+                    {% if physical_auths and physical_auths|length > 0 %}
+                    <ul class="list-group list-group-flush">
                         {% for auth in physical_auths %}
-                            <li>{{ auth.authorization_name or auth.name or auth }}</li>
+                        <li class="list-group-item">{{ auth.authorization_name or auth.name or auth }}</li>
                         {% endfor %}
-                        </ul>
-                    </div>
+                    </ul>
+                    {% else %}
+                    <p class="no-data">You don't have any physical authorizations yet.</p>
+                    {% endif %}
                 </div>
-                {% else %}
-                <p class="no-data">You don't have any physical authorizations yet.</p>
-                {% endif %}
             </div>
 {% endblock %}

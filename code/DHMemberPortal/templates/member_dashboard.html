@@ -1,78 +1,78 @@
-{% extends "base.html" %}
+{% extends "_dashboard_base.html" %}
 {% block title %}Member Dashboard - Pumping Station: One{% endblock %}
-{% block tagline %}Member Dashboard{% endblock %}
-{% block content_class %}content dashboard-menu{% endblock %}
-{% block content %}
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            {% for category, message in messages %}
-            <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">{{ message }}</div>
-            {% endfor %}
-            {% endif %}
-            {% endwith %}
-
-            {% include '_status_box.html' %}
+{% block page_title %}<i class="fa-solid fa-house ic-dashboard"></i> Member Dashboard{% endblock %}
+{% block dashboard_content %}
 
             <!-- Membership -->
             <div class="menu-section">
-                <h2>Membership</h2>
-                <ul class="menu-list">
-                    <li><a href="{{ url_for('member_profile') }}" class="menu-item"><i class="fa-solid fa-user random-icon"></i> Profile</a></li>
-                    <li><a href="{{ url_for('member_keys') }}" class="menu-item"><i class="fa-solid fa-key"></i> Keys & Access</a></li>
-                    <li><a href="https://billing.stripe.com/p/login/cN27vM18zeI35wI9AA" class="menu-item" target="_blank"><i class="fa-solid fa-credit-card"></i> Billing</a></li>
-                    <li><a href="{{ url_for('member_auths') }}" class="menu-item"><i class="fa-solid fa-certificate"></i> Authorizations</a></li>
-                    <li><a href="{{ url_for('member_storage') }}" class="menu-item"><i class="fa-solid fa-circle-info"></i> Member Info & Storage</a></li>
-                </ul>
+                <h2>Your Membership</h2>
+            </div>
+            <div class="row row-cols-2 row-cols-sm-3 g-3 mb-4 dash-tile-grid">
+                <div class="col">
+                    <a href="{{ url_for('member_profile') }}" class="dash-tile">
+                        <i class="fa-solid fa-user random-icon ic-profile" data-ic="ic-profile"></i>
+                        <span>Profile</span>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{{ url_for('member_keys') }}" class="dash-tile">
+                        <i class="fa-solid fa-key ic-keys"></i>
+                        <span>Keys & Access</span>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="https://billing.stripe.com/p/login/cN27vM18zeI35wI9AA" class="dash-tile" target="_blank">
+                        <i class="fa-solid fa-credit-card ic-billing"></i>
+                        <span>Billing</span>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{{ url_for('member_auths') }}" class="dash-tile">
+                        <i class="fa-solid fa-clipboard-check ic-auths"></i>
+                        <span>Authorizations</span>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{{ url_for('member_storage') }}" class="dash-tile">
+                        <i class="fa-solid fa-circle-info ic-info"></i>
+                        <span>Info & Storage</span>
+                    </a>
+                </div>
             </div>
 
-            <!-- Useful Links -->
+            <!-- Quick Links -->
             <div class="menu-section">
-                <h2>Useful Links</h2>
-                <ul class="menu-list">
-                    <li><a href="https://wiki.pumpingstationone.org/wiki/New_Member_Quick_Start_Guide" class="menu-item" target="_blank"><i class="fa-solid fa-rocket"></i> Membership Quick Start Guide</a></li>
-                    <li><a href="https://wiki.pumpingstationone.org/wiki/Community_Standards" class="menu-item" target="_blank"><i class="fa-solid fa-shield-heart"></i> Community Standards</a></li>
-                    <li><a href="https://ps1.link/discord" class="menu-item" target="_blank"><i class="fa-brands fa-discord"></i> Discord Invite</a></li>
-                    <li><a href="https://wiki.pumpingstationone.org" class="menu-item" target="_blank"><i class="fa-solid fa-book"></i> Wiki</a></li>
-                    <li><a href="https://pumpingstationone.org/events/" class="menu-item" target="_blank"><i class="fa-solid fa-calendar-days"></i> Events Calendar</a></li>
-                    <li><a href="https://shopmon.pumpingstationone.org/" class="menu-item" target="_blank"><i class="fa-solid fa-wave-square"></i> ShopMon</a></li>
-                    <li><a href="https://wiki.pumpingstationone.org/wiki/Authorizations" class="menu-item" target="_blank"><i class="fa-solid fa-graduation-cap"></i> How to get Authorized</a></li>
-                    <li><a href="https://canvas.pumpingstationone.org" class="menu-item" target="_blank"><i class="fa-solid fa-chalkboard"></i> Canvas</a></li>
-                    <li><a href="https://wiki.pumpingstationone.org/wiki/Membership_agreement" class="menu-item" target="_blank"><i class="fa-solid fa-file-contract"></i> Membership Agreement</a></li>
-                    <li><a href="https://wiki.pumpingstationone.org/wiki/How_can_I_help" class="menu-item" target="_blank"><i class="fa-solid fa-hand-holding-heart"></i> How To Help & Volunteer</a></li>
-                    <li><a href="https://wiki.pumpingstationone.org/wiki/Do_you_need_help" class="menu-item" target="_blank"><i class="fa-solid fa-circle-question"></i> Get More Help</a></li>
-                </ul>
+                <h2>Quick Links</h2>
+            </div>
+            <div class="row row-cols-1 row-cols-md-3 g-3 mb-4">
+                <div class="col"><a href="https://wiki.pumpingstationone.org/wiki/New_Member_Quick_Start_Guide" class="menu-item" target="_blank"><i class="fa-solid fa-rocket ic-quickstart"></i> Quick Start Guide</a></div>
+                <div class="col"><a href="https://wiki.pumpingstationone.org/wiki/Community_Standards" class="menu-item" target="_blank"><i class="fa-solid fa-shield-heart ic-standards"></i> Community Standards</a></div>
+                <div class="col"><a href="https://ps1.link/discord" class="menu-item" target="_blank"><i class="fa-brands fa-discord ic-discord"></i> Discord Invite</a></div>
+                <div class="col"><a href="https://wiki.pumpingstationone.org" class="menu-item" target="_blank"><i class="fa-solid fa-book ic-wiki"></i> Wiki</a></div>
+                <div class="col"><a href="https://pumpingstationone.org/events/" class="menu-item" target="_blank"><i class="fa-solid fa-calendar-days ic-events"></i> Events Calendar</a></div>
+                <div class="col"><a href="https://shopmon.pumpingstationone.org/" class="menu-item" target="_blank"><i class="fa-solid fa-wave-square ic-shopmon"></i> ShopMon</a></div>
+                <div class="col"><a href="https://wiki.pumpingstationone.org/wiki/Authorizations" class="menu-item" target="_blank"><i class="fa-solid fa-graduation-cap ic-authorized"></i> How to get Authorized</a></div>
+                <div class="col"><a href="https://canvas.pumpingstationone.org" class="menu-item" target="_blank"><i class="fa-solid fa-chalkboard ic-canvas"></i> Canvas</a></div>
+                <div class="col"><a href="https://wiki.pumpingstationone.org/wiki/Membership_agreement" class="menu-item" target="_blank"><i class="fa-solid fa-file-contract ic-agreement"></i> Membership Agreement</a></div>
+                <div class="col"><a href="https://wiki.pumpingstationone.org/wiki/How_can_I_help" class="menu-item" target="_blank"><i class="fa-solid fa-hand-holding-heart ic-volunteer"></i> How To Help & Volunteer</a></div>
+                <div class="col"><a href="https://wiki.pumpingstationone.org/wiki/Do_you_need_help" class="menu-item" target="_blank"><i class="fa-solid fa-circle-question ic-help"></i> Get More Help</a></div>
             </div>
 
             <!-- Social Media -->
             <div class="menu-section">
                 <h2>Social Media</h2>
-                <ul class="menu-list social-grid">
-                    <li><a href="https://pumpingstationone.org/blog" class="menu-item" target="_blank" title="Blog"><i class="fa-solid fa-newspaper"></i></a></li>
-                    <li><a href="https://bsky.app/profile/pumpingstationone.bsky.social" class="menu-item" target="_blank" title="Bluesky"><i class="fa-brands fa-bluesky"></i></a></li>
-                    <li><a href="https://www.facebook.com/PumpingStationOne" class="menu-item" target="_blank" title="Facebook"><i class="fa-brands fa-facebook"></i></a></li>
-                    <li><a href="https://www.instagram.com/pumpingstationone/" class="menu-item" target="_blank" title="Instagram"><i class="fa-brands fa-instagram"></i></a></li>
-                    <li><a href="https://www.linkedin.com/company/pumping-station-one/" class="menu-item" target="_blank" title="LinkedIn"><i class="fa-brands fa-linkedin"></i></a></li>
-                    <li><a href="https://masto.hackers.town/@pumpingstationone" class="menu-item" target="_blank" title="Mastodon"><i class="fa-brands fa-mastodon"></i></a></li>
-                    <li><a href="https://www.meetup.com/pumping-station-one/" class="menu-item" target="_blank" title="Meetup"><i class="fa-brands fa-meetup"></i></a></li>
-                    <li><a href="https://www.threads.com/@pumpingstationone" class="menu-item" target="_blank" title="Threads"><i class="fa-brands fa-threads"></i></a></li>
-                    <li><a href="https://www.tiktok.com/@pumpingstationone" class="menu-item" target="_blank" title="TikTok"><i class="fa-brands fa-tiktok"></i></a></li>
-                    <li><a href="https://x.com/PumpingStation1" class="menu-item" target="_blank" title="X"><i class="fa-brands fa-x-twitter"></i></a></li>
+                <ul class="menu-list social-grid mb-4">
+                    <li><a href="https://pumpingstationone.org/blog" class="menu-item" target="_blank" title="Blog"><i class="fa-solid fa-newspaper ic-blog"></i></a></li>
+                    <li><a href="https://bsky.app/profile/pumpingstationone.bsky.social" class="menu-item" target="_blank" title="Bluesky"><i class="fa-brands fa-bluesky ic-bluesky"></i></a></li>
+                    <li><a href="https://www.facebook.com/PumpingStationOne" class="menu-item" target="_blank" title="Facebook"><i class="fa-brands fa-facebook ic-facebook"></i></a></li>
+                    <li><a href="https://www.instagram.com/pumpingstationone/" class="menu-item" target="_blank" title="Instagram"><i class="fa-brands fa-instagram ic-instagram"></i></a></li>
+                    <li><a href="https://www.linkedin.com/company/pumping-station-one/" class="menu-item" target="_blank" title="LinkedIn"><i class="fa-brands fa-linkedin ic-linkedin"></i></a></li>
+                    <li><a href="https://masto.hackers.town/@pumpingstationone" class="menu-item" target="_blank" title="Mastodon"><i class="fa-brands fa-mastodon ic-mastodon"></i></a></li>
+                    <li><a href="https://www.meetup.com/pumping-station-one/" class="menu-item" target="_blank" title="Meetup"><i class="fa-brands fa-meetup ic-meetup"></i></a></li>
+                    <li><a href="https://www.threads.com/@pumpingstationone" class="menu-item" target="_blank" title="Threads"><i class="fa-brands fa-threads ic-threads"></i></a></li>
+                    <li><a href="https://www.tiktok.com/@pumpingstationone" class="menu-item" target="_blank" title="TikTok"><i class="fa-brands fa-tiktok ic-tiktok"></i></a></li>
+                    <li><a href="https://x.com/PumpingStation1" class="menu-item" target="_blank" title="X"><i class="fa-brands fa-x-twitter ic-x"></i></a></li>
                 </ul>
             </div>
-{% endblock %}
-{% block scripts %}
-<script>
-(function() {
-    var icons = [
-        'fa-hat-wizard','fa-user-astronaut','fa-robot','fa-brain','fa-dragon',
-        'fa-user-ninja','fa-cat','fa-dog','fa-otter','fa-user-secret','fa-person-half-dress',
-        'fa-smile','fa-person-rays','fa-crow','fa-horse','fa-kiwi-bird','fa-fish-fins'
-    ];
-    var seed = Math.floor(Date.now() / 600000);
-    var index = ((seed * 2654435761) >>> 0) % icons.length;
-    document.querySelectorAll('.random-icon').forEach(function(el) {
-        el.className = 'fa-solid ' + icons[index] + ' random-icon';
-    });
-})();
-</script>
+
 {% endblock %}

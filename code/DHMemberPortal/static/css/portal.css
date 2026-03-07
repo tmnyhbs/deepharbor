@@ -1,0 +1,648 @@
+/* ===================================================================
+   Deep Harbor Member Portal - Custom Styles (Bootstrap 5 overrides)
+   =================================================================== */
+
+:root {
+    --primary-color: #2563eb;
+    --secondary-color: #64748b;
+    --success-color: #16a34a;
+    --error-color: #dc2626;
+    --info-color: #0891b2;
+    --bg-color: #f8fafc;
+    --card-bg: #ffffff;
+    --text-color: #1e293b;
+    --border-color: #e2e8f0;
+
+    /* Bootstrap variable overrides */
+    --bs-primary: #2563eb;
+    --bs-secondary: #64748b;
+    --bs-success: #16a34a;
+    --bs-danger: #dc2626;
+    --bs-info: #0891b2;
+    --bs-body-bg: #f8fafc;
+    --bs-body-color: #1e293b;
+    --bs-border-color: #e2e8f0;
+    --bs-link-color: #2563eb;
+    --bs-link-hover-color: #1d4ed8;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+/* ===================================================================
+   BRAND / HEADER
+   =================================================================== */
+
+/* Row 1: Logo + tagline */
+.dh-header-logo {
+    max-width: 240px;
+    width: 100%;
+    height: auto;
+}
+
+.dh-header-row1 {
+    padding-top: 0.75rem;
+}
+
+.dh-header-logo-compact {
+    max-width: 312px;
+    width: 100%;
+    height: auto;
+}
+
+.sub-tagline {
+    font-size: 0.85em;
+    font-style: italic;
+    color: var(--secondary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* Row 2: Page title + status */
+.dh-header-row2 {
+    padding: 0.5rem 0;
+}
+
+.dh-page-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.dh-status-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.35rem 1rem;
+    border: 1px solid var(--border-color);
+    border-left: 4px solid;
+    border-radius: 6px;
+    background: var(--card-bg);
+}
+
+.dh-status-bar.active {
+    border-left-color: var(--success-color);
+}
+
+.dh-status-bar.inactive {
+    border-left-color: var(--error-color);
+}
+
+.dh-status-text {
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.dh-status-bar.active .dh-status-text {
+    color: var(--success-color);
+}
+
+.dh-status-bar.inactive .dh-status-text {
+    color: var(--error-color);
+}
+
+.dh-level-text {
+    font-size: 0.8rem;
+    color: var(--secondary-color);
+}
+
+.dh-menu-btn {
+    font-size: 0.9rem;
+    padding: 0.35rem 0.65rem;
+    white-space: nowrap;
+}
+
+.dev-banner {
+    background: #f59e0b;
+    color: #78350f;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 0;
+    letter-spacing: 0.05em;
+    width: 100%;
+}
+
+/* ===================================================================
+   DASHBOARD STATUS BOX
+   =================================================================== */
+
+.dashboard-status {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 0.75rem 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid;
+    margin-bottom: 1rem;
+}
+
+.dashboard-status.active {
+    border-left-color: var(--success-color);
+}
+
+.dashboard-status.inactive {
+    border-left-color: var(--error-color);
+}
+
+.dashboard-status .status-text {
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.dashboard-status.active .status-text {
+    color: var(--success-color);
+}
+
+.dashboard-status.inactive .status-text {
+    color: var(--error-color);
+}
+
+.dashboard-status .level-text {
+    font-size: 0.875rem;
+    color: var(--secondary-color);
+}
+
+/* ===================================================================
+   SIDEBAR NAVIGATION
+   =================================================================== */
+
+.dh-sidebar {
+    background: var(--card-bg);
+    border-right: 1px solid var(--border-color);
+    min-height: calc(100vh - 76px);
+}
+
+.dh-sidebar .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 1rem;
+    color: var(--text-color);
+    font-weight: 500;
+    border-radius: 6px;
+    transition: background-color 0.15s;
+}
+
+.dh-sidebar .nav-link:hover {
+    background-color: var(--bg-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.dh-sidebar .nav-link.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.dh-sidebar .nav-link.active i {
+    color: white;
+}
+
+.dh-sidebar .nav-link i {
+    width: 1.5rem;
+    text-align: center;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+}
+
+.dh-sidebar .nav-section-title {
+    font-size: 0.75rem;
+    color: var(--secondary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.5rem 1rem 0.25rem;
+    font-weight: 600;
+}
+
+/* Offcanvas sidebar for mobile */
+.offcanvas.dh-sidebar-offcanvas {
+    max-width: 280px;
+}
+
+.offcanvas.dh-sidebar-offcanvas .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 1rem;
+    color: var(--text-color);
+    font-weight: 500;
+    border-radius: 6px;
+    transition: background-color 0.15s;
+}
+
+.offcanvas.dh-sidebar-offcanvas .nav-link:hover {
+    background-color: var(--bg-color);
+}
+
+.offcanvas.dh-sidebar-offcanvas .nav-link.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.offcanvas.dh-sidebar-offcanvas .nav-link.active i {
+    color: white;
+}
+
+.offcanvas.dh-sidebar-offcanvas .nav-link i {
+    width: 1.5rem;
+    text-align: center;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+}
+
+/* ===================================================================
+   DASHBOARD TILES (Membership quick-nav grid)
+   =================================================================== */
+
+.dash-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1.25rem 0.75rem;
+    background: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    color: var(--text-color);
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-align: center;
+    transition: background-color 0.15s, box-shadow 0.15s;
+    height: 100%;
+}
+
+.dash-tile:hover {
+    background-color: var(--bg-color);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    color: var(--text-color);
+    text-decoration: none;
+}
+
+.dash-tile i {
+    font-size: 2rem;
+    color: var(--primary-color);
+}
+
+/* Cap Bootstrap container at xl breakpoint (1140px) instead of xxl (1320px) */
+.container {
+    max-width: 1140px;
+}
+
+/* ===================================================================
+   MENU ITEMS (Dashboard hub + sidebar links)
+   =================================================================== */
+
+.menu-section h2 {
+    font-size: 0.875rem;
+    color: var(--secondary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.4rem;
+}
+
+.menu-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem 0;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    color: var(--text-color);
+    border-radius: 6px;
+    transition: background-color 0.15s;
+    font-weight: 500;
+}
+
+.menu-item:hover {
+    background-color: var(--card-bg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    color: var(--text-color);
+    text-decoration: none;
+}
+
+.menu-item i {
+    width: 1.5rem;
+    text-align: center;
+    color: var(--primary-color);
+    font-size: 1.25rem;
+}
+
+.menu-item small {
+    font-size: 0.75rem;
+    color: var(--secondary-color);
+    font-weight: 400;
+    margin-left: 0.25rem;
+}
+
+.menu-item.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.social-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.5rem;
+}
+
+.social-grid .menu-item {
+    justify-content: center;
+    padding: 0.75rem;
+}
+
+.social-grid .menu-item i {
+    font-size: 1.5rem;
+}
+
+/* ===================================================================
+   INFO GROUP (Label + Description + Value pattern)
+   =================================================================== */
+
+.info-group {
+    margin-bottom: 1.5rem;
+}
+
+.info-group label {
+    display: block;
+    font-weight: 600;
+    color: var(--secondary-color);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.info-label-desc {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--secondary-color);
+    font-weight: 400;
+    margin-top: -0.25rem;
+    margin-bottom: 0.4rem;
+    line-height: 1.4;
+}
+
+.info-value {
+    color: var(--text-color);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* ===================================================================
+   IMAGE + TEXT CARDS
+   =================================================================== */
+
+.img-card {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-color);
+    margin-bottom: 1rem;
+}
+
+.img-card-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+.img-card-body {
+    padding: 1rem 1.25rem;
+}
+
+.img-card-body h3 {
+    font-size: 1.1rem;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.img-card-body p {
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+}
+
+.img-card-horizontal {
+    display: flex;
+    align-items: stretch;
+}
+
+.img-card-horizontal .img-card-image {
+    width: 160px;
+    min-height: 120px;
+    flex-shrink: 0;
+    object-fit: cover;
+}
+
+.img-card-horizontal .img-card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+@media (max-width: 575.98px) {
+    .img-card-horizontal {
+        flex-direction: column;
+    }
+    .img-card-horizontal .img-card-image {
+        width: 100%;
+        min-height: 120px;
+    }
+}
+
+/* ===================================================================
+   FOOTER
+   =================================================================== */
+
+.dh-footer a:not(.btn) {
+    color: var(--secondary-color);
+    text-decoration: none;
+}
+
+.dh-footer a:not(.btn):hover {
+    color: var(--primary-color);
+}
+
+.dh-footer-logo {
+    width: 64px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.footer-build {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.65rem;
+}
+
+.footer-build a {
+    font-size: 0.875rem;
+}
+
+.footer-help a {
+    margin-left: 0.5rem;
+    font-size: 1rem;
+}
+
+/* ===================================================================
+   AUTHORIZATION ITEMS
+   =================================================================== */
+
+.auth-item {
+    padding: 1rem;
+    background: var(--bg-color);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.status-active {
+    background-color: #d1fae5;
+    color: var(--success-color);
+}
+
+.status-inactive {
+    background-color: #fee2e2;
+    color: var(--error-color);
+}
+
+/* ===================================================================
+   SIGNUP FORM SPECIFICS
+   =================================================================== */
+
+.username-check {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.username-check input {
+    flex: 1;
+}
+
+.username-message {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.username-message.error {
+    color: var(--error-color);
+}
+
+.username-message.success {
+    color: var(--success-color);
+}
+
+/* ===================================================================
+   MISC OVERRIDES
+   =================================================================== */
+
+/* Ensure Bootstrap cards match our style */
+.card {
+    border: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* No-data placeholder text */
+.no-data {
+    color: var(--secondary-color);
+    font-style: italic;
+    text-align: center;
+    padding: 2rem;
+}
+
+/* Override Bootstrap's default btn-primary colors */
+.btn-primary {
+    --bs-btn-bg: #2563eb;
+    --bs-btn-border-color: #2563eb;
+    --bs-btn-hover-bg: #1d4ed8;
+    --bs-btn-hover-border-color: #1d4ed8;
+    --bs-btn-active-bg: #1e40af;
+    --bs-btn-active-border-color: #1e40af;
+}
+
+.btn-secondary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #64748b;
+    --bs-btn-border-color: #64748b;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #475569;
+    --bs-btn-hover-border-color: #475569;
+}
+
+.btn-outline-primary {
+    --bs-btn-color: #2563eb;
+    --bs-btn-border-color: #2563eb;
+    --bs-btn-hover-bg: #2563eb;
+    --bs-btn-hover-border-color: #2563eb;
+}
+
+.btn-danger {
+    --bs-btn-bg: #dc2626;
+    --bs-btn-border-color: #dc2626;
+    --bs-btn-hover-bg: #b91c1c;
+    --bs-btn-hover-border-color: #b91c1c;
+}
+
+/* Responsive social grid */
+@media (max-width: 575.98px) {
+    .social-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+/* ===================================================================
+   ICON COLORS (accessible palette — varied hues, colorblind-safe)
+   =================================================================== */
+
+/* Membership / navigation icons (!important to beat parent color rules) */
+i.ic-dashboard  { color: #009fc2 !important; } /* PS1 teal */
+i.ic-profile    { color: #2563eb !important; } /* Blue */
+i.ic-keys       { color: #d97706 !important; } /* Amber */
+i.ic-billing    { color: #059669 !important; } /* Emerald */
+i.ic-auths      { color: #7c3aed !important; } /* Violet */
+i.ic-info       { color: #0891b2 !important; } /* Cyan */
+
+/* Quick link icons */
+i.ic-quickstart { color: #ea580c !important; } /* Orange */
+i.ic-standards  { color: #be185d !important; } /* Pink */
+i.ic-discord    { color: #5865F2 !important; } /* Discord brand */
+i.ic-wiki       { color: #0d9488 !important; } /* Teal */
+i.ic-events     { color: #dc2626 !important; } /* Red */
+i.ic-shopmon    { color: #16a34a !important; } /* Green */
+i.ic-authorized { color: #7c3aed !important; } /* Violet */
+i.ic-canvas     { color: #1d4ed8 !important; } /* Blue-700 */
+i.ic-agreement  { color: #92400e !important; } /* Amber-800 */
+i.ic-volunteer  { color: #db2777 !important; } /* Pink-600 */
+i.ic-help       { color: #2563eb !important; } /* Blue-600 */
+
+/* Social media brand colors */
+i.ic-blog       { color: #21759B !important; } /* WordPress brand */
+i.ic-bluesky    { color: #0085ff !important; } /* Bluesky brand */
+i.ic-facebook   { color: #1877F2 !important; } /* Facebook brand */
+i.ic-instagram  { color: #E4405F !important; } /* Instagram brand */
+i.ic-linkedin   { color: #0A66C2 !important; } /* LinkedIn brand */
+i.ic-mastodon   { color: #6364FF !important; } /* Mastodon brand */
+i.ic-meetup     { color: #ED1C40 !important; } /* Meetup brand */
+i.ic-threads    { color: #EE1D52 !important; } /* Threads pink-red */
+i.ic-tiktok     { color: #69C9D0 !important; } /* TikTok cyan */
+i.ic-x          { color: #000000 !important; } /* X brand */
+
+/* Active sidebar link: icons stay white (higher specificity + !important) */
+.dh-sidebar .nav-link.active i,
+.offcanvas .nav-link.active i {
+    color: white !important;
+}
