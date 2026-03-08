@@ -54,7 +54,7 @@
                                     <div class="mb-3">
                                         <label for="first_name" class="form-label">First Name *</label>
                                         <input type="text" class="form-control" id="first_name" name="first_name" required
-                                               pattern=".*\S+.*"
+                                               maxlength="100" pattern=".*\S+.*"
                                                title="Cannot be empty or contain only spaces"
                                                value="{{ contact.first_name if contact else '' }}">
                                     </div>
@@ -63,7 +63,7 @@
                                     <div class="mb-3">
                                         <label for="last_name" class="form-label">Last Name *</label>
                                         <input type="text" class="form-control" id="last_name" name="last_name" required
-                                               pattern=".*\S+.*"
+                                               maxlength="100" pattern=".*\S+.*"
                                                title="Cannot be empty or contain only spaces"
                                                value="{{ contact.last_name if contact else '' }}">
                                     </div>
@@ -73,7 +73,7 @@
                             <div class="mb-3">
                                 <label for="preferred_name" class="form-label">Preferred Name/Nickname</label>
                                 <input type="text" class="form-control" id="preferred_name" name="preferred_name"
-                                       pattern=".*\S+.*|^$"
+                                       maxlength="100" pattern=".*\S+.*|^$"
                                        title="Cannot contain only spaces"
                                        value="{{ contact.preferred_name if contact else '' }}">
                                 <div class="form-text">How would you like to identify yourself?</div>
@@ -89,7 +89,7 @@
                                 <label for="username" class="form-label">Username *</label>
                                 <div class="username-check">
                                     <input type="text" class="form-control" id="username" name="username" required
-                                           pattern="[a-zA-Z0-9_-]+"
+                                           maxlength="50" pattern="[a-zA-Z0-9_-]+"
                                            title="Username can only contain letters, numbers, underscores, and hyphens (no spaces)">
                                     <button type="button" class="btn btn-secondary" onclick="checkUsername()">Check</button>
                                 </div>
@@ -102,7 +102,7 @@
                                     <div class="mb-3">
                                         <label for="phone" class="form-label">Phone Number *</label>
                                         <input type="tel" class="form-control" id="phone" name="phone" required
-                                               pattern=".*\S+.*"
+                                               maxlength="20" pattern=".*\S+.*"
                                                title="Cannot be empty or contain only spaces"
                                                value="{{ contact.phone_number if contact else '' }}">
                                     </div>
@@ -111,7 +111,7 @@
                                     <div class="mb-3">
                                         <label for="discord_handle" class="form-label">Discord Handle</label>
                                         <input type="text" class="form-control" id="discord_handle" name="discord_handle"
-                                               pattern=".*\S+.*|^$"
+                                               maxlength="50" pattern=".*\S+.*|^$"
                                                title="Cannot contain only spaces"
                                                placeholder="username#1234"
                                                value="{{ contact.discord_handle if contact else '' }}">

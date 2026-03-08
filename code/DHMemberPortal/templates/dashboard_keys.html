@@ -44,13 +44,13 @@
                                         {% if rfid_tags_list|length > 0 %}
                                             {% for tag in rfid_tags_list %}
                                             <tr>
-                                                <td><input type="text" class="form-control rfid-tag-input" value="{{ tag.strip() }}" maxlength="10" inputmode="numeric" pattern="[0-9]*"></td>
+                                                <td><input type="text" class="form-control rfid-tag-input" autocomplete="off" value="{{ tag.strip() }}" maxlength="10" inputmode="numeric" pattern="[0-9]*"></td>
                                                 <td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn">Delete</button></td>
                                             </tr>
                                             {% endfor %}
                                         {% else %}
                                             <tr>
-                                                <td><input type="text" class="form-control rfid-tag-input" value="" maxlength="10" inputmode="numeric" pattern="[0-9]*"></td>
+                                                <td><input type="text" class="form-control rfid-tag-input" autocomplete="off" value="" maxlength="10" inputmode="numeric" pattern="[0-9]*"></td>
                                                 <td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn">Delete</button></td>
                                             </tr>
                                         {% endif %}
@@ -99,7 +99,7 @@
             addRfidTagBtn.addEventListener('click', () => {
                 const newRow = document.createElement('tr');
                 newRow.innerHTML = `
-                    <td><input type="text" class="form-control rfid-tag-input" value="" maxlength="10" inputmode="numeric" pattern="[0-9]*"></td>
+                    <td><input type="text" class="form-control rfid-tag-input" autocomplete="off" value="" maxlength="10" inputmode="numeric" pattern="[0-9]*"></td>
                     <td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn">Delete</button></td>
                 `;
                 enforceNumeric(newRow.querySelector('.rfid-tag-input'));

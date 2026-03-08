@@ -16,7 +16,7 @@
                                 <label>First Name</label>
                                 <div class="info-value">
                                     <input type="text" class="form-control" name="first_name"
-                                           value="{{ identity.first_name or '' }}">
+                                           maxlength="100" value="{{ identity.first_name or '' }}">
                                 </div>
                             </div>
                         </div>
@@ -25,7 +25,7 @@
                                 <label>Last Name</label>
                                 <div class="info-value">
                                     <input type="text" class="form-control" name="last_name"
-                                           value="{{ identity.last_name or '' }}">
+                                           maxlength="100" value="{{ identity.last_name or '' }}">
                                 </div>
                             </div>
                         </div>
@@ -36,7 +36,7 @@
                         <span class="info-label-desc">Used instead of your first name by various awesome PS1 internal services and tools, included the name tag printer.</span>
                         <div class="info-value">
                             <input type="text" class="form-control" name="nickname"
-                                   value="{{ identity.nickname or '' }}">
+                                   maxlength="100" value="{{ identity.nickname or '' }}">
                         </div>
                     </div>
 
