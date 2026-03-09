@@ -2,6 +2,30 @@
 {% block title %}Keys & Access - Pumping Station: One{% endblock %}
 {% block page_title %}<i class="fa-solid fa-key ic-keys"></i> Keys & Access{% endblock %}
 {% block dashboard_content %}
+            {% if status.membership_status != 'active' %}
+            <!-- Full inactive warning (hides all page content until dismissed) -->
+            <div id="inactiveWarningFull">
+                <div class="alert alert-danger p-4" style="border-left: 4px solid var(--error-color); border-radius: 8px;">
+                    <h4 class="mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i>Membership Inactive</h4>
+                    <p>Your membership is currently inactive. Any key changes made will not grant building access until your membership is reactivated.</p>
+                    <div class="d-grid gap-2">
+                        <a href="https://billing.stripe.com/p/login/cN27vM18zeI35wI9AA" class="btn text-white" style="background-color: #059669; border-color: #059669;" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-credit-card me-1"></i> Update Billing</a>
+                        <a href="https://ps1.link/discord" class="btn text-white" style="background-color: #5865F2; border-color: #5865F2;" rel="noopener noreferrer"><i class="fa-brands fa-discord me-1"></i> Get Help in Discord</a>
+                        <a href="mailto:info@pumpingstationone.org" class="btn text-white" style="background-color: #2563eb; border-color: #2563eb;"><i class="fa-solid fa-envelope me-1"></i> Get Help over Email</a>
+                        <button type="button" class="btn btn-outline-secondary" id="dismissInactiveWarning"><i class="fa-solid fa-arrow-right me-1"></i> Continue to Keys Anyway</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collapsed reminder (shown after dismissing full warning) -->
+            <div id="inactiveWarningSmall" style="display: none;">
+                <div class="alert alert-danger mb-3" role="alert">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i><strong>Reminder:</strong> Your membership is inactive. Key changes won't grant access until reactivated.
+                </div>
+            </div>
+            {% endif %}
+
+            <div id="keysPageContent" {% if status.membership_status != 'active' %}style="display: none;"{% endif %}>
             <div class="card mb-3">
                 <div class="card-body">
                     <h2 class="card-title mb-3">Your Keys</h2>
@@ -76,6 +100,7 @@
                     <p class="no-data">Doorbot coming soon.</p>
                 </div>
             </div>
+            </div>{# /keysPageContent #}
 {% endblock %}
 {% block scripts %}
     <script>
@@ -150,6 +175,16 @@
                 }
 
                 document.getElementById('rfidTagsHidden').value = tags.join(', ');
+            });
+        }
+
+        // Dismiss inactive membership warning
+        const dismissBtn = document.getElementById('dismissInactiveWarning');
+        if (dismissBtn) {
+            dismissBtn.addEventListener('click', () => {
+                document.getElementById('inactiveWarningFull').style.display = 'none';
+                document.getElementById('inactiveWarningSmall').style.display = 'block';
+                document.getElementById('keysPageContent').style.display = 'block';
             });
         }
 
