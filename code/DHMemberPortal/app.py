@@ -408,8 +408,17 @@ def member_keys():
     if error:
         return error
 
+    access = member_info.get('access', {}) if isinstance(member_info, dict) else {}
+
+    # Pad RFID tags with leading zeros to 10 digits
+    if access and 'rfid_tags' in access and access['rfid_tags']:
+        if isinstance(access['rfid_tags'], list):
+            access['rfid_tags'] = [tag.zfill(10) for tag in access['rfid_tags'] if isinstance(tag, str)]
+        elif isinstance(access['rfid_tags'], str):
+            access['rfid_tags'] = ','.join(tag.strip().zfill(10) for tag in access['rfid_tags'].split(',') if tag.strip())
+
     return render_template('dashboard_keys.html',
-                         access=member_info.get('access', {}) if isinstance(member_info, dict) else {},
+                         access=access,
                          identity=member_info.get('identity', {}) if isinstance(member_info, dict) else {},
                          status=member_info.get('status', {}) if isinstance(member_info, dict) else {},
                          user=session.get('user'))
