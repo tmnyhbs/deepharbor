@@ -165,7 +165,7 @@ DEV_USERS = [
             "essentials_form": "completed",
             "orientation_completed_date": "2020-01-22",
         },
-        "access": {"rfid_tags": ["12345678", "87654321"]},
+        "access": {"rfid_tags": ["1012345678", "1087654321"]},
         "authorizations": {
             "authorizations": [
                 "Table Saw", "Band Saw", "Mig Welders", "Tig Welders",
@@ -208,7 +208,7 @@ DEV_USERS = [
             "essentials_form": "completed",
             "orientation_completed_date": "2019-03-17",
         },
-        "access": {"rfid_tags": ["23456789"]},
+        "access": {"rfid_tags": ["1023456789"]},
         "authorizations": {
             "authorizations": [
                 "Table Saw", "Band Saw", "Metal Band Saw",
@@ -249,7 +249,7 @@ DEV_USERS = [
             "essentials_form": "completed",
             "orientation_completed_date": "2018-06-08",
         },
-        "access": {"rfid_tags": ["11223344"]},
+        "access": {"rfid_tags": ["1011223344"]},
         "authorizations": {
             "authorizations": [
                 "Table Saw", "Band Saw", "Mig Welders", "Tig Welders",
@@ -297,7 +297,7 @@ DEV_USERS = [
             "essentials_form": "completed",
             "orientation_completed_date": "2019-09-22",
         },
-        "access": {"rfid_tags": ["44556677", "55667788"]},
+        "access": {"rfid_tags": ["1044556677", "1055667788"]},
         "authorizations": {
             "authorizations": [
                 "Table Saw", "Band Saw", "Wood Lathe", "Wood Mini Lathe",
@@ -342,7 +342,7 @@ DEV_USERS = [
             "essentials_form": "completed",
             "orientation_completed_date": "2017-11-08",
         },
-        "access": {"rfid_tags": ["99887766"]},
+        "access": {"rfid_tags": ["1099887766"]},
         "authorizations": {
             "authorizations": ["Ender 3D Printers", "Prusa 3D printers", "Band Saw"],
             "computer_authorizations": [],
@@ -378,7 +378,7 @@ DEV_USERS = [
             "essentials_form": "completed",
             "orientation_completed_date": "2018-03-22",
         },
-        "access": {"rfid_tags": ["77665544"]},
+        "access": {"rfid_tags": ["1077665544"]},
         "authorizations": {
             "authorizations": ["Table Saw", "Mitre Saw", "Sanders", "Ender 3D Printers"],
             "computer_authorizations": ["Epilog Authorized Users"],
@@ -414,7 +414,7 @@ DEV_USERS = [
             "essentials_form": "completed",
             "orientation_completed_date": "2021-04-08",
         },
-        "access": {"rfid_tags": ["33221100", "44332211"]},
+        "access": {"rfid_tags": ["1033221100", "1044332211"]},
         "authorizations": {
             "authorizations": [
                 "Table Saw", "Band Saw", "Mig Welders", "Jointer",
@@ -454,7 +454,7 @@ DEV_USERS = [
             "essentials_form": "completed",
             "orientation_completed_date": "2022-02-21",
         },
-        "access": {"rfid_tags": ["66778899"]},
+        "access": {"rfid_tags": ["1066778899"]},
         "authorizations": {
             "authorizations": [
                 "Ender 3D Printers", "Prusa 3D printers",
@@ -495,7 +495,7 @@ DEV_USERS = [
             "essentials_form": "completed",
             "orientation_completed_date": "2018-06-08",
         },
-        "access": {"rfid_tags": ["33445566"]},
+        "access": {"rfid_tags": ["1033445566"]},
         "authorizations": {
             "authorizations": ["Table Saw", "Band Saw", "Mig Welders", "Cold Metals Basic"],
             "computer_authorizations": [],
@@ -621,12 +621,11 @@ def generate_forms(fake: Faker) -> dict:
 
 
 def generate_unique_rfid_tags(count: int, used_tags: set) -> list[str]:
-    """Generate unique RFID tags (5-8 digit numeric strings)."""
+    """Generate unique RFID tags (10 digit numeric strings)."""
     tags = []
     for _ in range(count):
         for _attempt in range(1000):
-            length = random.randint(5, 8)
-            tag = str(random.randint(10 ** (length - 1), 10**length - 1))
+            tag = str(random.randint(1000000000, 9999999999))
             if tag not in used_tags:
                 used_tags.add(tag)
                 tags.append(tag)
