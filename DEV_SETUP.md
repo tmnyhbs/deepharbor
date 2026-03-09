@@ -56,12 +56,14 @@ on top of the production compose file:
    `network_mode: host` to the Docker bridge network
 3. **Bypasses authentication** — `AUTH_MODE=dev` replaces Azure B2C
    login with a dev user picker showing preset seed-data members
-4. **Bypasses external calls** — `DEV_MODE=true` on worker services
+4. **Shows dev banner** — `DEV_BANNER=true` displays a "DEV MODE"
+   banner at the top of every portal page
+5. **Bypasses external calls** — `DEV_MODE=true` on worker services
    (DH2AD, DH2RFID) so they return success without contacting
    hardware controllers
-5. **Loads seed data** — 25 members inserted on first boot (10 dev
+6. **Loads seed data** — 25 members inserted on first boot (10 dev
    users with stable IDs + 15 random members)
-6. **Remaps ports** — Gateway 80→8808, Grafana 3000→3300 to avoid
+7. **Remaps ports** — Gateway 80→8808, Grafana 3000→3300 to avoid
    conflicts with other local services
 
 ## Dev Auth Bypass
@@ -89,6 +91,27 @@ ID manually.
 Authorization still works normally — the portals make real API calls
 to DHService to check roles and permissions. Only the Azure B2C
 authentication step is bypassed.
+
+## Dev Banner
+
+The `DEV_BANNER` env var controls the "DEV MODE" banner shown at the
+top of every portal page. It's independent of `AUTH_MODE` — you can
+use them separately or together:
+
+| AUTH_MODE | DEV_BANNER | Result |
+|-----------|------------|--------|
+| *(unset)* | *(unset)*  | Normal B2C login, no banner (production) |
+| `dev`     | `true`     | Dev login picker + banner (full dev, the default in docker-compose.dev.yml) |
+| *(unset)* | `true`     | Real B2C login + banner (staging/test deployments) |
+| `dev`     | *(unset)*  | Dev login picker, no banner |
+
+To show the banner on a non-dev deployment, set the `DEV_BANNER`
+environment variable on the portal containers:
+
+```yaml
+environment:
+  DEV_BANNER: "true"
+```
 
 ## Manual Setup
 

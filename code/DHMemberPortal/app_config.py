@@ -8,6 +8,7 @@ from config import config
 # AUTH_MODE is set by docker-compose.dev.yml. When it's "dev", we skip
 # all B2C configuration and use a local dev login page instead.
 AUTH_MODE = os.environ.get("AUTH_MODE", "").lower()
+DEV_BANNER = os.environ.get("DEV_BANNER", "").lower() == "true"
 
 ###############################################################################
 # Azure AD B2C Configurations

@@ -28,7 +28,7 @@
 </head>
 
 <body>
-    {% if auth_mode == "dev" %}
+    {% if dev_banner %}
     <div class="dev-banner">DEV MODE — {{ git_version }}</div>
     {% endif %}
     <div class="header">

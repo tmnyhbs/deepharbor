@@ -45,6 +45,7 @@ services:
     environment:
       DH_API_BASE_URL: "http://gateway/dh/service"
       AUTH_MODE: dev
+      DEV_BANNER: "true"
       DH_CLIENT_ID: "dev-member-portal"
       DH_CLIENT_SECRET: "hQgPvJW9RU48tRSQKS8SladAZsKHS34fKetbNr_443E"
 
@@ -57,6 +58,7 @@ services:
     environment:
       DH_API_BASE_URL: "http://gateway/dh/service"
       AUTH_MODE: dev
+      DEV_BANNER: "true"
       DH_CLIENT_ID: "dev-admin-portal"
       DH_CLIENT_SECRET: "ikactyRLicKoI8VHiD9KZEwTrOIhtYjfzm1h6YUjj7M"
 
