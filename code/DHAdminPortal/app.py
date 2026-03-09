@@ -14,6 +14,7 @@ from config import config
 
 ### Dev mode flag — read from app_config so we only check the env var once
 AUTH_MODE = app_config.AUTH_MODE
+DEV_BANNER = app_config.DEV_BANNER
 if AUTH_MODE == "dev":
     logger.info("AUTH_MODE=dev — B2C authentication bypassed, dev login enabled")
 
@@ -306,7 +307,8 @@ def _get_token_from_cache(scope=None):
 app.jinja_env.globals.update(_build_auth_code_flow=_build_auth_code_flow)  # Used in template
 app.jinja_env.globals.update(git_version=config.get("git", "version", fallback="unknown"))  # Used in footer
 app.jinja_env.globals.update(now=datetime.now)  # Used in footer for dynamic year
-app.jinja_env.globals.update(auth_mode=AUTH_MODE)  # Used in dev banner
+app.jinja_env.globals.update(auth_mode=AUTH_MODE)  # Used in dev login routes
+app.jinja_env.globals.update(dev_banner=DEV_BANNER)  # Used in dev banner
 
 
 ###############################################################################
