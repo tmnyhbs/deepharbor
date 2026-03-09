@@ -32,44 +32,26 @@ from faker import Faker
 
 MEMBERSHIP_TYPES = [
     "Area Host",
-    "Board Member / Officer",
-    "Contractor",
-    "Member - Cash Payment",
-    "Member - Grandfathered Price",
-    "Member - PayPal",
-    "Member w/ Storage - Cash Payment",
-    "Member w/ Storage - Grandfathered Price",
-    "Member w/ Storage - PayPal",
-    "New Member",
-    "Scholarship",
-    "Stripe Member - $65",
-    "Stripe Member w/ Storage - $95",
-    "Stripe Volunteer w/ Paid Storage - $30",
+    "Board Member",
+    "Membership",
+    "Membership with Storage",
+    "Officer",
     "Volunteer",
     "Volunteer w/ Free Storage",
-    "Volunteer w/ Paid Storage",
+    "Volunteer w/ Storage",
 ]
 
 # Weighted distribution for random member generation — favors
 # the more common membership types over special ones
 MEMBERSHIP_WEIGHTS = {
-    "Stripe Member - $65": 25,
-    "Member - Cash Payment": 15,
-    "Member - PayPal": 10,
-    "Stripe Member w/ Storage - $95": 8,
-    "Member w/ Storage - Cash Payment": 5,
-    "Member w/ Storage - PayPal": 5,
-    "Member w/ Storage - Grandfathered Price": 3,
-    "Member - Grandfathered Price": 5,
-    "Volunteer": 6,
-    "Volunteer w/ Free Storage": 3,
-    "Volunteer w/ Paid Storage": 3,
-    "Stripe Volunteer w/ Paid Storage - $30": 3,
-    "Scholarship": 3,
-    "New Member": 2,
-    "Area Host": 1,
-    "Contractor": 2,
-    "Board Member / Officer": 1,
+    "Membership": 40,
+    "Membership with Storage": 20,
+    "Volunteer": 10,
+    "Volunteer w/ Storage": 5,
+    "Volunteer w/ Free Storage": 5,
+    "Area Host": 3,
+    "Officer": 3,
+    "Board Member": 2,
 }
 
 # requires_login=true — these go in "computer_authorizations"
@@ -153,8 +135,8 @@ DEV_USERS = [
         },
         "connections": {"discord_username": "ada_admin"},
         "status": {
-            "membership_status": "Active",
-            "membership_level": "Stripe Member - $65",
+            "membership_status": "active",
+            "membership_level": "Membership",
             "member_since": "2020-01-15",
         },
         "forms": {
@@ -196,8 +178,8 @@ DEV_USERS = [
         },
         "connections": {"discord_username": "cbabbage"},
         "status": {
-            "membership_status": "Active",
-            "membership_level": "Member - Cash Payment",
+            "membership_status": "active",
+            "membership_level": "Membership",
             "member_since": "2019-03-10",
         },
         "forms": {
@@ -237,7 +219,7 @@ DEV_USERS = [
         },
         "connections": {"discord_username": "spark_lord"},
         "status": {
-            "membership_status": "Active",
+            "membership_status": "active",
             "membership_level": "Volunteer",
             "member_since": "2018-06-01",
         },
@@ -285,7 +267,7 @@ DEV_USERS = [
         },
         "connections": {"discord_username": "hedy_builds"},
         "status": {
-            "membership_status": "Active",
+            "membership_status": "active",
             "membership_level": "Volunteer w/ Free Storage",
             "member_since": "2019-09-15",
         },
@@ -330,8 +312,8 @@ DEV_USERS = [
         },
         "connections": {"discord_username": "admiral_grace"},
         "status": {
-            "membership_status": "Active",
-            "membership_level": "Board Member / Officer",
+            "membership_status": "active",
+            "membership_level": "Officer",
             "member_since": "2017-11-01",
         },
         "forms": {
@@ -366,8 +348,8 @@ DEV_USERS = [
         },
         "connections": {"discord_username": "mhamilton_apollo"},
         "status": {
-            "membership_status": "Active",
-            "membership_level": "Board Member / Officer",
+            "membership_status": "active",
+            "membership_level": "Board Member",
             "member_since": "2018-03-15",
         },
         "forms": {
@@ -402,8 +384,8 @@ DEV_USERS = [
         },
         "connections": {"discord_username": "xray_rosalind"},
         "status": {
-            "membership_status": "Active",
-            "membership_level": "Member - Cash Payment",
+            "membership_status": "active",
+            "membership_level": "Membership with Storage",
             "member_since": "2021-04-01",
         },
         "forms": {
@@ -442,8 +424,8 @@ DEV_USERS = [
         },
         "connections": {"discord_username": "kjohnson_math"},
         "status": {
-            "membership_status": "Active",
-            "membership_level": "Stripe Member - $65",
+            "membership_status": "active",
+            "membership_level": "Membership with Storage",
             "member_since": "2022-02-14",
         },
         "forms": {
@@ -483,8 +465,8 @@ DEV_USERS = [
         },
         "connections": {"discord_username": "mcurie_rad"},
         "status": {
-            "membership_status": "Inactive",
-            "membership_level": "Member - Cash Payment",
+            "membership_status": "suspended",
+            "membership_level": "Membership",
             "member_since": "2018-06-01",
         },
         "forms": {
@@ -519,8 +501,8 @@ DEV_USERS = [
         },
         "connections": None,
         "status": {
-            "membership_status": "Inactive",
-            "membership_level": "Stripe Member - $65",
+            "membership_status": "suspended",
+            "membership_level": "Area Host",
             "member_since": "2023-09-01",
         },
         "forms": {
@@ -587,16 +569,13 @@ def make_member_sql(member: dict) -> str:
 def pick_membership_level(is_active: bool, is_new: bool) -> str:
     """Pick a membership level appropriate for the member's status."""
     if is_new:
-        return "New Member"
+        return "Membership"
 
     if not is_active:
-        # Inactive members were on regular paid plans
+        # Suspended members were on regular paid plans
         inactive_levels = [
-            "Stripe Member - $65",
-            "Member - Cash Payment",
-            "Member - PayPal",
-            "Member - Grandfathered Price",
-            "Stripe Member w/ Storage - $95",
+            "Membership",
+            "Membership with Storage",
         ]
         return random.choice(inactive_levels)
 
@@ -738,7 +717,7 @@ def generate_random_member(
         member_since = fake.date_between(start_date="-8y", end_date="-1y").isoformat()
 
     status = {
-        "membership_status": "Active" if is_active else "Inactive",
+        "membership_status": "active" if is_active else "suspended",
         "membership_level": membership_level,
         "member_since": member_since,
     }
