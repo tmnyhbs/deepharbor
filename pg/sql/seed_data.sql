@@ -38,7 +38,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "ada_admin"}'::jsonb,
     '{"membership_status": "Active", "membership_level": "Stripe Member - $65", "member_since": "2020-01-15"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-1234", "waiver_signed_date": "2020-01-15", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2020-01-22"}'::jsonb,
-    '{"rfid_tags": ["12345678", "87654321"]}'::jsonb,
+    '{"rfid_tags": ["1012345678", "1087654321"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Mig Welders", "Tig Welders", "Jointer", "Planer", "Mitre Saw", "Sanders", "Wood Drill Press", "Router Table"], "computer_authorizations": ["Epilog Authorized Users", "Tormach Authorized Users", "ShopBot Authorized Users"]}'::jsonb,
     '{"storage_id": "A-01", "storage_area": "North Wall"}'::jsonb,
     '{"notes": [{"date": "2020-01-22", "author": "System", "text": "Completed orientation and safety training"}, {"date": "2023-06-10", "author": "Board", "text": "Granted administrator access to the admin portal"}]}'::jsonb
@@ -53,7 +53,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "cbabbage"}'::jsonb,
     '{"membership_status": "Active", "membership_level": "Member - Cash Payment", "member_since": "2019-03-10"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-5678", "waiver_signed_date": "2019-03-10", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2019-03-17"}'::jsonb,
-    '{"rfid_tags": ["23456789"]}'::jsonb,
+    '{"rfid_tags": ["1023456789"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Metal Band Saw", "Metal Drill Press", "Bridgeport Mill", "Clausing Lathe"], "computer_authorizations": ["Boss Authorized Users", "CNC Plasma Authorized Users"]}'::jsonb,
     NULL,
     '{"notes": [{"date": "2019-03-17", "author": "System", "text": "Orientation completed"}, {"date": "2024-01-15", "author": "Board", "text": "Added as administrator"}]}'::jsonb
@@ -68,7 +68,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "spark_lord"}'::jsonb,
     '{"membership_status": "Active", "membership_level": "Volunteer", "member_since": "2018-06-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "PP-9012", "waiver_signed_date": "2018-06-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2018-06-08"}'::jsonb,
-    '{"rfid_tags": ["11223344"]}'::jsonb,
+    '{"rfid_tags": ["1011223344"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Mig Welders", "Tig Welders", "Jointer", "Planer", "Mitre Saw", "Sanders", "Wood Drill Press", "Router Table", "Metal Band Saw", "Metal Drill Press", "Bridgeport Mill", "Clausing Lathe", "LeBlond Lathe", "Surface Grinder", "Hand held plasma cutter", "Pneumatic Power Tools", "Powder Coating Equipment", "Tube Bending Equipment"], "computer_authorizations": ["Epilog Authorized Users", "Tormach Authorized Users", "Universal Authorized Users", "Boss Authorized Users", "CNC Plasma Authorized Users", "ShopBot Authorized Users"]}'::jsonb,
     NULL,
     '{"notes": [{"date": "2018-06-08", "author": "System", "text": "Completed orientation"}, {"date": "2019-02-14", "author": "Board", "text": "Approved as equipment authorizer for metalworking and CNC areas"}]}'::jsonb
@@ -83,7 +83,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "hedy_builds"}'::jsonb,
     '{"membership_status": "Active", "membership_level": "Volunteer w/ Free Storage", "member_since": "2019-09-15"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-3456", "waiver_signed_date": "2019-09-15", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2019-09-22"}'::jsonb,
-    '{"rfid_tags": ["44556677", "55667788"]}'::jsonb,
+    '{"rfid_tags": ["1044556677", "1055667788"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Wood Lathe", "Wood Mini Lathe", "Drum Sander", "Panel Saw", "Saw Dado", "Square Chisel Morticer", "Jointer", "Planer", "Ender 3D Printers", "Prusa 3D printers", "Formlabs Form 3 printer"], "computer_authorizations": ["Epilog Authorized Users", "Universal Authorized Users", "Vinyl Cutter Authorized Users", "Mimaki CJV30 printer Users"]}'::jsonb,
     '{"storage_id": "C-05", "storage_area": "Woodshop Corner"}'::jsonb,
     '{"notes": [{"date": "2019-09-22", "author": "System", "text": "Completed orientation and all woodshop authorizations"}, {"date": "2020-04-01", "author": "Board", "text": "Approved as authorizer for woodshop, 3D printing, and laser areas"}]}'::jsonb
@@ -98,7 +98,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "admiral_grace"}'::jsonb,
     '{"membership_status": "Active", "membership_level": "Board Member / Officer", "member_since": "2017-11-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-7890", "waiver_signed_date": "2017-11-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2017-11-08"}'::jsonb,
-    '{"rfid_tags": ["99887766"]}'::jsonb,
+    '{"rfid_tags": ["1099887766"]}'::jsonb,
     '{"authorizations": ["Ender 3D Printers", "Prusa 3D printers", "Band Saw"], "computer_authorizations": []}'::jsonb,
     NULL,
     '{"notes": [{"date": "2017-11-08", "author": "System", "text": "Completed orientation"}, {"date": "2022-01-01", "author": "Board", "text": "Elected to board of directors"}]}'::jsonb
@@ -112,7 +112,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "mhamilton_apollo"}'::jsonb,
     '{"membership_status": "Active", "membership_level": "Board Member / Officer", "member_since": "2018-03-15"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-2345", "waiver_signed_date": "2018-03-15", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2018-03-22"}'::jsonb,
-    '{"rfid_tags": ["77665544"]}'::jsonb,
+    '{"rfid_tags": ["1077665544"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Mitre Saw", "Sanders", "Ender 3D Printers"], "computer_authorizations": ["Epilog Authorized Users"]}'::jsonb,
     NULL,
     '{"notes": [{"date": "2018-03-22", "author": "System", "text": "Completed orientation"}, {"date": "2023-01-01", "author": "Board", "text": "Elected to board"}]}'::jsonb
@@ -127,7 +127,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "xray_rosalind"}'::jsonb,
     '{"membership_status": "Active", "membership_level": "Member - Cash Payment", "member_since": "2021-04-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-6789", "waiver_signed_date": "2021-04-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2021-04-08"}'::jsonb,
-    '{"rfid_tags": ["33221100", "44332211"]}'::jsonb,
+    '{"rfid_tags": ["1033221100", "1044332211"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Mig Welders", "Jointer", "Planer", "Ender 3D Printers", "Prusa 3D printers"], "computer_authorizations": ["Epilog Authorized Users", "Tormach Authorized Users"]}'::jsonb,
     '{"storage_id": "B-12", "storage_area": "South Wall"}'::jsonb,
     '{"notes": [{"date": "2021-04-08", "author": "System", "text": "Completed orientation and basic woodshop training"}]}'::jsonb
@@ -141,7 +141,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "kjohnson_math"}'::jsonb,
     '{"membership_status": "Active", "membership_level": "Stripe Member - $65", "member_since": "2022-02-14"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-0123", "waiver_signed_date": "2022-02-14", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2022-02-21"}'::jsonb,
-    '{"rfid_tags": ["66778899"]}'::jsonb,
+    '{"rfid_tags": ["1066778899"]}'::jsonb,
     '{"authorizations": ["Ender 3D Printers", "Prusa 3D printers", "Formlabs Form 3 printer", "Tier one Sewing Machine", "Serger sewing machine", "Button sewing machines"], "computer_authorizations": ["Epilog Authorized Users", "Vinyl Cutter Authorized Users"]}'::jsonb,
     NULL,
     '{"notes": [{"date": "2022-02-21", "author": "System", "text": "Completed orientation, focused on textiles and 3D printing"}]}'::jsonb
@@ -156,7 +156,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "mcurie_rad"}'::jsonb,
     '{"membership_status": "Inactive", "membership_level": "Member - Cash Payment", "member_since": "2018-06-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-4567", "waiver_signed_date": "2018-06-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2018-06-08"}'::jsonb,
-    '{"rfid_tags": ["33445566"]}'::jsonb,
+    '{"rfid_tags": ["1033445566"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Mig Welders", "Cold Metals Basic"], "computer_authorizations": []}'::jsonb,
     NULL,
     '{"notes": [{"date": "2018-06-08", "author": "System", "text": "Completed orientation"}, {"date": "2024-03-01", "author": "System", "text": "Membership lapsed — moved to inactive"}]}'::jsonb
@@ -194,7 +194,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "rocketman_w"}'::jsonb,
     '{"membership_status": "Active", "membership_level": "Area Host", "member_since": "2017-01-15"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-1111", "waiver_signed_date": "2017-01-15", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2017-01-22"}'::jsonb,
-    '{"rfid_tags": ["10203040", "50607080"]}'::jsonb,
+    '{"rfid_tags": ["1010203040", "1050607080"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Mig Welders", "Tig Welders", "Metal Band Saw", "Metal Drill Press", "Bridgeport Mill", "Clausing Lathe", "LeBlond Lathe", "Surface Grinder", "Hand held plasma cutter", "Pneumatic Power Tools", "Powder Coating Equipment", "Tube Bending Equipment", "Cold Metals Basic"], "computer_authorizations": ["Boss Authorized Users", "CNC Plasma Authorized Users", "Tormach Authorized Users"]}'::jsonb,
     NULL,
     '{"notes": [{"date": "2017-01-22", "author": "System", "text": "Completed orientation"}, {"date": "2018-05-01", "author": "Board", "text": "Appointed area host for metalworking"}]}'::jsonb
@@ -208,7 +208,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "emmy_makes"}'::jsonb,
     '{"membership_status": "Active", "membership_level": "Stripe Member w/ Storage - $95", "member_since": "2021-08-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-2222", "waiver_signed_date": "2021-08-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2021-08-08"}'::jsonb,
-    '{"rfid_tags": ["11112222", "33334444", "55556666"]}'::jsonb,
+    '{"rfid_tags": ["1011112222", "1033334444", "1055556666"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Jointer", "Planer", "Mitre Saw", "Router Table", "Wood Lathe", "Drum Sander", "Panel Saw", "Ender 3D Printers", "Prusa 3D printers", "Formlabs Form 3 printer"], "computer_authorizations": ["Epilog Authorized Users", "Universal Authorized Users", "ShopBot Authorized Users"]}'::jsonb,
     '{"storage_id": "D-08", "storage_area": "East Wall"}'::jsonb,
     NULL
@@ -222,7 +222,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "feynman_diagrams"}'::jsonb,
     '{"membership_status": "Active", "membership_level": "Member - Grandfathered Price", "member_since": "2016-05-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-3333", "waiver_signed_date": "2016-05-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2016-05-08"}'::jsonb,
-    '{"rfid_tags": ["77778888"]}'::jsonb,
+    '{"rfid_tags": ["1077778888"]}'::jsonb,
     '{"authorizations": ["Ender 3D Printers", "Band Saw", "Sanders"], "computer_authorizations": []}'::jsonb,
     NULL,
     '{"notes": [{"date": "2016-05-08", "author": "System", "text": "Completed orientation — mostly interested in electronics bench"}]}'::jsonb
@@ -236,7 +236,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "barb_bio"}'::jsonb,
     '{"membership_status": "Active", "membership_level": "Scholarship", "member_since": "2024-01-15"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-4444", "waiver_signed_date": "2024-01-15", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2024-01-22"}'::jsonb,
-    '{"rfid_tags": ["99990000"]}'::jsonb,
+    '{"rfid_tags": ["1099990000"]}'::jsonb,
     '{"authorizations": ["Band Saw", "Ender 3D Printers", "Tier one Sewing Machine"], "computer_authorizations": []}'::jsonb,
     NULL,
     '{"notes": [{"date": "2024-01-22", "author": "System", "text": "Completed orientation"}, {"date": "2024-01-15", "author": "Board", "text": "Approved scholarship membership"}]}'::jsonb
@@ -250,7 +250,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "marconi_radio"}'::jsonb,
     '{"membership_status": "Active", "membership_level": "Stripe Volunteer w/ Paid Storage - $30", "member_since": "2020-07-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-5555", "waiver_signed_date": "2020-07-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2020-07-08"}'::jsonb,
-    '{"rfid_tags": ["12121212"]}'::jsonb,
+    '{"rfid_tags": ["1012121212"]}'::jsonb,
     '{"authorizations": ["Band Saw", "Sanders", "Ender 3D Printers", "Cold Metals Basic"], "computer_authorizations": []}'::jsonb,
     '{"storage_id": "E-03", "storage_area": "Electronics Bench"}'::jsonb,
     NULL
@@ -279,7 +279,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "jwatt_steam"}'::jsonb,
     '{"membership_status": "Active", "membership_level": "Member w/ Storage - Cash Payment", "member_since": "2019-11-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-6666", "waiver_signed_date": "2019-11-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2019-11-08"}'::jsonb,
-    '{"rfid_tags": ["34343434"]}'::jsonb,
+    '{"rfid_tags": ["1034343434"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Mig Welders", "Tig Welders", "Metal Band Saw", "Metal Drill Press", "Bridgeport Mill", "Blacksmithing"], "computer_authorizations": ["CNC Plasma Authorized Users"]}'::jsonb,
     '{"storage_id": "F-15", "storage_area": "Metalshop"}'::jsonb,
     NULL
@@ -293,7 +293,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "cswu_physics"}'::jsonb,
     '{"membership_status": "Active", "membership_level": "Member - PayPal", "member_since": "2022-09-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-7777", "waiver_signed_date": "2022-09-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2022-09-08"}'::jsonb,
-    '{"rfid_tags": ["56565656"]}'::jsonb,
+    '{"rfid_tags": ["1056565656"]}'::jsonb,
     '{"authorizations": ["Ender 3D Printers", "Prusa 3D printers", "Band Saw", "Table Saw", "Mitre Saw"], "computer_authorizations": ["Epilog Authorized Users"]}'::jsonb,
     NULL,
     NULL
@@ -307,7 +307,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "bucky_dome"}'::jsonb,
     '{"membership_status": "Active", "membership_level": "Stripe Member - $65", "member_since": "2023-03-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-8888", "waiver_signed_date": "2023-03-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2023-03-08"}'::jsonb,
-    '{"rfid_tags": ["78787878"]}'::jsonb,
+    '{"rfid_tags": ["1078787878"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Jointer", "Planer", "Mitre Saw", "Router Table", "Wood Drill Press", "Multi-Router", "Panel Saw"], "computer_authorizations": ["ShopBot Authorized Users"]}'::jsonb,
     NULL,
     NULL
@@ -321,7 +321,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     NULL,
     '{"membership_status": "Active", "membership_level": "Contractor", "member_since": "2025-06-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-9999", "waiver_signed_date": "2025-06-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2025-06-08"}'::jsonb,
-    '{"rfid_tags": ["90909090"]}'::jsonb,
+    '{"rfid_tags": ["1090909090"]}'::jsonb,
     '{"authorizations": ["Band Saw", "Sanders"], "computer_authorizations": []}'::jsonb,
     NULL,
     '{"notes": [{"date": "2025-06-01", "author": "Board", "text": "Contractor engagement for building renovation project"}]}'::jsonb
@@ -335,7 +335,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "philo_tv"}'::jsonb,
     '{"membership_status": "Active", "membership_level": "Member w/ Storage - Grandfathered Price", "member_since": "2016-09-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-1010", "waiver_signed_date": "2016-09-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2016-09-08"}'::jsonb,
-    '{"rfid_tags": ["21212121"]}'::jsonb,
+    '{"rfid_tags": ["1021212121"]}'::jsonb,
     '{"authorizations": ["Band Saw", "Table Saw", "Ender 3D Printers", "Sanders", "Wood Drill Press", "Cold Metals Basic", "Coffee Roaster"], "computer_authorizations": []}'::jsonb,
     '{"storage_id": "A-22", "storage_area": "North Wall"}'::jsonb,
     NULL
@@ -349,7 +349,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "jocelyn_stars"}'::jsonb,
     '{"membership_status": "Active", "membership_level": "Volunteer w/ Paid Storage", "member_since": "2021-01-15"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-1212", "waiver_signed_date": "2021-01-15", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2021-01-22"}'::jsonb,
-    '{"rfid_tags": ["43434343"]}'::jsonb,
+    '{"rfid_tags": ["1043434343"]}'::jsonb,
     '{"authorizations": ["Ender 3D Printers", "Prusa 3D printers", "Band Saw", "Tier one Sewing Machine", "Billiards"], "computer_authorizations": ["Epilog Authorized Users"]}'::jsonb,
     '{"storage_id": "G-01", "storage_area": "Classroom"}'::jsonb,
     '{"notes": [{"date": "2021-02-01", "author": "Board", "text": "Volunteering to run monthly intro-to-science workshops for kids"}]}'::jsonb
@@ -363,7 +363,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "element118"}'::jsonb,
     '{"membership_status": "Inactive", "membership_level": "Member - Grandfathered Price", "member_since": "2015-03-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-1313", "waiver_signed_date": "2015-03-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2015-03-08"}'::jsonb,
-    '{"rfid_tags": ["65656565"]}'::jsonb,
+    '{"rfid_tags": ["1065656565"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Mig Welders", "Metal Band Saw", "Blacksmithing"], "computer_authorizations": []}'::jsonb,
     NULL,
     '{"notes": [{"date": "2015-03-08", "author": "System", "text": "Completed orientation"}, {"date": "2024-09-01", "author": "System", "text": "Membership lapsed — member relocated out of state"}]}'::jsonb
@@ -391,7 +391,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"discord_username": "gwcarver_makes"}'::jsonb,
     '{"membership_status": "Active", "membership_level": "Member w/ Storage - PayPal", "member_since": "2020-10-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-1515", "waiver_signed_date": "2020-10-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2020-10-08"}'::jsonb,
-    '{"rfid_tags": ["87878787"]}'::jsonb,
+    '{"rfid_tags": ["1087878787"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Jointer", "Planer", "Wood Lathe", "Tier one Sewing Machine", "Serger sewing machine", "Button sewing machines", "Saw Dado"], "computer_authorizations": ["Vinyl Cutter Authorized Users", "Mimaki CJV30 printer Users"]}'::jsonb,
     '{"storage_id": "B-07", "storage_area": "South Wall"}'::jsonb,
     NULL
