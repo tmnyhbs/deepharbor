@@ -618,8 +618,9 @@ i.ic-dashboard  { color: #009fc2 !important; } /* PS1 teal */
 i.ic-profile    { color: #2563eb !important; } /* Blue */
 i.ic-keys       { color: #d97706 !important; } /* Amber */
 i.ic-billing    { color: #059669 !important; } /* Emerald */
-i.ic-auths      { color: #7c3aed !important; } /* Violet */
+i.ic-auths      { color: #e11d48 !important; } /* Rose */
 i.ic-info       { color: #0891b2 !important; } /* Cyan */
+i.ic-floof      { color: #9333ea !important; } /* Purple */
 
 /* Quick link icons */
 i.ic-quickstart { color: #ea580c !important; } /* Orange */
@@ -628,7 +629,7 @@ i.ic-discord    { color: #5865F2 !important; } /* Discord brand */
 i.ic-wiki       { color: #0d9488 !important; } /* Teal */
 i.ic-events     { color: #dc2626 !important; } /* Red */
 i.ic-shopmon    { color: #16a34a !important; } /* Green */
-i.ic-authorized { color: #7c3aed !important; } /* Violet */
+i.ic-authorized { color: #e11d48 !important; } /* Rose */
 i.ic-canvas     { color: #1d4ed8 !important; } /* Blue-700 */
 i.ic-agreement  { color: #92400e !important; } /* Amber-800 */
 i.ic-volunteer  { color: #db2777 !important; } /* Pink-600 */

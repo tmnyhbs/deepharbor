@@ -453,6 +453,17 @@ def member_storage():
                          identity=member_info.get('identity', {}) if isinstance(member_info, dict) else {},
                          user=session.get('user'))
 
+@app.route('/dashboard/floof')
+def member_floof():
+    """Show fun stuff page"""
+    member_info, error = _get_authenticated_member_info()
+    if error:
+        return error
+
+    return render_template('dashboard_floof.html',
+                         status=member_info.get('status', {}) if isinstance(member_info, dict) else {},
+                         user=session.get('user'))
+
 @app.route('/dashboard/update-profile', methods=['POST'])
 def member_update_profile():
     """Update member profile fields from dashboard"""

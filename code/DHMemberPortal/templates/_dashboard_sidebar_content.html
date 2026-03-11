@@ -18,6 +18,9 @@
     <a class="nav-link {% if request.endpoint == 'member_storage' %}active{% endif %}" href="{{ url_for('member_storage') }}">
         <i class="fa-solid fa-circle-info ic-info"></i> Info & Storage
     </a>
+    <a class="nav-link {% if request.endpoint == 'member_floof' %}active{% endif %}" href="{{ url_for('member_floof') }}">
+        <i class="fa-solid fa-paw ic-floof"></i> Floof
+    </a>
 </nav>
 
 <div class="nav-section-title">Quick Links</div>
