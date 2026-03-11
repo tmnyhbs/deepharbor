@@ -556,6 +556,7 @@ body {
 
 /* Ensure Bootstrap cards match our style */
 .card {
+    background: #ffffff;
     border: none;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
