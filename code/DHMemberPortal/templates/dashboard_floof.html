@@ -19,13 +19,14 @@
                             <input type="text" class="form-control" placeholder="Coming soon!" disabled>
                         </div>
                     </div>
-                    <form method="POST" action="{{ url_for('member_update_profile') }}">
+                    <form method="POST" action="{{ url_for('member_update_profile') }}" class="dh-validate">
                     <input type="hidden" name="source_page" value="floof">
                     <div class="info-group">
                         <label>Pronouns</label>
-                        <span class="info-label-desc">Used by various awesome PS1 internal services and tools, included the name tag printer.</span>
+                        <span class="info-label-desc">How would you like to be referred to? (e.g. she/her, he/him, they/them)</span>
                         <div class="info-value">
                             <input type="text" class="form-control" name="pronouns"
+                                   autocapitalize="none" autocorrect="off"
                                    maxlength="50" value="{{ identity.pronouns or '' }}">
                         </div>
                     </div>

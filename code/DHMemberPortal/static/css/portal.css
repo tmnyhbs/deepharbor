@@ -524,6 +524,56 @@ body {
 }
 
 /* ===================================================================
+   REQUIRED FIELD INDICATORS
+   =================================================================== */
+
+.required-badge {
+    font-size: 0.65rem;
+    vertical-align: middle;
+    margin-left: 0.35rem;
+    padding: 0.15em 0.45em;
+    border-radius: 3px;
+}
+
+/* Field error highlighting */
+.field-error {
+    border-color: var(--error-color) !important;
+    background-color: #fef2f2 !important;
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.15) !important;
+}
+
+@keyframes field-shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-4px); }
+    40%, 80% { transform: translateX(4px); }
+}
+
+.field-shake {
+    animation: field-shake 0.4s ease-in-out;
+}
+
+/* Validation toast */
+.toast-container {
+    z-index: 1090;
+}
+
+.toast.dh-toast {
+    opacity: 1 !important;
+    background: var(--card-bg);
+    border-left: 4px solid var(--error-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.toast.dh-toast.toast-success {
+    border-left-color: var(--success-color);
+}
+
+.toast.dh-toast .toast-body ul {
+    margin-bottom: 0;
+    padding-left: 1.25rem;
+}
+
+/* ===================================================================
    SIGNUP FORM SPECIFICS
    =================================================================== */
 

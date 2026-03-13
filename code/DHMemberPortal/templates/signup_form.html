@@ -25,7 +25,7 @@
 {% endblock %}
 {% block content_class %}row justify-content-center{% endblock %}
 {% block content %}
-            <div class="col-md-8 col-lg-6">
+            <div class="col-md-10 col-lg-8">
                 <div class="card">
                     <div class="card-body">
                         {% if contact_found %}
@@ -34,7 +34,7 @@
                         </div>
                         {% endif %}
 
-                        <form method="POST" action="{{ url_for('signup_submit') }}">
+                        <form method="POST" action="{{ url_for('signup_submit') }}" class="dh-validate">
                             <input type="hidden" name="email" value="{{ email }}">
                             <input type="hidden" name="waiver_signed_at" value="{{ contact.signed_at_datetime if contact else '' }}">
 
@@ -52,19 +52,23 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="first_name" class="form-label">First Name *</label>
+                                        <label for="first_name" class="form-label">First Name <span class="badge bg-danger required-badge">Required</span></label>
                                         <input type="text" class="form-control" id="first_name" name="first_name" required
                                                maxlength="100" pattern=".*\S+.*"
                                                title="Cannot be empty or contain only spaces"
+                                               data-label="First Name"
+                                               autocapitalize="words" autocorrect="off"
                                                value="{{ contact.first_name if contact else '' }}">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="last_name" class="form-label">Last Name *</label>
+                                        <label for="last_name" class="form-label">Last Name <span class="badge bg-danger required-badge">Required</span></label>
                                         <input type="text" class="form-control" id="last_name" name="last_name" required
                                                maxlength="100" pattern=".*\S+.*"
                                                title="Cannot be empty or contain only spaces"
+                                               data-label="Last Name"
+                                               autocapitalize="words" autocorrect="off"
                                                value="{{ contact.last_name if contact else '' }}">
                                     </div>
                                 </div>
@@ -72,46 +76,57 @@
 
                             <div class="mb-3">
                                 <label for="preferred_name" class="form-label">Preferred Name/Nickname</label>
+                                <span class="info-label-desc">How would you like to identify yourself?</span>
                                 <input type="text" class="form-control" id="preferred_name" name="preferred_name"
                                        maxlength="100" pattern=".*\S+.*|^$"
                                        title="Cannot contain only spaces"
+                                       autocapitalize="words" autocorrect="off"
                                        value="{{ contact.preferred_name if contact else '' }}">
-                                <div class="form-text">How would you like to identify yourself?</div>
                             </div>
 
                             <div class="mb-3">
                                 <label for="pronouns" class="form-label">Pronouns</label>
+                                <span class="info-label-desc">How would you like to be referred to? (e.g. she/her, he/him, they/them)</span>
                                 <input type="text" class="form-control" id="pronouns" name="pronouns"
                                        maxlength="50" pattern=".*\S+.*|^$"
-                                       title="Cannot contain only spaces">
-                                <div class="form-text">How would you like to be referred to? (e.g. she/her, he/him, they/them)</div>
+                                       title="Cannot contain only spaces"
+                                       autocapitalize="none" autocorrect="off">
                             </div>
 
                             <div class="mb-3">
-                                <label for="birthday" class="form-label">Birthday *</label>
+                                <label for="birthday" class="form-label">Birthday <span class="badge bg-danger required-badge">Required</span></label>
                                 <input type="date" class="form-control" id="birthday" name="birthday" required
+                                       data-label="Birthday"
+                                       data-min-age="18"
+                                       data-age-message="Members are required to be 18 years or older."
                                        value="{{ contact.birthday if contact else '' }}">
                             </div>
 
                             <div class="mb-3">
-                                <label for="username" class="form-label">Username *</label>
+                                <label for="username" class="form-label">Username <span class="badge bg-danger required-badge">Required</span></label>
+                                <span class="info-label-desc">This is for logging into PS1 computers, Canvas, etc.</span>
                                 <div class="username-check">
                                     <input type="text" class="form-control" id="username" name="username" required
-                                           maxlength="50" pattern="[a-zA-Z0-9_-]+"
-                                           title="Username can only contain letters, numbers, underscores, and hyphens (no spaces)">
+                                           maxlength="16" pattern="[a-zA-Z0-9_-]+"
+                                           title="Username can only contain letters, numbers, underscores, and hyphens"
+                                           data-label="Username"
+                                           autocapitalize="none" autocorrect="off" autocomplete="off"
+                                           oninput="this.value = this.value.replace(/[^a-zA-Z0-9_-]/g, '')">
                                     <button type="button" class="btn btn-secondary" onclick="checkUsername()">Check</button>
                                 </div>
-                                <div class="form-text">This is for logging into PS1 computers, Canvas, the wiki, etc.</div>
                                 <div id="username-message" class="username-message"></div>
                             </div>
 
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="phone" class="form-label">Phone Number *</label>
+                                        <label for="phone" class="form-label">Phone Number <span class="badge bg-danger required-badge">Required</span></label>
                                         <input type="tel" class="form-control" id="phone" name="phone" required
-                                               maxlength="20" pattern=".*\S+.*"
-                                               title="Cannot be empty or contain only spaces"
+                                               maxlength="20" pattern="[0-9() \-\.\+]+"
+                                               inputmode="numeric"
+                                               title="Phone number can only contain numbers, spaces, and ()-.+"
+                                               data-label="Phone Number"
+                                               oninput="this.value = this.value.replace(/[^0-9() \-\.\+]/g, '')"
                                                value="{{ contact.phone_number if contact else '' }}">
                                     </div>
                                 </div>
@@ -122,6 +137,7 @@
                                                maxlength="50" pattern=".*\S+.*|^$"
                                                title="Cannot contain only spaces"
                                                placeholder="username#1234"
+                                               autocapitalize="none" autocorrect="off" autocomplete="off"
                                                value="{{ contact.discord_handle if contact else '' }}">
                                     </div>
                                 </div>
@@ -139,30 +155,6 @@
 {% endblock %}
 {% block scripts %}
     <script>
-        // Trim all text inputs on form submission to prevent spaces-only submissions
-        document.querySelector('form').addEventListener('submit', function(event) {
-            const textInputs = this.querySelectorAll('input[type="text"], input[type="tel"]');
-            let hasError = false;
-
-            textInputs.forEach(input => {
-                // Trim the value
-                input.value = input.value.trim();
-
-                // Check if required field is now empty after trimming
-                if (input.hasAttribute('required') && input.value === '') {
-                    input.setCustomValidity('This field cannot be empty or contain only spaces');
-                    hasError = true;
-                } else {
-                    input.setCustomValidity('');
-                }
-            });
-
-            if (hasError) {
-                event.preventDefault();
-                this.reportValidity();
-            }
-        });
-
         async function checkUsername() {
             const usernameInput = document.getElementById('username');
             const messageDiv = document.getElementById('username-message');
