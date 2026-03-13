@@ -139,7 +139,8 @@ json_build_object(
         'last_name', m.identity ->> 'last_name'::TEXT,
         'primary_email', jsonb_path_query_first( m.identity, '$.emails[*] ? (@.type == "primary").email_address' )#>>'{}',
         'nickname', m.identity ->> 'nickname'::TEXT,
-        'active_directory_username', m.identity ->> 'active_directory_username'::TEXT
+        'active_directory_username', m.identity ->> 'active_directory_username'::TEXT,
+        'pronouns', m.identity ->> 'pronouns'::TEXT
     ),
     'connections', json_build_object(
       'discord_username', m.connections ->> 'discord_username'::TEXT

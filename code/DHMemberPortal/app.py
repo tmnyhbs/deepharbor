@@ -26,6 +26,20 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
+### Fields updatable from dashboard forms, grouped by JSONB column.
+### Only fields present in the form submission are updated — partial
+### forms won't wipe fields they don't include.
+### To add a new field, just add its name to the relevant list.
+UPDATABLE_FIELDS = {
+    "identity": ["first_name", "last_name", "nickname", "pronouns"],
+}
+
+def apply_form_fields(form, data_dict, field_list):
+    """Update data_dict with form values only for fields present in the submission."""
+    for field in field_list:
+        if field in form:
+            data_dict[field] = form[field].strip() or None
+
 ###############################################################################
 # Health check endpoint
 ###############################################################################
@@ -461,6 +475,7 @@ def member_floof():
         return error
 
     return render_template('dashboard_floof.html',
+                         identity=member_info.get('identity', {}) if isinstance(member_info, dict) else {},
                          status=member_info.get('status', {}) if isinstance(member_info, dict) else {},
                          user=session.get('user'))
 
@@ -479,11 +494,6 @@ def member_update_profile():
     member_id = session['member_id']
     user_email = session.get('email')
 
-    first_name = request.form.get('first_name', '').strip()
-    last_name = request.form.get('last_name', '').strip()
-    nickname = request.form.get('nickname', '').strip()
-    rfid_tags_raw = request.form.get('rfid_tags', '').strip()
-
     try:
         member_info = dhservices.get_full_member_info(access_token, member_id)
         identity_data = (member_info.get('identity') if isinstance(member_info, dict) else {}) or {}
@@ -491,14 +501,14 @@ def member_update_profile():
         logger.error(f"Error fetching identity for update: {str(e)}", exc_info=True)
         identity_data = {}
 
-    identity_data["first_name"] = first_name or None
-    identity_data["last_name"] = last_name or None
-    identity_data["nickname"] = nickname or None
+    apply_form_fields(request.form, identity_data, UPDATABLE_FIELDS["identity"])
 
     if not identity_data.get("emails") and user_email:
         identity_data["emails"] = [{"type": "primary", "email_address": user_email}]
 
-    rfid_tags = [tag.strip() for tag in rfid_tags_raw.split(',') if tag.strip()]
+    # Only process RFID tags if the field is in the form
+    rfid_tags_raw = request.form.get('rfid_tags', '').strip() if 'rfid_tags' in request.form else None
+    rfid_tags = [tag.strip() for tag in rfid_tags_raw.split(',') if tag.strip()] if rfid_tags_raw is not None else []
     access_data = {"rfid_tags": rfid_tags}
 
     # Validate RFID tags: must be exactly 10 numeric digits
@@ -515,7 +525,8 @@ def member_update_profile():
 
     try:
         dhservices.update_member_identity(access_token, member_id, identity_data)
-        dhservices.update_member_access(access_token, member_id, access_data)
+        if 'rfid_tags' in request.form:
+            dhservices.update_member_access(access_token, member_id, access_data)
         flash('Profile updated successfully', 'success')
         if source_page == 'keys':
             flash('Remember to test your new keys before leaving the building, hearing the key reader beep does not mean the key works. Ask for help so you don\'t get locked out.', 'warning')
@@ -524,6 +535,8 @@ def member_update_profile():
         flash('Error updating profile', 'error')
     if source_page == 'keys':
         return redirect(url_for('member_keys'))
+    if source_page == 'floof':
+        return redirect(url_for('member_floof'))
     return redirect(url_for('member_profile'))
 
 @app.route("/logout")
