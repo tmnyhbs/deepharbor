@@ -57,11 +57,88 @@ body {
 }
 
 .sub-tagline {
+    font-family: "SF Mono", "Fira Code", "Fira Mono", "Roboto Mono", "Courier New", monospace;
     font-size: 0.85em;
     font-style: italic;
     color: var(--secondary-color);
     text-transform: uppercase;
     letter-spacing: 0.1em;
+}
+
+.sub-tagline-word {
+    display: inline-block;
+    position: relative;
+}
+
+/* Tagline glitch effects */
+@keyframes glitch-shake {
+    0%   { transform: translate(0); }
+    20%  { transform: translate(-2px, 1px); }
+    40%  { transform: translate(2px, -1px); }
+    60%  { transform: translate(-1px, 2px); }
+    80%  { transform: translate(1px, -2px); }
+    100% { transform: translate(0); }
+}
+@keyframes glitch-clip-1 {
+    0%   { clip-path: inset(20% 0 60% 0); transform: translate(-3px, 0); }
+    25%  { clip-path: inset(50% 0 10% 0); transform: translate(3px, 0); }
+    50%  { clip-path: inset(10% 0 70% 0); transform: translate(-2px, 0); }
+    75%  { clip-path: inset(60% 0 5% 0); transform: translate(2px, 0); }
+    100% { clip-path: inset(30% 0 40% 0); transform: translate(-3px, 0); }
+}
+@keyframes glitch-clip-2 {
+    0%   { clip-path: inset(60% 0 5% 0); transform: translate(3px, 0); }
+    25%  { clip-path: inset(10% 0 60% 0); transform: translate(-3px, 0); }
+    50%  { clip-path: inset(70% 0 5% 0); transform: translate(2px, 0); }
+    75%  { clip-path: inset(5% 0 60% 0); transform: translate(-2px, 0); }
+    100% { clip-path: inset(40% 0 20% 0); transform: translate(3px, 0); }
+}
+.glitch-rgb.active {
+    animation: glitch-shake 0.15s linear infinite;
+}
+.glitch-rgb.active::before,
+.glitch-rgb.active::after {
+    content: attr(data-text);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    overflow: hidden;
+}
+.glitch-rgb.active::before {
+    color: #ff0040;
+    animation: glitch-clip-1 0.2s linear infinite;
+}
+.glitch-rgb.active::after {
+    color: #00e5ff;
+    animation: glitch-clip-2 0.2s linear infinite;
+}
+
+.flip-char {
+    display: inline-block;
+    transform-origin: center bottom;
+}
+.flip-char.flipping {
+    animation: flip-down 0.3s ease-in-out;
+}
+@keyframes flip-down {
+    0%   { transform: rotateX(0deg); }
+    50%  { transform: rotateX(-90deg); }
+    100% { transform: rotateX(0deg); }
+}
+
+.tagline-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background: var(--secondary-color);
+    margin-left: 1px;
+    vertical-align: text-bottom;
+    animation: blink-cursor 0.6s step-end infinite;
+}
+@keyframes blink-cursor {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
 }
 
 /* Row 2: Page title + status */

@@ -37,14 +37,14 @@
                 <a href="{{ url_for('member_dashboard') }}">
                     <img src="{{ url_for('static', filename='images/ps1-logo-horizontal-singleline.svg') }}" alt="Pumping Station: One" class="dh-header-logo-compact" width="312" height="28">
                 </a>
-                <span class="sub-tagline" id="sub-tagline"></span>
+                <span class="sub-tagline">Your Chicago <span class="sub-tagline-word" id="sub-tagline"></span></span>
             </div>
             <!-- Mobile: standard logo centered, tagline below -->
             <div class="d-lg-none text-center">
                 <a href="{{ url_for('member_dashboard') }}">
                     <img src="{{ url_for('static', filename='images/ps1-logo-horizontal.svg') }}" alt="Pumping Station: One" class="dh-header-logo">
                 </a>
-                <div class="mt-1"><span class="sub-tagline" id="sub-tagline-mobile"></span></div>
+                <div class="mt-1"><span class="sub-tagline">Your Chicago <span class="sub-tagline-word" id="sub-tagline-mobile"></span></span></div>
             </div>
         </div>
     </nav>
@@ -97,16 +97,7 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    <script>
-    (function() {
-        var phrases = ["Your Chicago Hackerspace", "Your Chicago Makerspace"];
-        var text = phrases[Math.floor(Math.random() * phrases.length)];
-        ['sub-tagline', 'sub-tagline-mobile'].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.textContent = text;
-        });
-    })();
-    </script>
+    <script src="{{ url_for('static', filename='js/tagline-glitch.js') }}"></script>
     <script>
     (function() {
         var icons = [

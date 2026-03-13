@@ -709,3 +709,15 @@ def dev_login_select():
         return redirect(url_for("index"))
 
     return redirect(url_for("member_dashboard"))
+
+
+###############################################################################
+# Dev sample pages — design/effect previews (dev mode only)
+###############################################################################
+
+@app.route("/dev/glitch-sample")
+def glitch_sample():
+    """Preview page for tagline glitch animation effects"""
+    if AUTH_MODE != "dev":
+        return redirect(url_for("index"))
+    return render_template("glitch_sample.html")
