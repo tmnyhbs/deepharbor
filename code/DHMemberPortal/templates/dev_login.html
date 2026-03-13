@@ -14,6 +14,33 @@
             {% endif %}
         {% endwith %}
 
+        <div class="row justify-content-center g-4 mb-4">
+            <div class="col-sm-6 col-lg-5">
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column">
+                        <h2 class="card-title">Already a Member?</h2>
+                        <p class="card-text text-muted flex-grow-1">Access your member dashboard and manage your account.</p>
+                        <small class="text-warning mb-2"><i class="fa-solid fa-triangle-exclamation"></i> B2C login does not work in dev mode.</small>
+                        <form method="POST" action="{{ url_for('dev_login_select') }}">
+                            <input type="hidden" name="member_id" value="{{ preset_users[0].member_id }}">
+                            <button type="submit" class="btn btn-primary w-100">Log In as {{ preset_users[0].name.split()[0] }}</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-5">
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column">
+                        <h2 class="card-title">New to Pumping Station: One?</h2>
+                        <p class="card-text text-muted flex-grow-1">Join our community and start your membership journey.</p>
+                        <small class="text-warning mb-2"><i class="fa-solid fa-triangle-exclamation"></i> Payments via the sign up flow won't work in dev mode.</small>
+                        <a href="{{ url_for('signup_start') }}" class="btn btn-secondary w-100">Sign Up</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
             {% for user in preset_users %}
             <div class="col">
