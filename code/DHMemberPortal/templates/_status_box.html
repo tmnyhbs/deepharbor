@@ -1,6 +1,6 @@
 {% if status %}
 <div class="dashboard-status mb-3 {% if status.membership_status == 'active' %}active{% else %}inactive{% endif %}">
-    <div class="status-text">{{ 'Membership Active' if status.membership_status == 'active' else 'Membership Inactive' }}</div>
+    <div class="status-text">{{ 'Active' if status.membership_status == 'active' else 'Inactive' }}</div>
     <div class="level-text">{{ status.membership_level or 'Member' }}</div>
 </div>
 {% endif %}
