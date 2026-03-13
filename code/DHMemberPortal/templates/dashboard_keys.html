@@ -1,88 +1,80 @@
-{% extends "base.html" %}
+{% extends "_dashboard_base.html" %}
 {% block title %}Keys & Access - Pumping Station: One{% endblock %}
-{% block tagline %}<i class="fa-solid fa-key"></i> Keys & Access{% endblock %}
-{% block header_actions %}
-<a href="{{ url_for('member_dashboard') }}" class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
-{% endblock %}
-{% block content_class %}content dashboard{% endblock %}
-{% block content %}
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            {% for category, message in messages %}
-            <div class="alert alert-{{ category }}" {% if category == 'warning' %}data-alert-warning{% endif %}>{{ message }}</div>
-            {% endfor %}
-            {% endif %}
-            {% endwith %}
+{% block page_title %}<i class="fa-solid fa-key ic-keys"></i> Keys & Access{% endblock %}
+{% block dashboard_content %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h2 class="card-title mb-3">Your Keys</h2>
 
-            {% include '_status_box.html' %}
+                    <form id="keysForm" method="POST" action="{{ url_for('member_update_profile') }}">
+                    <input type="hidden" name="source_page" value="keys">
+                    <input type="hidden" name="first_name" value="{{ identity.first_name or '' }}">
+                    <input type="hidden" name="last_name" value="{{ identity.last_name or '' }}">
+                    <input type="hidden" name="nickname" value="{{ identity.nickname or '' }}">
 
-            <div class="card">
-                <h2>Your Keys</h2>
+                    {% set rfid_tags_list = [] %}
+                    {% if access and access.rfid_tags is string %}
+                        {% set rfid_tags_list = access.rfid_tags.split(',') if access.rfid_tags else [] %}
+                    {% elif access and access.rfid_tags is iterable %}
+                        {% set rfid_tags_list = access.rfid_tags %}
+                    {% elif access and access.rfid_tags %}
+                        {% set rfid_tags_list = [access.rfid_tags] %}
+                    {% endif %}
 
-                <form id="keysForm" method="POST" action="{{ url_for('member_update_profile') }}">
-                <input type="hidden" name="source_page" value="keys">
-                <input type="hidden" name="first_name" value="{{ identity.first_name or '' }}">
-                <input type="hidden" name="last_name" value="{{ identity.last_name or '' }}">
-                <input type="hidden" name="nickname" value="{{ identity.nickname or '' }}">
-
-                {% set rfid_tags_list = [] %}
-                {% if access and access.rfid_tags is string %}
-                    {% set rfid_tags_list = access.rfid_tags.split(',') if access.rfid_tags else [] %}
-                {% elif access and access.rfid_tags is iterable %}
-                    {% set rfid_tags_list = access.rfid_tags %}
-                {% elif access and access.rfid_tags %}
-                    {% set rfid_tags_list = [access.rfid_tags] %}
-                {% endif %}
-
-                <div class="img-card img-card-horizontal" style="margin-bottom: 1rem;">
-                    <img src="{{ url_for('static', filename='images/rfidkeynumber.png') }}" alt="Key card number location" class="img-card-image">
-                    <div class="img-card-body">
-                        <p>Enter the first 10 digits on your key card or key fob. Do not give your keys away.</p>
+                    <div class="img-card img-card-horizontal mb-3">
+                        <img src="{{ url_for('static', filename='images/rfidkeynumber.png') }}" alt="Key card number location" class="img-card-image">
+                        <div class="img-card-body">
+                            <p>Enter the first 10 digits on your key card or key fob. Do not give your keys away.</p>
+                        </div>
                     </div>
-                </div>
 
-                <div class="info-group">
-                    <label>Key cards & fobs</label>
-                    <div class="info-value">
-                        <div id="keysValidationError" class="alert alert-error" style="display: none;"></div>
-                        <table class="table" id="rfidTagsTable" style="margin-bottom: 0.5rem;">
-                            <thead>
-                                <tr>
-                                    <th style="width: 85%;">Card or Fob Number</th>
-                                    <th style="width: 15%; text-align: center;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="rfidTagsTableBody">
-                                {% if rfid_tags_list|length > 0 %}
-                                    {% for tag in rfid_tags_list %}
-                                    <tr>
-                                        <td><input type="text" class="form-control rfid-tag-input" value="{{ tag.strip() }}" maxlength="10" inputmode="numeric" pattern="[0-9]*"></td>
-                                        <td style="text-align: center;"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn">Delete</button></td>
-                                    </tr>
-                                    {% endfor %}
-                                {% else %}
-                                    <tr>
-                                        <td><input type="text" class="form-control rfid-tag-input" value="" maxlength="10" inputmode="numeric" pattern="[0-9]*"></td>
-                                        <td style="text-align: center;"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn">Delete</button></td>
-                                    </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
-                        <button type="button" class="btn btn-outline btn-sm" id="addRfidTagBtn" title="Add card or fob"><i class="fa-solid fa-plus"></i></button>
-                        <input type="hidden" name="rfid_tags" id="rfidTagsHidden">
+                    <div class="info-group">
+                        <label>Key cards & fobs</label>
+                        <div class="info-value">
+                            <div id="keysValidationError" class="alert alert-danger" style="display: none;"></div>
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="rfidTagsTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 85%;">Card or Fob Number</th>
+                                            <th style="width: 15%; text-align: center;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="rfidTagsTableBody">
+                                        {% if rfid_tags_list|length > 0 %}
+                                            {% for tag in rfid_tags_list %}
+                                            <tr>
+                                                <td><input type="text" class="form-control rfid-tag-input" autocomplete="off" value="{{ tag.strip() }}" maxlength="10" inputmode="numeric" pattern="[0-9]*"></td>
+                                                <td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn">Delete</button></td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td><input type="text" class="form-control rfid-tag-input" autocomplete="off" value="" maxlength="10" inputmode="numeric" pattern="[0-9]*"></td>
+                                                <td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn">Delete</button></td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="addRfidTagBtn" title="Add card or fob"><i class="fa-solid fa-plus"></i></button>
+                            <input type="hidden" name="rfid_tags" id="rfidTagsHidden">
+                        </div>
                     </div>
-                </div>
 
-                <div style="text-align: center; margin: 1rem 0;">
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <div class="text-center mt-3">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                    </form>
                 </div>
-                </form>
             </div>
 
             <!-- Placeholder for future features -->
-            <div class="card">
-                <h2>Doorbot</h2>
-                <p class="no-data">Doorbot coming soon.</p>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h2 class="card-title mb-3">Doorbot</h2>
+                    <p class="no-data">Doorbot coming soon.</p>
+                </div>
             </div>
 {% endblock %}
 {% block scripts %}
@@ -107,8 +99,8 @@
             addRfidTagBtn.addEventListener('click', () => {
                 const newRow = document.createElement('tr');
                 newRow.innerHTML = `
-                    <td><input type="text" class="form-control rfid-tag-input" value="" maxlength="10" inputmode="numeric" pattern="[0-9]*"></td>
-                    <td style="text-align: center;"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn">Delete</button></td>
+                    <td><input type="text" class="form-control rfid-tag-input" autocomplete="off" value="" maxlength="10" inputmode="numeric" pattern="[0-9]*"></td>
+                    <td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn">Delete</button></td>
                 `;
                 enforceNumeric(newRow.querySelector('.rfid-tag-input'));
                 rfidTagsTableBody.appendChild(newRow);
