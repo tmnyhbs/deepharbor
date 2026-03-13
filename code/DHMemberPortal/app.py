@@ -31,7 +31,7 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 ### forms won't wipe fields they don't include.
 ### To add a new field, just add its name to the relevant list.
 UPDATABLE_FIELDS = {
-    "identity": ["first_name", "last_name", "nickname", "pronouns"],
+    "identity": ["first_name", "last_name", "nickname", "pronouns", "nametag_subtitle"],
 }
 
 def apply_form_fields(form, data_dict, field_list):
