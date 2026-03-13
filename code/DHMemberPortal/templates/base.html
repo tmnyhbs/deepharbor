@@ -34,14 +34,14 @@
         <div class="container">
             <!-- Desktop: compact logo left, tagline right -->
             <div class="d-none d-lg-flex align-items-center justify-content-between">
-                <a href="{{ url_for('member_dashboard') }}">
+                <a href="{{ url_for('member_dashboard') if session.user else url_for('index') }}">
                     <img src="{{ url_for('static', filename='images/ps1-logo-horizontal-singleline.svg') }}" alt="Pumping Station: One" class="dh-header-logo-compact" width="312" height="28">
                 </a>
                 <span class="sub-tagline">Your Chicago <span class="sub-tagline-word" id="sub-tagline"></span></span>
             </div>
             <!-- Mobile: standard logo centered, tagline below -->
             <div class="d-lg-none text-center">
-                <a href="{{ url_for('member_dashboard') }}">
+                <a href="{{ url_for('member_dashboard') if session.user else url_for('index') }}">
                     <img src="{{ url_for('static', filename='images/ps1-logo-horizontal.svg') }}" alt="Pumping Station: One" class="dh-header-logo">
                 </a>
                 <div class="mt-1"><span class="sub-tagline">Your Chicago <span class="sub-tagline-word" id="sub-tagline-mobile"></span></span></div>
