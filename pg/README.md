@@ -29,6 +29,39 @@ This directory contains the necessary files and configurations for setting up an
      ```bash
      docker-compose restart
      ```
+## Tools
+
+Database utilities live in `pg/tools/` with shell wrappers in `tools/`.
+
+### update_view — Compare & Apply View Changes
+
+When you add a new field to a JSONB column (e.g., adding `pronouns` to `identity`), the `v_member_info` view in `pg/sql/pgsql_schema.sql` must also be updated to expose it. This tool automates checking and applying those changes.
+
+**Workflow for adding a new field:**
+1. Add the field to the portal code (templates, route handlers)
+2. Add it to the `v_member_info` view in `pg/sql/pgsql_schema.sql`
+3. Run `tools/update_view.sh` to apply the change to the live database
+
+**Usage:**
+```bash
+# Show what's different between schema file and live DB
+tools/update_view.sh --dry-run
+
+# Compare and prompt to apply
+tools/update_view.sh
+
+# Apply without prompting
+tools/update_view.sh --yes
+```
+
+**Database connection** defaults to `dh/dh@localhost:5432/deepharbor`. Override with `--host`, `--port`, `--dbname`, `--user`, `--password`.
+
+### generate_seed_data — Generate Test Data
+
+Generates random member records for dev/testing. Called via `tools/seed_data.sh generate`.
+
+See `tools/seed_data.sh --help` for usage.
+
 ## Additional Resources
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 - [Docker PostgreSQL Image](https://hub.docker.com/_/postgres)
