@@ -34,17 +34,17 @@
         <div class="container">
             <!-- Desktop: compact logo left, tagline right -->
             <div class="d-none d-lg-flex align-items-center justify-content-between">
-                <a href="{{ url_for('member_dashboard') }}">
+                <a href="{{ url_for('member_dashboard') if session.user else url_for('index') }}">
                     <img src="{{ url_for('static', filename='images/ps1-logo-horizontal-singleline.svg') }}" alt="Pumping Station: One" class="dh-header-logo-compact" width="312" height="28">
                 </a>
-                <span class="sub-tagline" id="sub-tagline"></span>
+                <span class="sub-tagline">Your Chicago <span class="sub-tagline-word" id="sub-tagline"></span></span>
             </div>
             <!-- Mobile: standard logo centered, tagline below -->
             <div class="d-lg-none text-center">
-                <a href="{{ url_for('member_dashboard') }}">
+                <a href="{{ url_for('member_dashboard') if session.user else url_for('index') }}">
                     <img src="{{ url_for('static', filename='images/ps1-logo-horizontal.svg') }}" alt="Pumping Station: One" class="dh-header-logo">
                 </a>
-                <div class="mt-1"><span class="sub-tagline" id="sub-tagline-mobile"></span></div>
+                <div class="mt-1"><span class="sub-tagline">Your Chicago <span class="sub-tagline-word" id="sub-tagline-mobile"></span></span></div>
             </div>
         </div>
     </nav>
@@ -97,16 +97,7 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    <script>
-    (function() {
-        var phrases = ["Your Chicago Hackerspace", "Your Chicago Makerspace"];
-        var text = phrases[Math.floor(Math.random() * phrases.length)];
-        ['sub-tagline', 'sub-tagline-mobile'].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.textContent = text;
-        });
-    })();
-    </script>
+    <script src="{{ url_for('static', filename='js/tagline-glitch.js') }}"></script>
     <script>
     (function() {
         var icons = [
@@ -120,6 +111,109 @@
         document.querySelectorAll('[data-ic]').forEach(function(el) {
             // Swap icon class; data-ic holds the color class to re-apply
             el.className = 'fa-solid ' + newIcon + ' random-icon ' + el.getAttribute('data-ic');
+        });
+    })();
+    </script>
+    <!-- Validation toast (shared across all forms) -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="dh-validation-toast" class="toast dh-toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="5000">
+            <div class="toast-header">
+                <i class="fa-solid fa-circle-exclamation text-danger me-2" id="dh-toast-icon"></i>
+                <strong class="me-auto" id="dh-toast-title">Missing Required Fields</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="dh-toast-body"></div>
+        </div>
+    </div>
+    <script>
+    /* DH required-field validation — any form with class "dh-validate" gets toast + highlighting */
+    (function () {
+        var toastEl = document.getElementById('dh-validation-toast');
+        if (!toastEl) return;
+        var bsToast = new bootstrap.Toast(toastEl);
+
+        /* Dismiss on tap/click anywhere on the toast */
+        toastEl.addEventListener('click', function () { bsToast.hide(); });
+
+        document.querySelectorAll('form.dh-validate').forEach(function (form) {
+            form.setAttribute('novalidate', '');
+
+            form.addEventListener('submit', function (e) {
+                /* Clear previous errors */
+                form.querySelectorAll('.field-error').forEach(function (el) {
+                    el.classList.remove('field-error', 'field-shake');
+                });
+
+                /* Trim text/tel inputs */
+                form.querySelectorAll('input[type="text"], input[type="tel"], input[type="email"]').forEach(function (input) {
+                    input.value = input.value.trim();
+                });
+
+                /* Find empty required fields */
+                var missing = [];
+                form.querySelectorAll('[required]').forEach(function (input) {
+                    if (!input.value.trim()) {
+                        var label = input.getAttribute('data-label') || input.closest('.mb-3, .info-group')?.querySelector('label')?.textContent?.replace(/\s*Required\s*/, '').trim() || 'Field';
+                        missing.push(label);
+                        input.classList.add('field-error', 'field-shake');
+                        input.addEventListener('animationend', function () { input.classList.remove('field-shake'); }, { once: true });
+                    }
+                });
+
+                /* Email format check */
+                var errors = [];
+                form.querySelectorAll('input[type="email"]').forEach(function (input) {
+                    if (!input.value.trim()) return;
+                    if (!/^[^\s@]+@[^\s@]+$/.test(input.value.trim())) {
+                        var label = input.getAttribute('data-label') || 'Email';
+                        errors.push(label + ' must be a valid email address.');
+                        input.classList.add('field-error', 'field-shake');
+                        input.addEventListener('animationend', function () { input.classList.remove('field-shake'); }, { once: true });
+                    }
+                });
+
+                /* Age check on date inputs with data-min-age */
+                form.querySelectorAll('input[type="date"][data-min-age]').forEach(function (input) {
+                    if (!input.value) return;
+                    var minAge = parseInt(input.getAttribute('data-min-age'), 10);
+                    var dob = new Date(input.value + 'T00:00:00');
+                    var today = new Date();
+                    var age = today.getFullYear() - dob.getFullYear();
+                    var monthDiff = today.getMonth() - dob.getMonth();
+                    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                        age--;
+                    }
+                    if (age < minAge) {
+                        errors.push(input.getAttribute('data-age-message') || 'You must be at least ' + minAge + ' years old.');
+                        input.classList.add('field-error', 'field-shake');
+                        input.addEventListener('animationend', function () { input.classList.remove('field-shake'); }, { once: true });
+                    }
+                });
+
+                if (missing.length > 0 || errors.length > 0) {
+                    e.preventDefault();
+                    document.getElementById('dh-toast-icon').className = 'fa-solid fa-circle-exclamation text-danger me-2';
+                    toastEl.classList.remove('toast-success');
+                    var html = '';
+                    if (missing.length > 0) {
+                        document.getElementById('dh-toast-title').textContent = 'Missing Required Fields';
+                        html += '<ul>' + missing.map(function (n) { return '<li>' + n + '</li>'; }).join('') + '</ul>';
+                    }
+                    if (errors.length > 0) {
+                        if (missing.length === 0) {
+                            document.getElementById('dh-toast-title').textContent = 'Please Fix the Following';
+                        }
+                        html += errors.map(function (msg) { return '<div>' + msg + '</div>'; }).join('');
+                    }
+                    document.getElementById('dh-toast-body').innerHTML = html;
+                    bsToast.show();
+                }
+            });
+
+            /* Clear error styling on input */
+            form.querySelectorAll('[required]').forEach(function (input) {
+                input.addEventListener('input', function () { input.classList.remove('field-error'); });
+            });
         });
     })();
     </script>

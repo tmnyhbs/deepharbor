@@ -11,29 +11,38 @@
 
             <div class="card mb-3">
                 <div class="card-body">
-                    <h2 class="card-title mb-3">Name Tag Subtitle</h2>
-                    <p>Add a second line to your name tag for when it's printed.</p>
+                    <h2 class="card-title mb-3">Name Tag</h2>
+                    <form method="POST" action="{{ url_for('member_update_profile') }}" class="dh-validate">
+                    <input type="hidden" name="source_page" value="floof">
                     <div class="info-group">
                         <label>Subtitle</label>
+                        <span class="info-label-desc">Add a second line to your name tag for when it's printed.</span>
                         <div class="info-value">
-                            <input type="text" class="form-control" placeholder="Coming soon!" disabled>
+                            <input type="text" class="form-control" name="nametag_subtitle"
+                                   autocapitalize="words" autocorrect="off"
+                                   maxlength="100" value="{{ identity.nametag_subtitle or '' }}">
                         </div>
                     </div>
                     <div class="info-group">
                         <label>Pronouns</label>
-                        <span class="info-label-desc">Used by various awesome PS1 internal services and tools, included the name tag printer.</span>
+                        <span class="info-label-desc">How would you like to be referred to? (e.g. she/her, he/him, they/them)</span>
                         <div class="info-value">
                             <input type="text" class="form-control" name="pronouns"
-                                   value="Coming soon!" disabled>
+                                   autocapitalize="none" autocorrect="off"
+                                   maxlength="50" value="{{ identity.pronouns or '' }}">
                         </div>
                     </div>
+                    <div class="text-center mt-3">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                    </form>
                 </div>
             </div>
 
             <div class="card mb-3">
                 <div class="card-body">
                     <h2 class="card-title mb-3">Entrance Theme Song</h2>
-                    <p>URL to an 10 second or less MP3 that plays as your theme song when you print your badge.</p>
+                    <p>URL to an 10 second or less MP3 that plays as your theme song when you print your name tag.</p>
                     <div class="info-group">
                         <label>MP3 URL</label>
                         <div class="info-value">
@@ -55,7 +64,9 @@
                         <input class="form-check-input floof-identity" type="radio" name="identity_choice" id="identity_maker" value="maker">
                         <label class="form-check-label floof-identity" for="identity_maker">Maker</label>
                     </div>
-                    <button type="button" class="btn btn-primary" disabled>Save</button>
+                    <div class="text-center mt-3">
+                        <button type="button" class="btn btn-primary" disabled>Save</button>
+                    </div>
                 </div>
             </div>
 {% endblock %}

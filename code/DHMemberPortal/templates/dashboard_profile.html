@@ -7,24 +7,28 @@
                     <h2 class="card-title mb-3">Profile</h2>
 
                     {% if identity %}
-                    <form id="profileForm" method="POST" action="{{ url_for('member_update_profile') }}">
+                    <form id="profileForm" method="POST" action="{{ url_for('member_update_profile') }}" class="dh-validate">
                     <input type="hidden" name="source_page" value="profile">
 
                     <div class="row">
                         <div class="col-md-6">
                             <div class="info-group">
-                                <label>First Name</label>
+                                <label>First Name <span class="badge bg-danger required-badge">Required</span></label>
                                 <div class="info-value">
-                                    <input type="text" class="form-control" name="first_name"
+                                    <input type="text" class="form-control" name="first_name" required
+                                           data-label="First Name"
+                                           autocapitalize="words" autocorrect="off"
                                            maxlength="100" value="{{ identity.first_name or '' }}">
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="info-group">
-                                <label>Last Name</label>
+                                <label>Last Name <span class="badge bg-danger required-badge">Required</span></label>
                                 <div class="info-value">
-                                    <input type="text" class="form-control" name="last_name"
+                                    <input type="text" class="form-control" name="last_name" required
+                                           data-label="Last Name"
+                                           autocapitalize="words" autocorrect="off"
                                            maxlength="100" value="{{ identity.last_name or '' }}">
                                 </div>
                             </div>
@@ -33,19 +37,21 @@
 
                     <div class="info-group">
                         <label>Preferred Name/Nickname</label>
-                        <span class="info-label-desc">Used instead of your first name by various awesome PS1 internal services and tools, included the name tag printer.</span>
+                        <span class="info-label-desc">How would you like to identify yourself?</span>
                         <div class="info-value">
                             <input type="text" class="form-control" name="nickname"
+                                   autocapitalize="words" autocorrect="off"
                                    maxlength="100" value="{{ identity.nickname or '' }}">
                         </div>
                     </div>
 
                     <div class="info-group">
                         <label>Pronouns</label>
-                        <span class="info-label-desc">Used by various awesome PS1 internal services and tools, included the name tag printer.</span>
+                        <span class="info-label-desc">How would you like to be referred to? (e.g. she/her, he/him, they/them)</span>
                         <div class="info-value">
                             <input type="text" class="form-control" name="pronouns"
-                                   value="Coming soon!" disabled>
+                                   autocapitalize="none" autocorrect="off"
+                                   maxlength="50" value="{{ identity.pronouns or '' }}">
                         </div>
                     </div>
 
@@ -60,7 +66,7 @@
                         <div class="col-md-6">
                             <div class="info-group">
                                 <label>Username</label>
-                                <span class="info-label-desc">Windows Active Directory username for PS1 computers.</span>
+                                <span class="info-label-desc">This is for logging into PS1 computers, Canvas, etc.</span>
                                 <div class="info-value">{{ identity.active_directory_username }}</div>
                             </div>
                         </div>
