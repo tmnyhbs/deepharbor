@@ -152,7 +152,8 @@ def signup_submit():
         "emails": [{"type": "primary", "email_address": email}],
         "nickname": request.form.get("preferred_name"),
         "active_directory_username": request.form.get("username"),
-        "birthday": request.form.get("birthday")
+        "birthday": request.form.get("birthday"),
+        "pronouns": request.form.get("pronouns")
     }
     connections_data = {
         "phone": request.form.get("phone"),

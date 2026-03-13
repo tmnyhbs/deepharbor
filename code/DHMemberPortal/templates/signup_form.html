@@ -80,6 +80,14 @@
                             </div>
 
                             <div class="mb-3">
+                                <label for="pronouns" class="form-label">Pronouns</label>
+                                <input type="text" class="form-control" id="pronouns" name="pronouns"
+                                       maxlength="50" pattern=".*\S+.*|^$"
+                                       title="Cannot contain only spaces">
+                                <div class="form-text">How would you like to be referred to? (e.g. she/her, he/him, they/them)</div>
+                            </div>
+
+                            <div class="mb-3">
                                 <label for="birthday" class="form-label">Birthday *</label>
                                 <input type="date" class="form-control" id="birthday" name="birthday" required
                                        value="{{ contact.birthday if contact else '' }}">

@@ -19,14 +19,20 @@
                             <input type="text" class="form-control" placeholder="Coming soon!" disabled>
                         </div>
                     </div>
+                    <form method="POST" action="{{ url_for('member_update_profile') }}">
+                    <input type="hidden" name="source_page" value="floof">
                     <div class="info-group">
                         <label>Pronouns</label>
                         <span class="info-label-desc">Used by various awesome PS1 internal services and tools, included the name tag printer.</span>
                         <div class="info-value">
                             <input type="text" class="form-control" name="pronouns"
-                                   value="Coming soon!" disabled>
+                                   maxlength="50" value="{{ identity.pronouns or '' }}">
                         </div>
                     </div>
+                    <div class="text-center mt-3">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                    </form>
                 </div>
             </div>
 
