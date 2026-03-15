@@ -145,7 +145,7 @@
                 });
 
                 /* Trim text/tel inputs */
-                form.querySelectorAll('input[type="text"], input[type="tel"], input[type="email"]').forEach(function (input) {
+                form.querySelectorAll('input[type="text"], input[type="tel"], input[type="email"], input[type="url"]').forEach(function (input) {
                     input.value = input.value.trim();
                 });
 
@@ -190,6 +190,31 @@
                     }
                 });
 
+                /* HTTPS URL check */
+                form.querySelectorAll('input[type="url"][data-require-https]').forEach(function (input) {
+                    if (!input.value.trim()) return;
+                    if (!/^https:\/\/.+/.test(input.value.trim())) {
+                        var label = input.getAttribute('data-label') || 'URL';
+                        errors.push(label + ' must start with https://');
+                        input.classList.add('field-error', 'field-shake');
+                        input.addEventListener('animationend', function () { input.classList.remove('field-shake'); }, { once: true });
+                    }
+                });
+
+                /* Number range check */
+                form.querySelectorAll('input[type="number"][data-validate-range]').forEach(function (input) {
+                    if (!input.value.trim()) return;
+                    var val = parseFloat(input.value);
+                    var min = parseFloat(input.getAttribute('min'));
+                    var max = parseFloat(input.getAttribute('max'));
+                    var label = input.getAttribute('data-label') || 'Value';
+                    if (isNaN(val) || val < min || val > max) {
+                        errors.push(label + ' must be between ' + min + ' and ' + max + '.');
+                        input.classList.add('field-error', 'field-shake');
+                        input.addEventListener('animationend', function () { input.classList.remove('field-shake'); }, { once: true });
+                    }
+                });
+
                 if (missing.length > 0 || errors.length > 0) {
                     e.preventDefault();
                     document.getElementById('dh-toast-icon').className = 'fa-solid fa-circle-exclamation text-danger me-2';
@@ -213,6 +238,19 @@
             /* Clear error styling on input */
             form.querySelectorAll('[required]').forEach(function (input) {
                 input.addEventListener('input', function () { input.classList.remove('field-error'); });
+            });
+
+            /* Restrict number inputs to digits and decimal point only */
+            form.querySelectorAll('input[type="number"]').forEach(function (input) {
+                input.addEventListener('keypress', function (e) {
+                    var ch = String.fromCharCode(e.which || e.keyCode);
+                    if (ch === '.' && input.value.indexOf('.') !== -1) { e.preventDefault(); return; }
+                    if (ch !== '.' && (ch < '0' || ch > '9')) { e.preventDefault(); }
+                });
+                input.addEventListener('paste', function (e) {
+                    var text = (e.clipboardData || window.clipboardData).getData('text');
+                    if (!/^\d*\.?\d*$/.test(text)) { e.preventDefault(); }
+                });
             });
         });
     })();
