@@ -1,0 +1,205 @@
+{% extends "_dashboard_base.html" %}
+{% block title %}Keys & Access - Pumping Station: One{% endblock %}
+{% block page_title %}<i class="fa-solid fa-key ic-keys"></i> Keys & Access{% endblock %}
+{% block dashboard_content %}
+            {% if status.membership_status != 'active' %}
+            <!-- Full inactive warning (hides all page content until dismissed) -->
+            <div id="inactiveWarningFull">
+                <div class="alert alert-danger p-4" style="border-left: 4px solid var(--error-color); border-radius: 8px;">
+                    <h4 class="mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i>Membership Inactive</h4>
+                    <p>Your membership is currently inactive. Any key changes made will not grant building access until your membership is reactivated.</p>
+                    <div class="d-grid gap-2">
+                        <a href="https://billing.stripe.com/p/login/cN27vM18zeI35wI9AA" class="btn text-white" style="background-color: #059669; border-color: #059669;" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-credit-card me-1"></i> Update Billing</a>
+                        <a href="https://ps1.link/discord" class="btn text-white" style="background-color: #5865F2; border-color: #5865F2;" rel="noopener noreferrer"><i class="fa-brands fa-discord me-1"></i> Get Help in Discord</a>
+                        <a href="mailto:info@pumpingstationone.org" class="btn text-white" style="background-color: #2563eb; border-color: #2563eb;"><i class="fa-solid fa-envelope me-1"></i> Get Help over Email</a>
+                        <button type="button" class="btn btn-outline-secondary" id="dismissInactiveWarning"><i class="fa-solid fa-arrow-right me-1"></i> Continue to Keys Anyway</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collapsed reminder (shown after dismissing full warning) -->
+            <div id="inactiveWarningSmall" style="display: none;">
+                <div class="alert alert-danger mb-3" role="alert">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i><strong>Reminder:</strong> Your membership is inactive. Key changes won't grant access until reactivated.
+                </div>
+            </div>
+            {% endif %}
+
+            <div id="keysPageContent" {% if status.membership_status != 'active' %}style="display: none;"{% endif %}>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h2 class="card-title mb-3">Your Keys</h2>
+
+                    <form id="keysForm" method="POST" action="{{ url_for('member_update_profile') }}">
+                    <input type="hidden" name="source_page" value="keys">
+                    <input type="hidden" name="first_name" value="{{ identity.first_name or '' }}">
+                    <input type="hidden" name="last_name" value="{{ identity.last_name or '' }}">
+                    <input type="hidden" name="nickname" value="{{ identity.nickname or '' }}">
+
+                    {% set rfid_tags_list = [] %}
+                    {% if access and access.rfid_tags is string %}
+                        {% set rfid_tags_list = access.rfid_tags.split(',') if access.rfid_tags else [] %}
+                    {% elif access and access.rfid_tags is iterable %}
+                        {% set rfid_tags_list = access.rfid_tags %}
+                    {% elif access and access.rfid_tags %}
+                        {% set rfid_tags_list = [access.rfid_tags] %}
+                    {% endif %}
+
+                    <div class="img-card img-card-horizontal mb-3">
+                        <img src="{{ url_for('static', filename='images/rfidkeynumber.png') }}" alt="Key card number location" class="img-card-image">
+                        <div class="img-card-body">
+                            <p>Enter the first 10 digits on your key card or key fob. Do not give your keys away.</p>
+                        </div>
+                    </div>
+
+                    <div class="info-group">
+                        <label>Key cards & fobs</label>
+                        <div class="info-value">
+                            <div id="keysValidationError" class="alert alert-danger" style="display: none;"></div>
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="rfidTagsTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 85%;">Card or Fob Number</th>
+                                            <th style="width: 15%; text-align: center;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="rfidTagsTableBody">
+                                        {% if rfid_tags_list|length > 0 %}
+                                            {% for tag in rfid_tags_list %}
+                                            <tr>
+                                                <td><input type="text" class="form-control rfid-tag-input" autocomplete="off" value="{{ tag.strip() }}" maxlength="10" inputmode="numeric" pattern="[0-9]*"></td>
+                                                <td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn">Delete</button></td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td><input type="text" class="form-control rfid-tag-input" autocomplete="off" value="" maxlength="10" inputmode="numeric" pattern="[0-9]*"></td>
+                                                <td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn">Delete</button></td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="addRfidTagBtn" title="Add card or fob"><i class="fa-solid fa-plus"></i></button>
+                            <input type="hidden" name="rfid_tags" id="rfidTagsHidden">
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Placeholder for future features -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h2 class="card-title mb-3">Doorbot</h2>
+                    <p class="no-data">Doorbot coming soon.</p>
+                </div>
+            </div>
+            </div>{# /keysPageContent #}
+{% endblock %}
+{% block scripts %}
+    <script>
+        const keysForm = document.getElementById('keysForm');
+        const addRfidTagBtn = document.getElementById('addRfidTagBtn');
+        const rfidTagsTableBody = document.getElementById('rfidTagsTableBody');
+        const validationError = document.getElementById('keysValidationError');
+
+        // Strip non-numeric characters from input
+        function enforceNumeric(input) {
+            input.addEventListener('input', () => {
+                input.value = input.value.replace(/[^0-9]/g, '');
+            });
+        }
+
+        // Apply to all existing inputs
+        document.querySelectorAll('.rfid-tag-input').forEach(enforceNumeric);
+
+        // Add new RFID tag row
+        if (addRfidTagBtn) {
+            addRfidTagBtn.addEventListener('click', () => {
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td><input type="text" class="form-control rfid-tag-input" autocomplete="off" value="" maxlength="10" inputmode="numeric" pattern="[0-9]*"></td>
+                    <td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn">Delete</button></td>
+                `;
+                enforceNumeric(newRow.querySelector('.rfid-tag-input'));
+                rfidTagsTableBody.appendChild(newRow);
+            });
+        }
+
+        // Delete RFID tag row (delegated)
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-rfid-btn')) {
+                const row = e.target.closest('tr');
+                if (rfidTagsTableBody.children.length > 1) {
+                    row.remove();
+                } else {
+                    row.querySelector('.rfid-tag-input').value = '';
+                }
+            }
+        });
+
+        // Validate and collect RFID tags before submit
+        if (keysForm) {
+            keysForm.addEventListener('submit', (e) => {
+                validationError.style.display = 'none';
+                const rfidInputs = document.querySelectorAll('.rfid-tag-input');
+                const tags = Array.from(rfidInputs)
+                    .map(input => input.value.trim())
+                    .filter(tag => tag !== '');
+
+                for (const tag of tags) {
+                    if (!/^[0-9]+$/.test(tag)) {
+                        e.preventDefault();
+                        validationError.textContent = 'Card or fob numbers must contain only digits.';
+                        validationError.style.display = 'block';
+                        return;
+                    }
+                    if (tag.length > 10) {
+                        e.preventDefault();
+                        validationError.textContent = 'The card or fob number should only be the first 10 digits shown on the tag.';
+                        validationError.style.display = 'block';
+                        return;
+                    }
+                    if (tag.length < 10) {
+                        e.preventDefault();
+                        validationError.textContent = 'The card or fob number must be exactly 10 digits.';
+                        validationError.style.display = 'block';
+                        return;
+                    }
+                }
+
+                document.getElementById('rfidTagsHidden').value = tags.join(', ');
+            });
+        }
+
+        // Dismiss inactive membership warning
+        const dismissBtn = document.getElementById('dismissInactiveWarning');
+        if (dismissBtn) {
+            dismissBtn.addEventListener('click', () => {
+                document.getElementById('inactiveWarningFull').style.display = 'none';
+                document.getElementById('inactiveWarningSmall').style.display = 'block';
+                document.getElementById('keysPageContent').style.display = 'block';
+            });
+        }
+
+        // Tuesday open house conditional for warning alerts
+        (function() {
+            const warningAlerts = document.querySelectorAll('[data-alert-warning]');
+            if (warningAlerts.length === 0) return;
+            const now = new Date();
+            const isTuesday = now.getDay() === 2;
+            const hour = now.getHours();
+            if (isTuesday && hour >= 17 && hour < 23) {
+                warningAlerts.forEach(alert => {
+                    alert.innerHTML += '<br>During the open house the front door is left unlocked, so please test with the back door.';
+                });
+            }
+        })();
+    </script>
+{% endblock %}

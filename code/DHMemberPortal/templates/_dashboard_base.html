@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% set is_dashboard_home = (request.endpoint == 'member_dashboard') %}
+
+{% block header_bar %}
+{% set page_title_content %}{% block page_title %}{% endblock %}{% endset %}
+<div class="dh-header-row2 bg-white border-bottom">
+    <div class="container">
+        <!-- Desktop: page title left, status right -->
+        <div class="d-none d-lg-flex align-items-center justify-content-between">
+            <h1 class="dh-page-title mb-0">{{ page_title_content }}</h1>
+            {% if status %}
+            <div class="dh-status-bar {% if status.membership_status == 'active' %}active{% else %}inactive{% endif %}">
+                <span class="dh-status-text">{{ 'Active' if status.membership_status == 'active' else 'Inactive' }}</span>
+                <span class="dh-level-text">{{ status.membership_level or 'Member' }}</span>
+            </div>
+            {% endif %}
+        </div>
+        <!-- Mobile: menu + title row, status below -->
+        <div class="d-lg-none">
+            <div class="d-flex align-items-center justify-content-between">
+                <button class="btn btn-outline-secondary dh-menu-btn {% if is_dashboard_home %}d-none{% endif %}" type="button" data-bs-toggle="offcanvas" data-bs-target="#dashboardSidebar" aria-controls="dashboardSidebar">
+                    <i class="fa-solid fa-bars"></i> Menu
+                </button>
+                <h1 class="dh-page-title mb-0 {% if is_dashboard_home %}w-100 text-center{% else %}flex-grow-1 text-center{% endif %}">{{ page_title_content }}</h1>
+                {% if not is_dashboard_home %}<div style="width: 80px;"></div>{% endif %}
+            </div>
+            {% if status %}
+            <div class="mt-2 d-flex justify-content-center">
+                <div class="dh-status-bar {% if status.membership_status == 'active' %}active{% else %}inactive{% endif %}">
+                    <span class="dh-status-text">{{ 'Active' if status.membership_status == 'active' else 'Inactive' }}</span>
+                    <span class="dh-level-text">{{ status.membership_level or 'Member' }}</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block body %}
+<div class="container flex-grow-1">
+    <div class="row">
+        <!-- Sidebar: visible on lg+ for sub-pages, always hidden on dashboard home -->
+        {% if not is_dashboard_home %}
+        <nav class="col-lg-3 d-none d-lg-block dh-sidebar py-3 px-3">
+            {% include '_dashboard_sidebar_content.html' %}
+        </nav>
+        {% endif %}
+
+        <!-- Offcanvas sidebar (always available for mobile, and for dashboard home on all sizes) -->
+        <div class="offcanvas offcanvas-start dh-sidebar-offcanvas" tabindex="-1" id="dashboardSidebar" aria-labelledby="dashboardSidebarLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="dashboardSidebarLabel">Dashboard</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+                {% include '_dashboard_sidebar_content.html' %}
+            </div>
+        </div>
+
+        <!-- Main content area -->
+        <main class="{% if is_dashboard_home %}col-12{% else %}col-lg-9{% endif %} py-3 px-3 px-md-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            {% block dashboard_content %}{% endblock %}
+        </main>
+    </div>
+</div>
+{% endblock %}

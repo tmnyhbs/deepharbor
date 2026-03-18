@@ -12,6 +12,12 @@ from dhs_logging import logger
 from config import config
 import app_config
 
+### Dev mode flag — read from app_config so we only check the env var once
+AUTH_MODE = app_config.AUTH_MODE
+DEV_BANNER = app_config.DEV_BANNER
+if AUTH_MODE == "dev":
+    logger.info("AUTH_MODE=dev — B2C authentication bypassed, dev login enabled")
+
 app = Flask(__name__)
 app.config.from_object(app_config)
 Session(app)
@@ -19,6 +25,20 @@ Session(app)
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+### Fields updatable from dashboard forms, grouped by JSONB column.
+### Only fields present in the form submission are updated — partial
+### forms won't wipe fields they don't include.
+### To add a new field, just add its name to the relevant list.
+UPDATABLE_FIELDS = {
+    "identity": ["first_name", "last_name", "nickname", "pronouns", "nametag_subtitle", "theme_song_url", "theme_song_duration"],
+}
+
+def apply_form_fields(form, data_dict, field_list):
+    """Update data_dict with form values only for fields present in the submission."""
+    for field in field_list:
+        if field in form:
+            data_dict[field] = form[field].strip() or None
 
 ###############################################################################
 # Health check endpoint
@@ -44,6 +64,8 @@ def anonymous():
 @app.route('/')
 def index():
     """Landing page with login and signup options"""
+    if AUTH_MODE == "dev":
+        return render_template('dev_login.html', preset_users=MEMBER_DEV_USERS)
     return render_template('landing.html')
 
 @app.route('/signup')
@@ -130,7 +152,8 @@ def signup_submit():
         "emails": [{"type": "primary", "email_address": email}],
         "nickname": request.form.get("preferred_name"),
         "active_directory_username": request.form.get("username"),
-        "birthday": request.form.get("birthday")
+        "birthday": request.form.get("birthday"),
+        "pronouns": request.form.get("pronouns")
     }
     connections_data = {
         "phone": request.form.get("phone"),
@@ -243,6 +266,8 @@ def signup_submit():
 
 @app.route("/login")
 def login():
+    if AUTH_MODE == "dev":
+        return redirect(url_for("index"))
     logger.info("Login route accessed - redirecting to B2C")
     try:
         # Technically, we don't need to save the state because Flask session is stored on the server,
@@ -341,53 +366,119 @@ def authorized():
     
     return redirect(url_for("index"))
 
-@app.route('/dashboard')
-def member_dashboard():
-    """Show member dashboard with identity and authorizations"""
-    logger.info(f"Dashboard accessed - user in session: {session.get('user') is not None}, " +
-                f"access_token in session: {session.get('access_token') is not None}, " +
-                f"member_id in session: {session.get('member_id')}")
-    
+def _get_authenticated_member_info():
+    """Shared helper for dashboard pages. Returns (member_info, error_redirect).
+    If error_redirect is not None, the caller should return it."""
     if not session.get("user"):
         logger.warning("No user in session, redirecting to login")
-        return redirect(url_for("login"))
-    
+        return None, redirect(url_for("index") if AUTH_MODE == "dev" else url_for("login"))
+
     if 'access_token' not in session or 'member_id' not in session:
         logger.warning("Missing access_token or member_id in session, redirecting to login")
-        return redirect(url_for('login'))
-    
+        return None, redirect(url_for("index") if AUTH_MODE == "dev" else url_for("login"))
+
     access_token = session['access_token']
     user_email = session['email']
-    
+
     try:
         logger.info(f"Fetching member data for user: {user_email}")
-                
-        # Get member information
         member_data = dhservices.get_member_id(access_token, user_email)
         member_id = member_data.get("member_id")
-        
         member_info = dhservices.get_full_member_info(access_token, member_id)
-        logger.info(f"Member info: {member_info}")
-        
-        # Split authorizations into computer and physical
-        computer_auths = member_info.get('authorizations', {}).get('computer_authorizations', []) if isinstance(member_info, dict) else []
-        physical_auths = member_info.get('authorizations', {}).get('physical_authorizations', []) if isinstance(member_info, dict) else []
-        
-        logger.info(f"Dashboard loaded successfully for member {member_id}")
-        
-        return render_template('member_dashboard.html',
-                             identity=member_info.get('identity', {}) if isinstance(member_info, dict) else {},
-                             authorizations_computer_authorizations=computer_auths,
-                             authorizations_physical_authorizations=physical_auths,
-                             status=member_info.get('status', {}) if isinstance(member_info, dict) else {},
-                             access=member_info.get('access', {}) if isinstance(member_info, dict) else {},
-                             extras=member_info.get('extras', {}) if isinstance(member_info, dict) else {},
-                             forms=member_info.get('forms', []) if isinstance(member_info, dict) else {},
-                             user=session.get('user'))
+        logger.info(f"Member info loaded for member {member_id}")
+        return member_info, None
     except Exception as e:
-        logger.error(f"Dashboard error: {str(e)}", exc_info=True)
-        flash('Error loading dashboard', 'error')
-        return redirect(url_for('login'))
+        logger.error(f"Error fetching member data: {str(e)}", exc_info=True)
+        flash('Error loading member data', 'error')
+        return None, redirect(url_for('login'))
+
+@app.route('/dashboard')
+def member_dashboard():
+    """Show member dashboard menu"""
+    member_info, error = _get_authenticated_member_info()
+    if error:
+        return error
+
+    return render_template('member_dashboard.html',
+                         status=member_info.get('status', {}) if isinstance(member_info, dict) else {},
+                         user=session.get('user'))
+
+@app.route('/dashboard/profile')
+def member_profile():
+    """Show member profile - name, nickname, email, username"""
+    member_info, error = _get_authenticated_member_info()
+    if error:
+        return error
+
+    return render_template('dashboard_profile.html',
+                         identity=member_info.get('identity', {}) if isinstance(member_info, dict) else {},
+                         status=member_info.get('status', {}) if isinstance(member_info, dict) else {},
+                         access=member_info.get('access', {}) if isinstance(member_info, dict) else {},
+                         user=session.get('user'))
+
+@app.route('/dashboard/keys')
+def member_keys():
+    """Show member keys - RFID tags, future Doorbot"""
+    member_info, error = _get_authenticated_member_info()
+    if error:
+        return error
+
+    access = member_info.get('access', {}) if isinstance(member_info, dict) else {}
+
+    # Pad RFID tags with leading zeros to 10 digits
+    if access and 'rfid_tags' in access and access['rfid_tags']:
+        if isinstance(access['rfid_tags'], list):
+            access['rfid_tags'] = [tag.zfill(10) for tag in access['rfid_tags'] if isinstance(tag, str)]
+        elif isinstance(access['rfid_tags'], str):
+            access['rfid_tags'] = ','.join(tag.strip().zfill(10) for tag in access['rfid_tags'].split(',') if tag.strip())
+
+    return render_template('dashboard_keys.html',
+                         access=access,
+                         identity=member_info.get('identity', {}) if isinstance(member_info, dict) else {},
+                         status=member_info.get('status', {}) if isinstance(member_info, dict) else {},
+                         user=session.get('user'))
+
+@app.route('/dashboard/auths')
+def member_auths():
+    """Show member authorizations"""
+    member_info, error = _get_authenticated_member_info()
+    if error:
+        return error
+
+    computer_auths = member_info.get('authorizations', {}).get('computer_authorizations', []) if isinstance(member_info, dict) else []
+    physical_auths = member_info.get('authorizations', {}).get('physical_authorizations', []) if isinstance(member_info, dict) else []
+
+    return render_template('dashboard_auths.html',
+                         computer_auths=computer_auths,
+                         physical_auths=physical_auths,
+                         status=member_info.get('status', {}) if isinstance(member_info, dict) else {},
+                         user=session.get('user'))
+
+@app.route('/dashboard/storage')
+def member_storage():
+    """Show storage, misc info, and forms data"""
+    member_info, error = _get_authenticated_member_info()
+    if error:
+        return error
+
+    return render_template('dashboard_info_storage.html',
+                         extras=member_info.get('extras', {}) if isinstance(member_info, dict) else {},
+                         forms=member_info.get('forms', {}) if isinstance(member_info, dict) else {},
+                         status=member_info.get('status', {}) if isinstance(member_info, dict) else {},
+                         identity=member_info.get('identity', {}) if isinstance(member_info, dict) else {},
+                         user=session.get('user'))
+
+@app.route('/dashboard/floof')
+def member_floof():
+    """Show fun stuff page"""
+    member_info, error = _get_authenticated_member_info()
+    if error:
+        return error
+
+    return render_template('dashboard_floof.html',
+                         identity=member_info.get('identity', {}) if isinstance(member_info, dict) else {},
+                         status=member_info.get('status', {}) if isinstance(member_info, dict) else {},
+                         user=session.get('user'))
 
 @app.route('/dashboard/update-profile', methods=['POST'])
 def member_update_profile():
@@ -404,11 +495,6 @@ def member_update_profile():
     member_id = session['member_id']
     user_email = session.get('email')
 
-    first_name = request.form.get('first_name', '').strip()
-    last_name = request.form.get('last_name', '').strip()
-    nickname = request.form.get('nickname', '').strip()
-    rfid_tags_raw = request.form.get('rfid_tags', '').strip()
-
     try:
         member_info = dhservices.get_full_member_info(access_token, member_id)
         identity_data = (member_info.get('identity') if isinstance(member_info, dict) else {}) or {}
@@ -416,30 +502,53 @@ def member_update_profile():
         logger.error(f"Error fetching identity for update: {str(e)}", exc_info=True)
         identity_data = {}
 
-    identity_data["first_name"] = first_name or None
-    identity_data["last_name"] = last_name or None
-    identity_data["nickname"] = nickname or None
+    apply_form_fields(request.form, identity_data, UPDATABLE_FIELDS["identity"])
 
     if not identity_data.get("emails") and user_email:
         identity_data["emails"] = [{"type": "primary", "email_address": user_email}]
 
-    rfid_tags = [tag.strip() for tag in rfid_tags_raw.split(',') if tag.strip()]
+    # Only process RFID tags if the field is in the form
+    rfid_tags_raw = request.form.get('rfid_tags', '').strip() if 'rfid_tags' in request.form else None
+    rfid_tags = [tag.strip() for tag in rfid_tags_raw.split(',') if tag.strip()] if rfid_tags_raw is not None else []
     access_data = {"rfid_tags": rfid_tags}
+
+    # Validate RFID tags: must be exactly 10 numeric digits
+    for tag in rfid_tags:
+        if not tag.isdigit() or len(tag) != 10:
+            flash('Each card or fob number must be exactly 10 digits.', 'error')
+            source_page = request.form.get('source_page', 'profile')
+            if source_page == 'keys':
+                return redirect(url_for('member_keys'))
+            return redirect(url_for('member_profile'))
+
+    # Determine source page for redirect
+    source_page = request.form.get('source_page', 'profile')
 
     try:
         dhservices.update_member_identity(access_token, member_id, identity_data)
-        dhservices.update_member_access(access_token, member_id, access_data)
+        if 'rfid_tags' in request.form:
+            dhservices.update_member_access(access_token, member_id, access_data)
         flash('Profile updated successfully', 'success')
+        if source_page == 'keys':
+            flash('Remember to test your new keys before leaving the building, hearing the key reader beep does not mean the key works. Ask for help so you don\'t get locked out.', 'warning')
     except Exception as e:
         logger.error(f"Error updating member profile: {str(e)}", exc_info=True)
         flash('Error updating profile', 'error')
-
-    return redirect(url_for('member_dashboard'))
+    if source_page == 'keys':
+        return redirect(url_for('member_keys'))
+    if source_page == 'floof':
+        return redirect(url_for('member_floof'))
+    return redirect(url_for('member_profile'))
 
 @app.route("/logout")
 def logout():
     logger.info("Logout route accessed")
     session.clear()  # Wipe out user and its token cache from session
+
+    if AUTH_MODE == "dev":
+        # Dev mode — just redirect to index, no B2C logout needed
+        return redirect(url_for("index"))
+
     return redirect(  # Also logout from your tenant's web session
         app_config.AUTHORITY
         + "/oauth2/v2.0/logout"
@@ -537,3 +646,78 @@ def _get_token_from_cache(scope=None):
 app.jinja_env.globals.update(_build_auth_code_flow=_build_auth_code_flow)  # Used in template
 # We want to show formatted dates in the dashboard
 app.jinja_env.globals.update(format_date=format_date)  # Used in template
+app.jinja_env.globals.update(git_version=config.get("git", "version", fallback="unknown"))  # Used in footer
+app.jinja_env.globals.update(now=datetime.now)  # Used in footer for dynamic year
+app.jinja_env.globals.update(auth_mode=AUTH_MODE)  # Used in dev login routes
+app.jinja_env.globals.update(dev_banner=DEV_BANNER)  # Used in dev banner
+
+
+###############################################################################
+# Dev mode login routes — only active when AUTH_MODE=dev
+# These replace the B2C authentication flow with a simple user picker
+# that lets developers quickly log in as preset seed-data users.
+###############################################################################
+
+# Preset users for the dev login page. These match the seed data in
+# pg/sql/seed_data.sql — don't change the IDs without updating the SQL.
+MEMBER_DEV_USERS = [
+    {"member_id": 7, "name": "Rosalind Franklin", "email": "rosalind.franklin@example.com", "description": "Active member with full data"},
+    {"member_id": 16, "name": "Dorothy Vaughan", "email": "dorothy.vaughan@example.com", "description": "Brand new member, minimal data"},
+    {"member_id": 9, "name": "Marie Curie", "email": "marie.curie@example.com", "description": "Inactive member"},
+]
+
+@app.route("/dev-login/select", methods=["POST"])
+def dev_login_select():
+    """Handle dev login — authenticate via DHService API, set session"""
+    if AUTH_MODE != "dev":
+        return redirect(url_for("index"))
+
+    member_id = request.form.get("member_id")
+    if not member_id:
+        return redirect(url_for("index"))
+
+    try:
+        # Get DHService access token
+        access_token = dhservices.get_access_token(
+            dhservices.DH_CLIENT_ID,
+            dhservices.DH_CLIENT_SECRET
+        )
+
+        # Get member identity to populate session
+        identity = dhservices.get_member_identity(access_token, member_id)
+
+        # Extract email from identity
+        emails = identity.get("emails", [])
+        email = emails[0]["email_address"] if emails else f"dev-user-{member_id}@example.com"
+
+        # Set session variables to match what the B2C authorized() callback sets
+        session["user"] = {
+            "name": f"{identity.get('first_name', '')} {identity.get('last_name', '')}".strip(),
+            "email": email,
+            "preferred_username": email,
+            "dev_mode": True,
+        }
+        session["access_token"] = access_token
+        session["member_id"] = member_id
+        session["email"] = email
+
+        logger.info(f"Dev login: member_id={member_id}, email={email}")
+
+    except Exception as e:
+        logger.error(f"Dev login error: {e}")
+        flash(f"Dev login failed: {str(e)}. Make sure the database is running and seed data is loaded.", "error")
+        return redirect(url_for("index"))
+
+    return redirect(url_for("member_dashboard"))
+
+
+###############################################################################
+# Dev sample pages — design/effect previews (dev mode only)
+###############################################################################
+
+@app.route("/dev/glitch-sample")
+def glitch_sample():
+    """Preview page for tagline glitch animation effects"""
+    if AUTH_MODE != "dev":
+        return redirect(url_for("index"))
+    return render_template("glitch_sample.html")

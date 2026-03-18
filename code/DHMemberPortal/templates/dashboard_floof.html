@@ -1,0 +1,103 @@
+{% extends "_dashboard_base.html" %}
+{% block title %}Floof - Pumping Station: One{% endblock %}
+{% block page_title %}<i class="fa-solid fa-paw ic-floof"></i> Floof{% endblock %}
+{% block dashboard_content %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h2 class="card-title mb-3">Fun Stuff</h2>
+                    <p>Welcome to Floof! This is the place for fun extras and member perks. Stay tuned for more.</p>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h2 class="card-title mb-3">Name Tag</h2>
+                    <form method="POST" action="{{ url_for('member_update_profile') }}" class="dh-validate">
+                    <input type="hidden" name="source_page" value="floof">
+                    <div class="info-group">
+                        <label>Subtitle</label>
+                        <span class="info-label-desc">Add a second line to your name tag for when it's printed.</span>
+                        <div class="info-value">
+                            <input type="text" class="form-control" name="nametag_subtitle"
+                                   autocapitalize="words" autocorrect="off"
+                                   maxlength="100" value="{{ identity.nametag_subtitle or '' }}">
+                        </div>
+                    </div>
+                    <div class="info-group">
+                        <label>Pronouns</label>
+                        <span class="info-label-desc">How would you like to be referred to? (e.g. she/her, he/him, they/them)</span>
+                        <div class="info-value">
+                            <input type="text" class="form-control" name="pronouns"
+                                   autocapitalize="none" autocorrect="off"
+                                   maxlength="50" value="{{ identity.pronouns or '' }}">
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h2 class="card-title mb-3">Entrance Theme Song</h2>
+                    <form method="POST" action="{{ url_for('member_update_profile') }}" class="dh-validate">
+                    <input type="hidden" name="source_page" value="floof">
+                    <div class="info-group">
+                        <label>MP3 URL</label>
+                        <span class="info-label-desc">Direct link to an MP3 file that plays as your theme song when you print your name tag.</span>
+                        <div class="info-value">
+                            <input type="url" class="form-control" name="theme_song_url"
+                                   data-label="MP3 URL" data-require-https
+                                   autocapitalize="none" autocorrect="off" spellcheck="false"
+                                   maxlength="500" placeholder="https://example.com/my-theme.mp3"
+                                   value="{{ identity.theme_song_url or '' }}">
+                        </div>
+                    </div>
+                    <div class="info-group">
+                        <label>Duration</label>
+                        <span class="info-label-desc">How many seconds of your theme song to play, up to 10 seconds max.</span>
+                        <div class="info-value">
+                            <input type="number" class="form-control" name="theme_song_duration"
+                                   data-label="Duration" data-validate-range
+                                   inputmode="decimal" min="0.1" max="10" step="0.1"
+                                   placeholder="e.g. 5, 7.5"
+                                   value="{{ identity.theme_song_duration or '' }}">
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h2 class="card-title mb-3">You identify as a...</h2>
+                    <span class="info-label-desc"><a href="#" class="floof-identity text-muted"><u>Find out more</u></a> why this distinction is important and how PS1 uses this data.</span>
+                    <div class="form-check mb-2 mt-3">
+                        <input class="form-check-input floof-identity" type="radio" name="identity_choice" id="identity_hacker" value="hacker">
+                        <label class="form-check-label floof-identity" for="identity_hacker">Hacker</label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input floof-identity" type="radio" name="identity_choice" id="identity_maker" value="maker">
+                        <label class="form-check-label floof-identity" for="identity_maker">Maker</label>
+                    </div>
+                    <div class="text-center mt-3">
+                        <button type="button" class="btn btn-primary" disabled>Save</button>
+                    </div>
+                </div>
+            </div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.querySelectorAll('input.floof-identity').forEach(function(r) { r.checked = false; });
+document.querySelectorAll('.floof-identity').forEach(function(el) {
+    el.addEventListener('click', function() {
+        window.location.href = atob('aHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj1kUXc0dzlXZ1hjUQ==');
+    });
+});
+</script>
+{% endblock %}

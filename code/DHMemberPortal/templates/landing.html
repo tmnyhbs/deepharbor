@@ -1,31 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pumping Station: One Member Portal</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Pumping Station: One</h1>
-            <p class="tagline">Member Portal</p>
-        </div>
-
-        <div class="content">
-            <div class="card">
-                <h2>Already a Member?</h2>
-                <p>Access your member dashboard and manage your account.</p>
-                <a href="{{ url_for('login') }}" class="btn btn-primary">Log In</a>
+{% extends "base.html" %}
+{% block title %}Member Portal - Pumping Station: One{% endblock %}
+{% block page_title %}Member Portal{% endblock %}
+{% block content %}
+            <div class="col-sm-6 col-lg-5">
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column">
+                        <h2 class="card-title">Already a Member?</h2>
+                        <p class="card-text text-muted flex-grow-1">Access your member dashboard and manage your account.</p>
+                        <a href="{{ url_for('login') }}" class="btn btn-primary w-100">Log In</a>
+                    </div>
+                </div>
             </div>
 
-            <div class="card">
-                <h2>New to Pumping Station: One?</h2>
-                <p>Join our community and start your membership journey.</p>
-                <a href="{{ url_for('signup_start') }}" class="btn btn-secondary">Sign Up</a>
+            <div class="col-sm-6 col-lg-5">
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column">
+                        <h2 class="card-title">New to Pumping Station: One?</h2>
+                        <p class="card-text text-muted flex-grow-1">Join our community and start your membership journey.</p>
+                        <a href="{{ url_for('signup_start') }}" class="btn btn-secondary w-100">Sign Up</a>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-</body>
-</html>
+{% endblock %}
