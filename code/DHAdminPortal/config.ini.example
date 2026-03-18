@@ -11,3 +11,6 @@ RESETPASSWORD_USER_FLOW =
 client_name = dev-admin-portal
 client_secret = ikactyRLicKoI8VHiD9KZEwTrOIhtYjfzm1h6YUjj7M
 api_base_url = http://localhost/dh/service
+
+[git]
+version=unknown

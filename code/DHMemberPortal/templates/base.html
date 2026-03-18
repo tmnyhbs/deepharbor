@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/favicon-ps1-member.svg') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
+    <meta name="theme-color" content="#009fc2">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com; font-src cdnjs.cloudflare.com; img-src 'self' data:; frame-ancestors 'none'; base-uri 'self'; form-action 'self' billing.stripe.com *.b2clogin.com;">
+    <title>{% block title %}Pumping Station: One{% endblock %}</title>
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Custom overrides -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/portal.css') }}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+          integrity="sha384-nRgPTkuX86pH8yjPJUAFuASXQSSl2/bBUiNV47vSYpKFxHJhbcrGnmlYpYJMeD7a" crossorigin="anonymous">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="d-flex flex-column min-vh-100">
+    {% if dev_banner %}
+    <div class="dev-banner">DEV MODE — {{ git_version }}</div>
+    {% endif %}
+
+    <!-- Row 1: Logo + Tagline -->
+    <nav class="dh-header-row1 bg-white border-bottom py-2">
+        <div class="container">
+            <!-- Desktop: compact logo left, tagline right -->
+            <div class="d-none d-lg-flex align-items-center justify-content-between">
+                <a href="{{ url_for('member_dashboard') if session.user else url_for('index') }}">
+                    <img src="{{ url_for('static', filename='images/ps1-logo-horizontal-singleline.svg') }}" alt="Pumping Station: One" class="dh-header-logo-compact" width="312" height="28">
+                </a>
+                <span class="sub-tagline">Your Chicago <span class="sub-tagline-word" id="sub-tagline"></span></span>
+            </div>
+            <!-- Mobile: standard logo centered, tagline below -->
+            <div class="d-lg-none text-center">
+                <a href="{{ url_for('member_dashboard') if session.user else url_for('index') }}">
+                    <img src="{{ url_for('static', filename='images/ps1-logo-horizontal.svg') }}" alt="Pumping Station: One" class="dh-header-logo">
+                </a>
+                <div class="mt-1"><span class="sub-tagline">Your Chicago <span class="sub-tagline-word" id="sub-tagline-mobile"></span></span></div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Row 2: Page title (+ status/menu on dashboard pages via override) -->
+    {% block header_bar %}
+    {% set page_title_content %}{% block page_title %}{% endblock %}{% endset %}
+    {% if page_title_content %}
+    <div class="dh-header-row2 bg-white border-bottom">
+        <div class="container">
+            <h1 class="dh-page-title mb-0">{{ page_title_content }}</h1>
+        </div>
+    </div>
+    {% endif %}
+    {% block header_actions %}{% endblock %}
+    {% endblock %}
+
+    <!-- Main content -->
+    {% block body %}
+    <main class="container my-4 flex-grow-1">
+        <div class="{% block content_class %}row justify-content-center g-4{% endblock %}">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    {% endblock %}
+
+    <!-- Footer -->
+    {% block footer %}
+    <footer class="dh-footer mt-auto py-3 text-muted small">
+        <div class="container">
+            {% if session.user %}
+            <div class="d-flex align-items-center justify-content-center gap-3 mb-3">
+                <span>Logged in as {{ session.email or 'Unknown' }}</span>
+                <a href="{{ url_for('logout') }}" class="btn btn-secondary btn-sm">Logout</a>
+            </div>
+            {% endif %}
+            <hr>
+            <div class="d-flex align-items-center justify-content-center gap-3">
+                <a href="https://pumpingstationone.org" rel="noopener noreferrer"><img src="{{ url_for('static', filename='images/ps1-logo-square.svg') }}" alt="Pumping Station: One" class="dh-footer-logo"></a>
+                <div>
+                    <p class="mb-0 footer-help">Get help: {% if session.user %}<a href="https://ps1.link/discord" rel="noopener noreferrer"><i class="fa-brands fa-discord"></i></a> {% endif %}<a href="mailto:info@pumpingstationone.org"><i class="fa-solid fa-envelope"></i></a></p>
+                    <p class="mb-0">&copy; {{ now().year }} Pumping Station: One NFP</p>
+                    <p class="mb-0 footer-build"><a href="https://github.com/pumpingstationone/deepharbor" rel="noopener noreferrer"><i class="fa-brands fa-github"></i></a> {{ git_version }}</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    {% endblock %}
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='js/tagline-glitch.js') }}"></script>
+    <script>
+    (function() {
+        var icons = [
+            'fa-hat-wizard','fa-user-astronaut','fa-robot','fa-brain','fa-dragon',
+            'fa-user-ninja','fa-cat','fa-dog','fa-otter','fa-user-secret','fa-person-half-dress',
+            'fa-smile','fa-person-rays','fa-crow','fa-horse','fa-kiwi-bird','fa-fish-fins'
+        ];
+        var seed = Math.floor(Date.now() / 600000);
+        var index = ((seed * 2654435761) >>> 0) % icons.length;
+        var newIcon = icons[index];
+        document.querySelectorAll('[data-ic]').forEach(function(el) {
+            // Swap icon class; data-ic holds the color class to re-apply
+            el.className = 'fa-solid ' + newIcon + ' random-icon ' + el.getAttribute('data-ic');
+        });
+    })();
+    </script>
+    <!-- Validation toast (shared across all forms) -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="dh-validation-toast" class="toast dh-toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="5000">
+            <div class="toast-header">
+                <i class="fa-solid fa-circle-exclamation text-danger me-2" id="dh-toast-icon"></i>
+                <strong class="me-auto" id="dh-toast-title">Missing Required Fields</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="dh-toast-body"></div>
+        </div>
+    </div>
+    <script>
+    /* DH required-field validation — any form with class "dh-validate" gets toast + highlighting */
+    (function () {
+        var toastEl = document.getElementById('dh-validation-toast');
+        if (!toastEl) return;
+        var bsToast = new bootstrap.Toast(toastEl);
+
+        /* Dismiss on tap/click anywhere on the toast */
+        toastEl.addEventListener('click', function () { bsToast.hide(); });
+
+        document.querySelectorAll('form.dh-validate').forEach(function (form) {
+            form.setAttribute('novalidate', '');
+
+            form.addEventListener('submit', function (e) {
+                /* Clear previous errors */
+                form.querySelectorAll('.field-error').forEach(function (el) {
+                    el.classList.remove('field-error', 'field-shake');
+                });
+
+                /* Trim text/tel inputs */
+                form.querySelectorAll('input[type="text"], input[type="tel"], input[type="email"], input[type="url"]').forEach(function (input) {
+                    input.value = input.value.trim();
+                });
+
+                /* Find empty required fields */
+                var missing = [];
+                form.querySelectorAll('[required]').forEach(function (input) {
+                    if (!input.value.trim()) {
+                        var label = input.getAttribute('data-label') || input.closest('.mb-3, .info-group')?.querySelector('label')?.textContent?.replace(/\s*Required\s*/, '').trim() || 'Field';
+                        missing.push(label);
+                        input.classList.add('field-error', 'field-shake');
+                        input.addEventListener('animationend', function () { input.classList.remove('field-shake'); }, { once: true });
+                    }
+                });
+
+                /* Email format check */
+                var errors = [];
+                form.querySelectorAll('input[type="email"]').forEach(function (input) {
+                    if (!input.value.trim()) return;
+                    if (!/^[^\s@]+@[^\s@]+$/.test(input.value.trim())) {
+                        var label = input.getAttribute('data-label') || 'Email';
+                        errors.push(label + ' must be a valid email address.');
+                        input.classList.add('field-error', 'field-shake');
+                        input.addEventListener('animationend', function () { input.classList.remove('field-shake'); }, { once: true });
+                    }
+                });
+
+                /* Age check on date inputs with data-min-age */
+                form.querySelectorAll('input[type="date"][data-min-age]').forEach(function (input) {
+                    if (!input.value) return;
+                    var minAge = parseInt(input.getAttribute('data-min-age'), 10);
+                    var dob = new Date(input.value + 'T00:00:00');
+                    var today = new Date();
+                    var age = today.getFullYear() - dob.getFullYear();
+                    var monthDiff = today.getMonth() - dob.getMonth();
+                    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                        age--;
+                    }
+                    if (age < minAge) {
+                        errors.push(input.getAttribute('data-age-message') || 'You must be at least ' + minAge + ' years old.');
+                        input.classList.add('field-error', 'field-shake');
+                        input.addEventListener('animationend', function () { input.classList.remove('field-shake'); }, { once: true });
+                    }
+                });
+
+                /* HTTPS URL check */
+                form.querySelectorAll('input[type="url"][data-require-https]').forEach(function (input) {
+                    if (!input.value.trim()) return;
+                    if (!/^https:\/\/.+/.test(input.value.trim())) {
+                        var label = input.getAttribute('data-label') || 'URL';
+                        errors.push(label + ' must start with https://');
+                        input.classList.add('field-error', 'field-shake');
+                        input.addEventListener('animationend', function () { input.classList.remove('field-shake'); }, { once: true });
+                    }
+                });
+
+                /* Number range check */
+                form.querySelectorAll('input[type="number"][data-validate-range]').forEach(function (input) {
+                    if (!input.value.trim()) return;
+                    var val = parseFloat(input.value);
+                    var min = parseFloat(input.getAttribute('min'));
+                    var max = parseFloat(input.getAttribute('max'));
+                    var label = input.getAttribute('data-label') || 'Value';
+                    if (isNaN(val) || val < min || val > max) {
+                        errors.push(label + ' must be between ' + min + ' and ' + max + '.');
+                        input.classList.add('field-error', 'field-shake');
+                        input.addEventListener('animationend', function () { input.classList.remove('field-shake'); }, { once: true });
+                    }
+                });
+
+                if (missing.length > 0 || errors.length > 0) {
+                    e.preventDefault();
+                    document.getElementById('dh-toast-icon').className = 'fa-solid fa-circle-exclamation text-danger me-2';
+                    toastEl.classList.remove('toast-success');
+                    var html = '';
+                    if (missing.length > 0) {
+                        document.getElementById('dh-toast-title').textContent = 'Missing Required Fields';
+                        html += '<ul>' + missing.map(function (n) { return '<li>' + n + '</li>'; }).join('') + '</ul>';
+                    }
+                    if (errors.length > 0) {
+                        if (missing.length === 0) {
+                            document.getElementById('dh-toast-title').textContent = 'Please Fix the Following';
+                        }
+                        html += errors.map(function (msg) { return '<div>' + msg + '</div>'; }).join('');
+                    }
+                    document.getElementById('dh-toast-body').innerHTML = html;
+                    bsToast.show();
+                }
+            });
+
+            /* Clear error styling on input */
+            form.querySelectorAll('[required]').forEach(function (input) {
+                input.addEventListener('input', function () { input.classList.remove('field-error'); });
+            });
+
+            /* Restrict number inputs to digits and decimal point only */
+            form.querySelectorAll('input[type="number"]').forEach(function (input) {
+                input.addEventListener('keypress', function (e) {
+                    var ch = String.fromCharCode(e.which || e.keyCode);
+                    if (ch === '.' && input.value.indexOf('.') !== -1) { e.preventDefault(); return; }
+                    if (ch !== '.' && (ch < '0' || ch > '9')) { e.preventDefault(); }
+                });
+                input.addEventListener('paste', function (e) {
+                    var text = (e.clipboardData || window.clipboardData).getData('text');
+                    if (!/^\d*\.?\d*$/.test(text)) { e.preventDefault(); }
+                });
+            });
+        });
+    })();
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

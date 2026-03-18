@@ -1,4 +1,5 @@
 import email
+import os
 import requests
 
 from dhs_logging import logger
@@ -10,8 +11,9 @@ from config import config
 ## DHService API configuration
 ###############################################################################
 
-# This is the base URL for our DHService API
-DH_API_BASE_URL = config.get("dh_services", "api_base_url")
+# This is the base URL for our DHService API, with env var override
+# for running in Docker with bridge networking
+DH_API_BASE_URL = os.environ.get("DH_API_BASE_URL", config.get("dh_services", "api_base_url"))
 # This is the client ID and secret for our DHService API
 DH_CLIENT_ID = config.get("dh_services", "client_name")
 DH_CLIENT_SECRET = config.get("dh_services", "client_secret")

@@ -4,7 +4,7 @@
 SERVICE=$(basename "$PWD" | tr '[:upper:]' '[:lower:]')
 
 # Set up the git version string from the current commit
-echo "GIT_VERSION=$(git branch --show-current)-$(git rev-parse --short HEAD)" > .env
+echo "GIT_VERSION=$(git branch --show-current)-$(git rev-parse --short HEAD) $(date +%Y-%m-%d)" > .env
 
 # Rebuild the Docker image
 echo "Rebuilding image for service: $SERVICE"

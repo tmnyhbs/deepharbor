@@ -1,0 +1,524 @@
+{% extends "base.html" %}
+
+{% block title %}Tagline Glitch Effects - Sample{% endblock %}
+{% block page_title %}Tagline Glitch Effects{% endblock %}
+
+{% block extra_css %}
+<style>
+    .glitch-card {
+        background: var(--card-bg);
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .glitch-card h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+    .glitch-card .desc {
+        font-size: 0.8rem;
+        color: var(--secondary-color);
+        margin-bottom: 1rem;
+    }
+    .glitch-demo {
+        font-family: "SF Mono", "Fira Code", "Fira Mono", "Roboto Mono", "Courier New", monospace;
+        font-size: 0.85em;
+        font-style: italic;
+        color: var(--secondary-color);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        min-height: 1.5em;
+        position: relative;
+        text-align: right;
+    }
+    .glitch-demo .prefix {
+        /* stays static */
+    }
+    .glitch-demo .word {
+        display: inline-block;
+        position: relative;
+    }
+
+    /* Effect 4: CSS Glitch RGB split */
+    @keyframes glitch-shake {
+        0%   { transform: translate(0); }
+        20%  { transform: translate(-2px, 1px); }
+        40%  { transform: translate(2px, -1px); }
+        60%  { transform: translate(-1px, 2px); }
+        80%  { transform: translate(1px, -2px); }
+        100% { transform: translate(0); }
+    }
+    @keyframes glitch-clip-1 {
+        0%   { clip-path: inset(20% 0 60% 0); transform: translate(-3px, 0); }
+        25%  { clip-path: inset(50% 0 10% 0); transform: translate(3px, 0); }
+        50%  { clip-path: inset(10% 0 70% 0); transform: translate(-2px, 0); }
+        75%  { clip-path: inset(60% 0 5% 0); transform: translate(2px, 0); }
+        100% { clip-path: inset(30% 0 40% 0); transform: translate(-3px, 0); }
+    }
+    @keyframes glitch-clip-2 {
+        0%   { clip-path: inset(60% 0 5% 0); transform: translate(3px, 0); }
+        25%  { clip-path: inset(10% 0 60% 0); transform: translate(-3px, 0); }
+        50%  { clip-path: inset(70% 0 5% 0); transform: translate(2px, 0); }
+        75%  { clip-path: inset(5% 0 60% 0); transform: translate(-2px, 0); }
+        100% { clip-path: inset(40% 0 20% 0); transform: translate(3px, 0); }
+    }
+    .glitch-rgb.active {
+        animation: glitch-shake 0.15s linear infinite;
+    }
+    .glitch-rgb.active::before,
+    .glitch-rgb.active::after {
+        content: attr(data-text);
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        overflow: hidden;
+    }
+    .glitch-rgb.active::before {
+        color: #ff0040;
+        animation: glitch-clip-1 0.2s linear infinite;
+    }
+    .glitch-rgb.active::after {
+        color: #00e5ff;
+        animation: glitch-clip-2 0.2s linear infinite;
+    }
+
+    /* Effect 5: Split-flap */
+    .flip-char {
+        display: inline-block;
+        transition: transform 0.15s ease-in;
+        transform-origin: center bottom;
+    }
+    .flip-char.flipping {
+        animation: flip-down 0.3s ease-in-out;
+    }
+    @keyframes flip-down {
+        0%   { transform: rotateX(0deg); }
+        50%  { transform: rotateX(-90deg); }
+        100% { transform: rotateX(0deg); }
+    }
+
+    /* Typewriter cursor */
+    .cursor {
+        display: inline-block;
+        width: 2px;
+        height: 1em;
+        background: var(--secondary-color);
+        margin-left: 1px;
+        vertical-align: text-bottom;
+        animation: blink-cursor 0.6s step-end infinite;
+    }
+    @keyframes blink-cursor {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="col-lg-10">
+    <p class="text-muted mb-4">Each card demos a different glitch animation for the tagline word swap. They cycle every 3-5 seconds here for preview (production would be 20-60s).</p>
+
+    <div class="row g-4">
+        <!-- Effect 1: Character Scramble -->
+        <div class="col-md-6">
+            <div class="glitch-card">
+                <h3>1. Character Scramble</h3>
+                <p class="desc">Random characters cycle through each letter position before settling — hacker terminal vibes.</p>
+                <div class="glitch-demo">
+                    <span class="prefix">Your Chicago </span><span class="word" id="g1-word">Hackerspace</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Effect 2: Typewriter -->
+        <div class="col-md-6">
+            <div class="glitch-card">
+                <h3>2. Typewriter Delete & Retype</h3>
+                <p class="desc">Backspaces the old word letter by letter, then types the new one with a blinking cursor.</p>
+                <div class="glitch-demo">
+                    <span class="prefix">Your Chicago </span><span class="word" id="g2-word">Hackerspace</span><span class="cursor" id="g2-cursor" style="display:none;"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Effect 3: Binary Flash -->
+        <div class="col-md-6">
+            <div class="glitch-card">
+                <h3>3. Binary Flash</h3>
+                <p class="desc">Word briefly flashes to binary/hex noise, then resolves to the new word.</p>
+                <div class="glitch-demo">
+                    <span class="prefix">Your Chicago </span><span class="word" id="g3-word">Hackerspace</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Effect 4: CSS Glitch RGB Split -->
+        <div class="col-md-6">
+            <div class="glitch-card">
+                <h3>4. CSS Glitch (RGB Split)</h3>
+                <p class="desc">Text shakes with red/cyan color channel offset — classic VHS/CRT corruption.</p>
+                <div class="glitch-demo">
+                    <span class="prefix">Your Chicago </span><span class="word glitch-rgb" id="g4-word" data-text="Hackerspace">Hackerspace</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Effect 5: Split-Flap Flip -->
+        <div class="col-md-6">
+            <div class="glitch-card">
+                <h3>5. Split-Flap Flip</h3>
+                <p class="desc">Each character flips individually like an airport departure board, staggered left-to-right.</p>
+                <div class="glitch-demo">
+                    <span class="prefix">Your Chicago </span><span class="word" id="g5-word">Hackerspace</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Effect 6: Static Dissolve -->
+        <div class="col-md-6">
+            <div class="glitch-card">
+                <h3>6. Fade Through Static</h3>
+                <p class="desc">Text dissolves into TV static block characters, holds briefly, then resolves to the new word.</p>
+                <div class="glitch-demo">
+                    <span class="prefix">Your Chicago </span><span class="word" id="g6-word">Hackerspace</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Effect 7: Pride Rainbow -->
+        <div class="col-md-6">
+            <div class="glitch-card">
+                <h3>7. Pride Rainbow Wave</h3>
+                <p class="desc">Characters scramble while cycling through pride flag colors per letter, then settle into the new word.</p>
+                <div class="glitch-demo">
+                    <span class="prefix">Your Chicago </span><span class="word" id="g7-word">Hackerspace</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Effect 8: Trans Flag -->
+        <div class="col-md-6">
+            <div class="glitch-card">
+                <h3>8. Trans Flag Wave</h3>
+                <p class="desc">Characters scramble while cycling through trans flag colors per letter, then settle into the new word.</p>
+                <div class="glitch-demo">
+                    <span class="prefix">Your Chicago </span><span class="word" id="g8-word">Hackerspace</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    var words = ["Hackerspace", "Makerspace\u00A0"];
+    var scrambleChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*";
+    var binaryChars = "01001011001010110100101101";
+    var staticChars = "░▒▓█▀▄▌▐";
+
+    function otherWord(current) {
+        return current === words[0] ? words[1] : words[0];
+    }
+
+    function randomInterval() {
+        return 3000 + Math.random() * 2000; // 3-5s for demo
+    }
+
+    // Pride flag colors (6-stripe)
+    var prideColors = ["#E40303", "#FF8C00", "#FFED00", "#008026", "#004DFF", "#750787"];
+    // Trans flag colors
+    var transColors = ["#55CDFC", "#F7A8B8", "#B0B0B0", "#F7A8B8", "#55CDFC"];
+
+    // Track current word for each effect
+    var state = {};
+    for (var i = 1; i <= 8; i++) state[i] = words[0];
+
+    /* ========== Effect 1: Character Scramble ========== */
+    function scramble(el, target, callback) {
+        var len = Math.max(el.textContent.length, target.length);
+        var iterations = 0;
+        var maxIterations = 12;
+        var settled = new Array(len).fill(false);
+
+        var interval = setInterval(function() {
+            iterations++;
+            var result = "";
+            for (var i = 0; i < len; i++) {
+                if (settled[i]) {
+                    result += i < target.length ? target[i] : "";
+                } else if (iterations > maxIterations - (len - i)) {
+                    settled[i] = true;
+                    result += i < target.length ? target[i] : "";
+                } else {
+                    result += scrambleChars[Math.floor(Math.random() * scrambleChars.length)];
+                }
+            }
+            el.textContent = result;
+            if (iterations >= maxIterations) {
+                clearInterval(interval);
+                el.textContent = target;
+                if (callback) callback();
+            }
+        }, 50);
+    }
+
+    (function loop1() {
+        setTimeout(function() {
+            var el = document.getElementById("g1-word");
+            state[1] = otherWord(state[1]);
+            scramble(el, state[1], loop1);
+        }, randomInterval());
+    })();
+
+    /* ========== Effect 2: Typewriter Delete & Retype ========== */
+    function typewriter(el, cursorEl, target, callback) {
+        var current = el.textContent;
+        cursorEl.style.display = "inline-block";
+        var i = current.length;
+
+        // Delete phase
+        var delInterval = setInterval(function() {
+            i--;
+            el.textContent = current.substring(0, i);
+            if (i <= 0) {
+                clearInterval(delInterval);
+                // Type phase
+                var j = 0;
+                var typeInterval = setInterval(function() {
+                    j++;
+                    el.textContent = target.substring(0, j);
+                    if (j >= target.length) {
+                        clearInterval(typeInterval);
+                        cursorEl.style.display = "none";
+                        if (callback) callback();
+                    }
+                }, 60);
+            }
+        }, 40);
+    }
+
+    (function loop2() {
+        setTimeout(function() {
+            var el = document.getElementById("g2-word");
+            var cursor = document.getElementById("g2-cursor");
+            state[2] = otherWord(state[2]);
+            typewriter(el, cursor, state[2], loop2);
+        }, randomInterval());
+    })();
+
+    /* ========== Effect 3: Binary Flash ========== */
+    function binaryFlash(el, target, callback) {
+        var flashes = 0;
+        var maxFlashes = 6;
+        var interval = setInterval(function() {
+            flashes++;
+            if (flashes <= maxFlashes) {
+                var noise = "";
+                for (var i = 0; i < target.length; i++) {
+                    noise += binaryChars[Math.floor(Math.random() * binaryChars.length)];
+                }
+                el.textContent = noise;
+                el.style.color = flashes % 2 === 0 ? "var(--secondary-color)" : "#16a34a";
+            } else {
+                clearInterval(interval);
+                el.textContent = target;
+                el.style.color = "";
+                if (callback) callback();
+            }
+        }, 60);
+    }
+
+    (function loop3() {
+        setTimeout(function() {
+            var el = document.getElementById("g3-word");
+            state[3] = otherWord(state[3]);
+            binaryFlash(el, state[3], loop3);
+        }, randomInterval());
+    })();
+
+    /* ========== Effect 4: CSS Glitch RGB Split ========== */
+    (function loop4() {
+        setTimeout(function() {
+            var el = document.getElementById("g4-word");
+            state[4] = otherWord(state[4]);
+            el.classList.add("active");
+
+            // Midway through glitch, swap the text
+            setTimeout(function() {
+                el.textContent = state[4];
+                el.setAttribute("data-text", state[4]);
+            }, 200);
+
+            // End glitch
+            setTimeout(function() {
+                el.classList.remove("active");
+                loop4();
+            }, 400);
+        }, randomInterval());
+    })();
+
+    /* ========== Effect 5: Split-Flap Flip ========== */
+    function splitFlap(el, target, callback) {
+        var current = el.textContent;
+        var maxLen = Math.max(current.length, target.length);
+
+        // Wrap each char in a span
+        var html = "";
+        for (var i = 0; i < maxLen; i++) {
+            html += '<span class="flip-char">' + (i < current.length ? current[i] : "") + '</span>';
+        }
+        el.innerHTML = html;
+        var chars = el.querySelectorAll(".flip-char");
+
+        // Stagger the flips
+        chars.forEach(function(charEl, idx) {
+            setTimeout(function() {
+                charEl.classList.add("flipping");
+                // Swap char at midpoint of animation
+                setTimeout(function() {
+                    charEl.textContent = idx < target.length ? target[idx] : "";
+                }, 150);
+                charEl.addEventListener("animationend", function() {
+                    charEl.classList.remove("flipping");
+                }, { once: true });
+            }, idx * 40);
+        });
+
+        // After all done, clean up
+        setTimeout(function() {
+            el.textContent = target;
+            if (callback) callback();
+        }, maxLen * 40 + 350);
+    }
+
+    (function loop5() {
+        setTimeout(function() {
+            var el = document.getElementById("g5-word");
+            state[5] = otherWord(state[5]);
+            splitFlap(el, state[5], loop5);
+        }, randomInterval());
+    })();
+
+    /* ========== Effect 6: Fade Through Static ========== */
+    function staticDissolve(el, target, callback) {
+        var current = el.textContent;
+        var len = Math.max(current.length, target.length);
+        var phase = 0; // 0=dissolve in, 1=hold, 2=resolve out
+        var dissolveSteps = 0;
+
+        // Phase 0: progressively replace chars with static
+        var interval = setInterval(function() {
+            dissolveSteps++;
+            var result = "";
+            for (var i = 0; i < len; i++) {
+                if (phase === 0) {
+                    // Chance of being static increases with steps
+                    if (Math.random() < dissolveSteps / 6) {
+                        result += staticChars[Math.floor(Math.random() * staticChars.length)];
+                    } else {
+                        result += i < current.length ? current[i] : "";
+                    }
+                } else if (phase === 1) {
+                    result += staticChars[Math.floor(Math.random() * staticChars.length)];
+                } else {
+                    // Resolve: chance of being target increases
+                    if (Math.random() < (dissolveSteps - 10) / 5) {
+                        result += i < target.length ? target[i] : "";
+                    } else {
+                        result += staticChars[Math.floor(Math.random() * staticChars.length)];
+                    }
+                }
+            }
+            el.textContent = result;
+
+            if (phase === 0 && dissolveSteps >= 6) {
+                phase = 1;
+            } else if (phase === 1 && dissolveSteps >= 10) {
+                phase = 2;
+            } else if (phase === 2 && dissolveSteps >= 16) {
+                clearInterval(interval);
+                el.textContent = target;
+                if (callback) callback();
+            }
+        }, 60);
+    }
+
+    (function loop6() {
+        setTimeout(function() {
+            var el = document.getElementById("g6-word");
+            state[6] = otherWord(state[6]);
+            staticDissolve(el, state[6], loop6);
+        }, randomInterval());
+    })();
+
+    /* ========== Effect 7: Pride Rainbow Wave ========== */
+    function prideScramble(el, target, colors, callback) {
+        var len = Math.max(el.textContent.length, target.length);
+        var iterations = 0;
+        var maxIterations = 16;
+        var settled = new Array(len).fill(false);
+        var colorOffset = 0;
+
+        // Wrap in spans for per-char coloring
+        var interval = setInterval(function() {
+            iterations++;
+            colorOffset++;
+            var html = "";
+            for (var i = 0; i < len; i++) {
+                var color = colors[(i + colorOffset) % colors.length];
+                if (settled[i]) {
+                    var ch = i < target.length ? target[i] : " ";
+                    // Settled chars fade back to default color
+                    html += '<span style="color:var(--secondary-color)">' + ch + '</span>';
+                } else if (iterations > maxIterations - (len - i)) {
+                    settled[i] = true;
+                    var ch = i < target.length ? target[i] : " ";
+                    html += '<span style="color:' + color + '">' + ch + '</span>';
+                } else {
+                    var ch = scrambleChars[Math.floor(Math.random() * scrambleChars.length)];
+                    html += '<span style="color:' + color + '">' + ch + '</span>';
+                }
+            }
+            el.innerHTML = html;
+            if (iterations >= maxIterations) {
+                clearInterval(interval);
+                // Final fade: briefly show target in flag colors, then reset
+                var finalHtml = "";
+                for (var i = 0; i < target.length; i++) {
+                    finalHtml += '<span style="color:' + colors[i % colors.length] + '">' + target[i] + '</span>';
+                }
+                el.innerHTML = finalHtml;
+                // After a beat, fade back to default
+                setTimeout(function() {
+                    el.textContent = target;
+                    if (callback) callback();
+                }, 600);
+            }
+        }, 50);
+    }
+
+    (function loop7() {
+        setTimeout(function() {
+            var el = document.getElementById("g7-word");
+            state[7] = otherWord(state[7]);
+            prideScramble(el, state[7], prideColors, loop7);
+        }, randomInterval());
+    })();
+
+    /* ========== Effect 8: Trans Flag Wave ========== */
+    (function loop8() {
+        setTimeout(function() {
+            var el = document.getElementById("g8-word");
+            state[8] = otherWord(state[8]);
+            prideScramble(el, state[8], transColors, loop8);
+        }, randomInterval());
+    })();
+
+})();
+</script>
+{% endblock %}

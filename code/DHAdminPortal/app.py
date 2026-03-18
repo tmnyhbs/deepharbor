@@ -1,8 +1,9 @@
 import uuid
 import requests
 import json
+from datetime import datetime
 from flask import Flask, render_template, session, request, redirect, url_for, make_response
-from flask_session import Session  
+from flask_session import Session
 import msal
 
 # Our stuff
@@ -10,6 +11,12 @@ import dhservices
 from dhs_logging import logger
 import app_config
 from config import config
+
+### Dev mode flag — read from app_config so we only check the env var once
+AUTH_MODE = app_config.AUTH_MODE
+DEV_BANNER = app_config.DEV_BANNER
+if AUTH_MODE == "dev":
+    logger.info("AUTH_MODE=dev — B2C authentication bypassed, dev login enabled")
 
 app = Flask(__name__)
 app.config.from_object(app_config)
@@ -45,6 +52,8 @@ def index():
     logger.info("Main route accessed")
     
     if not session.get("user"):
+        if AUTH_MODE == "dev":
+            return redirect(url_for("dev_login"))
         logger.info("No user logged in, building auth code flow")
         session["flow"] = _build_auth_code_flow(scopes=app_config.SCOPE)
         return render_template(
@@ -107,6 +116,8 @@ def index():
 
 @app.route("/login")
 def login():
+    if AUTH_MODE == "dev":
+        return redirect(url_for("dev_login"))
     print("Login route accessed")
     # Technically we could use empty list [] as scopes to do just sign in,
     # here we choose to also collect end user consent upfront
@@ -228,12 +239,18 @@ def logout():
             logger.error(f"Failed to log logout activity: {log_error}")
     
     session.clear()  # Wipe out user and its token cache from session
-    response = redirect(  # Also logout from your tenant's web session
-        app_config.AUTHORITY
-        + "/oauth2/v2.0/logout"
-        + "?post_logout_redirect_uri="
-        + url_for("index", _external=True)
-    )
+
+    if AUTH_MODE == "dev":
+        # Dev mode — just redirect to index, no B2C logout needed
+        response = redirect(url_for("index"))
+    else:
+        response = redirect(  # Also logout from your tenant's web session
+            app_config.AUTHORITY
+            + "/oauth2/v2.0/logout"
+            + "?post_logout_redirect_uri="
+            + url_for("index", _external=True)
+        )
+
     # Clear permissions cookie on logout
     response.set_cookie("user_permissions", "", expires=0)
     return response
@@ -288,6 +305,102 @@ def _get_token_from_cache(scope=None):
         return result
 
 app.jinja_env.globals.update(_build_auth_code_flow=_build_auth_code_flow)  # Used in template
+app.jinja_env.globals.update(git_version=config.get("git", "version", fallback="unknown"))  # Used in footer
+app.jinja_env.globals.update(now=datetime.now)  # Used in footer for dynamic year
+app.jinja_env.globals.update(auth_mode=AUTH_MODE)  # Used in dev login routes
+app.jinja_env.globals.update(dev_banner=DEV_BANNER)  # Used in dev banner
+
+
+###############################################################################
+# Dev mode login routes — only active when AUTH_MODE=dev
+# These replace the B2C authentication flow with a simple user picker
+# that lets developers quickly log in as preset seed-data users.
+# Authorization (role/permission checks) still works normally.
+###############################################################################
+
+# Preset users for the dev login page. These match the seed data in
+# pg/sql/seed_data.sql — don't change the IDs without updating the SQL.
+ADMIN_DEV_USERS = [
+    {"member_id": 1, "name": "Ada Lovelace", "email": "ada.lovelace@example.com", "role": "Administrator"},
+    {"member_id": 3, "name": "Nikola Tesla", "email": "nikola.tesla@example.com", "role": "Authorizer"},
+    {"member_id": 5, "name": "Grace Hopper", "email": "grace.hopper@example.com", "role": "Board"},
+]
+
+@app.route("/dev-login")
+def dev_login():
+    """Show the dev login page with preset user options"""
+    if AUTH_MODE != "dev":
+        return redirect(url_for("index"))
+    return render_template("dev_login.html", preset_users=ADMIN_DEV_USERS)
+
+@app.route("/dev-login/select", methods=["POST"])
+def dev_login_select():
+    """Handle dev login — authenticate via DHService API, set session"""
+    if AUTH_MODE != "dev":
+        return redirect(url_for("index"))
+
+    member_id = request.form.get("member_id")
+    if not member_id:
+        return redirect(url_for("dev_login"))
+
+    try:
+        # Get DHService access token — same as the B2C callback does
+        access_token = dhservices.get_access_token(
+            dhservices.DH_CLIENT_ID,
+            dhservices.DH_CLIENT_SECRET
+        )
+
+        # Get member identity to populate session
+        identity = dhservices.get_member_identity(access_token, member_id)
+
+        # Extract email from identity
+        emails = identity.get("emails", [])
+        email = emails[0]["email_address"] if emails else f"dev-user-{member_id}@example.com"
+
+        # Verify they have roles (same check the B2C callback does)
+        roles_data = dhservices.get_member_roles(access_token, member_id)
+        if not roles_data or "roles" not in roles_data or len(roles_data["roles"]) == 0:
+            return render_template("auth_error.html", result={
+                "error": "Authorization Failed",
+                "error_description": f"Member ID {member_id} has no admin roles assigned. "
+                    "The admin portal requires a role (Administrator, Authorizer, or Board)."
+            })
+
+        # Build a user dict that looks like what B2C id_token_claims would give us
+        session["user"] = {
+            "name": f"{identity.get('first_name', '')} {identity.get('last_name', '')}".strip(),
+            "email": email,
+            "preferred_username": email,
+            "dev_mode": True,
+        }
+
+        logger.info(f"Dev login: member_id={member_id}, email={email}")
+
+        # Log login activity
+        try:
+            dhservices.log_user_activity(
+                access_token,
+                str(member_id),
+                {
+                    "activity_details": {
+                        "action": "dev_login",
+                        "email": email,
+                        "roles": roles_data.get("roles", [])
+                    }
+                }
+            )
+        except Exception as log_error:
+            logger.error(f"Failed to log dev login activity: {log_error}")
+
+    except Exception as e:
+        logger.error(f"Dev login error: {e}")
+        return render_template("auth_error.html", result={
+            "error": "Dev Login Error",
+            "error_description": f"Failed to authenticate with DHService: {str(e)}. "
+                "Make sure the database is running and seed data is loaded."
+        })
+
+    return redirect(url_for("index"))
 
 
 ###############################################################################

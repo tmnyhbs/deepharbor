@@ -20,3 +20,8 @@ add_tags_endpoint=add_entry
 # For removing tags
 remove_tags_endpoint=remove_entry
 
+[DH2MG]
+client_name =
+client_secret =
+api_base_url = http://gateway/dh/email
+

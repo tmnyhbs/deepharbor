@@ -1,0 +1,85 @@
+{% extends "_dashboard_base.html" %}
+{% block title %}Profile - Pumping Station: One{% endblock %}
+{% block page_title %}<i class="fa-solid fa-user random-icon ic-profile" data-ic="ic-profile"></i> Profile{% endblock %}
+{% block dashboard_content %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h2 class="card-title mb-3">Profile</h2>
+
+                    {% if identity %}
+                    <form id="profileForm" method="POST" action="{{ url_for('member_update_profile') }}" class="dh-validate">
+                    <input type="hidden" name="source_page" value="profile">
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-group">
+                                <label>First Name <span class="badge bg-danger required-badge">Required</span></label>
+                                <div class="info-value">
+                                    <input type="text" class="form-control" name="first_name" required
+                                           data-label="First Name"
+                                           autocapitalize="words" autocorrect="off"
+                                           maxlength="100" value="{{ identity.first_name or '' }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-group">
+                                <label>Last Name <span class="badge bg-danger required-badge">Required</span></label>
+                                <div class="info-value">
+                                    <input type="text" class="form-control" name="last_name" required
+                                           data-label="Last Name"
+                                           autocapitalize="words" autocorrect="off"
+                                           maxlength="100" value="{{ identity.last_name or '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-group">
+                        <label>Preferred Name/Nickname</label>
+                        <span class="info-label-desc">How would you like to identify yourself?</span>
+                        <div class="info-value">
+                            <input type="text" class="form-control" name="nickname"
+                                   autocapitalize="words" autocorrect="off"
+                                   maxlength="100" value="{{ identity.nickname or '' }}">
+                        </div>
+                    </div>
+
+                    <div class="info-group">
+                        <label>Pronouns</label>
+                        <span class="info-label-desc">How would you like to be referred to? (e.g. she/her, he/him, they/them)</span>
+                        <div class="info-value">
+                            <input type="text" class="form-control" name="pronouns"
+                                   autocapitalize="none" autocorrect="off"
+                                   maxlength="50" value="{{ identity.pronouns or '' }}">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-group">
+                                <label>Email</label>
+                                <div class="info-value">{{ identity.email or session.email or 'Not available' }}</div>
+                            </div>
+                        </div>
+                        {% if identity.active_directory_username %}
+                        <div class="col-md-6">
+                            <div class="info-group">
+                                <label>Username</label>
+                                <span class="info-label-desc">This is for logging into PS1 computers, Canvas, etc.</span>
+                                <div class="info-value">{{ identity.active_directory_username }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                    </form>
+                    {% else %}
+                    <p class="no-data">Unable to load profile information.</p>
+                    {% endif %}
+                </div>
+            </div>
+{% endblock %}

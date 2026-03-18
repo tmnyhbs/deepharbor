@@ -1,0 +1,3 @@
+# Force LF line endings for shell scripts and other files that break with CRLF.
+# Prevents issues on Windows/WSL where core.autocrlf=true converts LF to CRLF.
+*.sh text eol=lf

@@ -1,31 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up Payment - Pumping Station: One</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Pumping Station: One</h1>
-            <p class="tagline">Complete Your Membership</p>
-        </div>
+{% extends "base.html" %}
+{% block title %}Sign Up Payment - Pumping Station: One{% endblock %}
+{% block page_title %}Complete Your Membership{% endblock %}
+{% block content_class %}row justify-content-center{% endblock %}
+{% block content %}
+            <div class="col-md-10 col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title mb-3">Membership Payment</h2>
+                        <p class="text-muted mb-3">Please select a membership plan to complete your signup.</p>
 
-        <div class="content">
-            <div class="card">
-                <h2>Membership Payment</h2>
-                <p>Please select a membership plan to complete your signup.</p>
-
-                <!-- Stripe integration here -->
-		<script async src="https://js.stripe.com/v3/pricing-table.js"></script>
+                        <!-- Stripe integration here -->
+                <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
 		<stripe-pricing-table pricing-table-id="prctbl_1PpEnYJFw8qo37G3YaEY7bm4"
 			publishable-key="pk_live_51BxeY8JFw8qo37G3PKaKG3g1rCoptTQxjkYtxzGHEXXI33gbkVLRYeR63mZCKzDs02IeCMAywlaCSUMGTBg6YIek00Ubohq1rJ" {% if email %}
-                        customer-email="{{ email }}"{% endif %}>
-		</stripe-pricing-table>
+                                customer-email="{{ email }}"{% endif %}>
+                </stripe-pricing-table>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-</body>
-</html>
+{% endblock %}
