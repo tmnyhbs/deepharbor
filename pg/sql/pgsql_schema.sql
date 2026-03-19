@@ -327,7 +327,7 @@ end;
 $body$ LANGUAGE plpgsql;
 COMMENT ON FUNCTION convertfromwiegand(BIGINT) IS 'Converts a Wiegand 24-bit integer value into the corresponding facility code and user code integer value.';
 
-CREATE FUNCTION converttowiegand (p_num integer)  RETURNS integer
+CREATE OR REPLACE FUNCTION converttowiegand (p_num bigint)  RETURNS integer
   VOLATILE
 AS $body$
 DECLARE
@@ -337,14 +337,15 @@ DECLARE
 
     v_fNum INTEGER;
     v_uNum INTEGER;
+    v_uPadNum varchar(5);
 
     v_FinalNum varchar(16) := '';
 BEGIN
- -- Return NULL if input is NULL
+    -- Return NULL if input is NULL
     IF p_num IS NULL THEN
         RETURN NULL;
     END IF;
-
+    
     -- Convert the number passed to us as a binary string
     v_baseVal := CAST(p_num::bit(24)::VARCHAR AS VARCHAR(24));
 
@@ -361,14 +362,16 @@ BEGIN
     -- Now we're going to convert the bits to numbers
     v_fNum := (v_fc::bit(8))::integer;
     v_uNum := (v_uc::bit(16))::integer;
+    
+    v_uPadNum := lpad(v_uNum::varchar, 5, '0');
   
     -- And put it all together    
-    v_FinalNum := format('%s%s', v_fNum::varchar, v_uNum::varchar);
+    v_FinalNum := format('%s%s', v_fNum::varchar, v_uPadNum);
   
     RETURN (SELECT v_FinalNum::integer);
 END;
 $body$ LANGUAGE plpgsql;
-COMMENT ON FUNCTION converttowiegand(integer) IS 'Converts a facility code and user code integer value into the corresponding Wiegand 24-bit integer value.';
+COMMENT ON FUNCTION converttowiegand(bigint) IS 'Converts a facility code and user code integer value into the corresponding Wiegand 24-bit integer value.';
 
 CREATE FUNCTION get_all_tags_for_member(IN p_member_id INTEGER)
 RETURNS TABLE(tag TEXT, wiegand_tag_num INTEGER, status TEXT)

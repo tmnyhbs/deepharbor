@@ -158,7 +158,8 @@ def search_members_by_identity_and_access(query: str) -> list[dict]:
                 """SELECT id,
                           identity ->> 'first_name' first_name,
                           identity ->> 'last_name' last_name,
-                          identity -> 'emails' -> 0 ->> 'email_address' primary_email_address
+                          identity -> 'emails' -> 0 ->> 'email_address' primary_email_address,
+                          status ->> 'membership_status' membership_status
                    FROM   search_members_by_identity_and_access(%s)
                 """,
                 (query,),
@@ -169,7 +170,8 @@ def search_members_by_identity_and_access(query: str) -> list[dict]:
             "member_id": result[0],
             "first_name": result[1],
             "last_name": result[2],
-            "primary_email_address": result[3]
+            "primary_email_address": result[3],
+            "membership_status": result[4]
         })
     logger.debug(f"Found {len(members)} members matching query: {query}")
     return members
@@ -540,7 +542,10 @@ def search_members_by_rfid_tag(rfid_tag: str) -> list[dict]:
             "first_name": result[1],
             "last_name": result[2],
             "pronouns": result[3],
-            "primary_email_address": result[4]
+            "nametag_subtitle": result[4],
+            "theme_song_url": result[5],
+            "theme_song_duration": result[6],
+            "primary_email_address": result[7]
         })
     logger.debug(f"Found {len(members)} members with RFID tag: {rfid_tag}")
     return members
