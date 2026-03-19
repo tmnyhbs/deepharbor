@@ -540,7 +540,10 @@ def search_members_by_rfid_tag(rfid_tag: str) -> list[dict]:
             "first_name": result[1],
             "last_name": result[2],
             "pronouns": result[3],
-            "primary_email_address": result[4]
+            "nametag_subtitle": result[4],
+            "theme_song_url": result[5],
+            "theme_song_duration": result[6],
+            "primary_email_address": result[7]
         })
     logger.debug(f"Found {len(members)} members with RFID tag: {rfid_tag}")
     return members
