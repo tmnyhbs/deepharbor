@@ -1049,7 +1049,7 @@ function displayResults(members, updateCache = true) {
     }
     
     if (members.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center">No members found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No members found</td></tr>';
     } else {
         members.forEach(member => {
             const row = document.createElement('tr');
@@ -1058,6 +1058,7 @@ function displayResults(members, updateCache = true) {
                 <td>${member.first_name || ''}</td>
                 <td>${member.last_name || ''}</td>
                 <td>${member.primary_email_address || ''}</td>
+                <td>${member.membership_status || ''}</td>
             `;
             // Add click handler to fetch member data
             row.onclick = function() {
