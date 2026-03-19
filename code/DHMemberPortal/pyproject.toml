@@ -14,4 +14,5 @@ dependencies = [
     "stripe>=14.3.0",
     "waitress>=3.0.2",
     "werkzeug>=3.1.5",
+    "urllib3>=2.6.3",
 ]
