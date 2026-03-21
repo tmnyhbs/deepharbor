@@ -63,7 +63,10 @@ on top of the production compose file:
    hardware controllers
 6. **Loads seed data** — 25 members inserted on first boot (10 dev
    users with stable IDs + 15 random members)
-7. **Remaps ports** — Gateway 80→8808, Grafana 3000→3300 to avoid
+7. **Sets Flask secret key** — `DH_SECRET_KEY` is set automatically
+   for CSRF protection and session security (production requires
+   generating your own — see [README.md](README.md))
+8. **Remaps ports** — Gateway 80→8808, Grafana 3000→3300 to avoid
    conflicts with other local services
 
 ## Dev Auth Bypass
