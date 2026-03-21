@@ -61,3 +61,22 @@ else:
 SESSION_TYPE = (
     "filesystem"  # Specifies the token cache should be stored in server-side session
 )
+
+###############################################################################
+# Flask Secret Key & Session Security
+###############################################################################
+
+if AUTH_MODE == "dev":
+    SECRET_KEY = config.get("flask", "secret_key", fallback="dev-secret-key-not-for-production")
+else:
+    SECRET_KEY = config.get("flask", "secret_key", fallback=None)
+    if not SECRET_KEY:
+        from dhs_logging import logger
+        logger.error("SECRET_KEY is not set. Add [flask] secret_key to config.ini or set the DH_SECRET_KEY environment variable.")
+        raise RuntimeError(
+            "SECRET_KEY is not set. Add [flask] secret_key to config.ini "
+            "or set the DH_SECRET_KEY environment variable."
+        )
+
+SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_HTTPONLY = True

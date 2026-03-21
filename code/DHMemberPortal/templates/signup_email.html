@@ -17,6 +17,7 @@
                         {% endif %}
 
                         <form method="POST" action="{{ url_for('signup_check_email') }}" class="dh-validate">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email Address <span class="badge bg-danger required-badge">Required</span></label>
                                 <span class="info-label-desc">Please use the same email address you used for the waiver form.</span>

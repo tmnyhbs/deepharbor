@@ -35,6 +35,7 @@
                         {% endif %}
 
                         <form method="POST" action="{{ url_for('signup_submit') }}" class="dh-validate">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="hidden" name="email" value="{{ email }}">
                             <input type="hidden" name="waiver_signed_at" value="{{ contact.signed_at_datetime if contact else '' }}">
 

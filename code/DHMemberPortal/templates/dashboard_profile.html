@@ -8,6 +8,7 @@
 
                     {% if identity %}
                     <form id="profileForm" method="POST" action="{{ url_for('member_update_profile') }}" class="dh-validate">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="source_page" value="profile">
 
                     <div class="row">

@@ -12,5 +12,8 @@ client_name = dev-member-portal
 client_secret = hQgPvJW9RU48tRSQKS8SladAZsKHS34fKetbNr_443E
 api_base_url = http://localhost/dh/service
 
+[flask]
+secret_key = CHANGE-ME-generate-with-python-c-import-secrets-print-secrets-token-hex-32
+
 [git]
 version=unknown
