@@ -2,7 +2,16 @@
 ## Quick Note on configuration (or lack thereof)
 The system makes use of a lot of `config.ini` files in various places. These files are used to configure database connections, service endpoints, and other settings. There are a number of parameters that Deep Harbor uses that require things like an Active Directory server, an RFID controller, and so forth. The default `config.ini` files that are included with the code are meant for development purposes only and will need to be modified to reflect your actual environment.
 
+The portals (DHAdminPortal and DHMemberPortal) require a `SECRET_KEY` for CSRF protection and session security. Set it via the `DH_SECRET_KEY` environment variable or add a `[flask] secret_key` entry to each portal's `config.ini`. Generate one with:
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+In the dev environment this is handled automatically — you don't need to do anything.
+
 Also note that Pumping Station One uses [Azure B2C](https://learn.microsoft.com/en-us/azure/active-directory-b2c/overview) for identity management; if you are not using Azure B2C, you will need to modify the authentication and authorization code in both the DHAdminPortal and DHMemberPortal components to reflect your identity management system.
+
+> **Looking to set up a dev environment?** See [DEV_SETUP.md](DEV_SETUP.md) — it handles config files, seed data, and auth bypass automatically. The guide below is for production deployments.
+
 ## Purpose
 The Deep Harbor CRM was written to support membership at [Pumping Station: One](https://pumpingstationone.org). It's meant to be performant and flexable, subscribing to the concept of _"You don't know what you don't know."_ What this means is that the system is designed to be easy to extend and modify to fit new situations with minimal changes.
 ## General Design
@@ -74,29 +83,169 @@ These files are located in the root directory of the Deep Harbor CRM project:
 * `nginx.conf`: Nginx configuration file for routing requests to the appropriate Deep Harbor components.
 
 
-## Getting Started
+## Production Deployment
 
-To get started with Deep Harbor CRM, follow these steps:
+> For local development, see [DEV_SETUP.md](DEV_SETUP.md) instead. The dev setup handles all of this automatically.
 
-0. **Install Docker and Docker Compose**:
-   Ensure that Docker and Docker Compose are installed on your machine. You can download them from the [Docker website](https://www.docker.com/get-started).
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/pumpingstationone/deepharbor.git
-    cd deepharbor
-    ```
-2. **`start_dh.sh` Script**:
-   Use the provided `start_dh.sh` script to set up and start all necessary components. This script will handle starting the database, web portals, dispatcher, and services.
-   ```bash
-   ./start_dh.sh
-   ```
-   To stop all components, use:
-   ```bash
-   ./stop_dh.sh
-    ```
-   If you need to reset everything (including the database), use:
-   ```bash
-   ./reset_for_restart.sh
-   ```
-   
-**NOTE**: A number of the services rely on a `config.ini` file (to handle situations where the system is not run in Docker); the default database values are filled in (it's a development system afterall), but some parts (e.g. `DH2AD`) require actual credentials that will need to be supplied to make that part of the system work.
+### Prerequisites
+
+- **Docker** and **Docker Compose** (v2.24.0+, with `docker compose` syntax)
+- **Git**
+- Access to the external services you plan to integrate (Azure B2C, Active Directory, RFID hardware, Stripe, Mailgun — see step 5)
+
+### Step 1: Clone and Create Config Files
+
+```bash
+git clone https://github.com/pumpingstationone/deepharbor.git
+cd deepharbor
+```
+
+Every service needs a `config.ini` file. Start by copying the examples:
+
+```bash
+find code -name "config.ini.example" -exec sh -c \
+  'for f; do cp -n "$f" "${f%.example}"; done' _ {} +
+```
+
+Config files are gitignored and will never be committed. Each one needs to be edited with production values as described in the steps below.
+
+### Step 2: Generate Secrets
+
+Several services require unique secret keys. Generate each one with:
+
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+| Secret | Where to set it | Config file(s) |
+|--------|----------------|----------------|
+| Flask SECRET_KEY | `DH_SECRET_KEY` env var **or** `[flask] secret_key` in config.ini | `code/DHMemberPortal/config.ini`, `code/DHAdminPortal/config.ini` |
+| DHService OAuth2 key | `[oauth2] secret_key` | `code/DHService/config.ini` |
+| DH2MG OAuth2 key | `[oauth2] secret_key` | `code/external/DH2MG/config.ini` |
+| Database password | `[Database] password` + `POSTGRES_PASSWORD` in docker-compose.yaml | All services that connect to the database |
+
+**Important:** Change the default database password (`dh`) in both `docker-compose.yaml` (the `POSTGRES_PASSWORD` env var on the `db` service) and in every service's `config.ini` `[Database] password` field.
+
+### Step 3: Configure Service-to-Service Auth
+
+Each portal and external service authenticates to DHService using OAuth2 client credentials. Generate a unique `client_secret` for each and set the matching values in DHService's config.
+
+| Service | Config section | Keys to set |
+|---------|---------------|-------------|
+| DHMemberPortal | `[dh_services]` | `client_name`, `client_secret`, `api_base_url` |
+| DHAdminPortal | `[dh_services]` | `client_name`, `client_secret`, `api_base_url` |
+| ST2DH (Stripe) | `[dh_services]` | `client_name`, `client_secret`, `api_base_url` |
+| DH2MG (Mailgun) | `[dh_services]` in DHStatus config | `client_name`, `client_secret`, `api_base_url` |
+
+Set `api_base_url` to `http://gateway/dh/service` (the internal nginx gateway route) for services on the Docker bridge network, or `http://localhost/dh/service` for services using host networking.
+
+### Step 4: Configure Azure B2C Authentication
+
+Both portals require Azure B2C for user authentication. Fill in the `[b2c]` section in each portal's `config.ini`:
+
+| Key | Description |
+|-----|-------------|
+| `TENANT_NAME` | Your Azure B2C tenant name |
+| `CLIENT_ID` | App registration client ID from Azure portal |
+| `CLIENT_SECRET` | App registration client secret |
+| `ENDPOINT` | Application ID URI |
+| `SIGNUPSIGNIN_USER_FLOW` | Name of your sign-up/sign-in user flow |
+| `EDITPROFILE_USER_FLOW` | Name of your profile editing user flow |
+| `RESETPASSWORD_USER_FLOW` | Name of your password reset user flow |
+
+DH2AD and DHADController also need Azure B2C config in their `[azure_b2c]` section (`tenant_name`, `tenant_id`, `client_id`, `client_secret`, `extensions_app_id`).
+
+If you are not using Azure B2C, you will need to modify the authentication code in both portals.
+
+### Step 5: Configure External Services
+
+#### Active Directory
+
+Set these in `code/workers/DH2AD/config.ini` and `code/workers/DHADController/config.ini`:
+
+| Section | Key | Description |
+|---------|-----|-------------|
+| `[active_directory]` | `domain_name` | AD domain (e.g., `corp.example.com`) |
+| `[active_directory]` | `server_ip` | AD server IP address |
+| `[active_directory]` | `username` | Service account username |
+| `[active_directory]` | `password` | Service account password |
+| `[active_directory]` | `base_dn` | Base DN (e.g., `dc=corp,dc=example,dc=com`) |
+| `[active_directory_groups]` | `member_DN` | OU where new users are created |
+| `[active_directory_groups]` | `tool_base_DN` | Base DN for tool access groups |
+
+#### RFID Hardware
+
+Set in `code/workers/DHRFIDReader/config.ini` and `code/utilities/RFID2DB/config.ini`:
+
+| Key | Description |
+|-----|-------------|
+| `BOARD_IP` | RFID reader hardware IP address |
+| `BOARD_PORT` | RFID reader port (typically `60000`) |
+| `BOARD_SERIAL_NUMBER_AS_INT` | RFID reader serial number (as integer) |
+
+#### Stripe
+
+Set in `code/external/ST2DH/config.ini`:
+
+| Key | Description |
+|-----|-------------|
+| `[stripe] api_key` | Stripe API key |
+| `[stripe] signing_secret` | Stripe webhook signing secret |
+
+Configure Stripe to send webhooks to `https://<your-domain>/dh/wf2dh/`.
+
+#### Mailgun
+
+Set in `code/external/DH2MG/config.ini`:
+
+| Key | Description |
+|-----|-------------|
+| `[mailgun] api_key` | Mailgun API key |
+| `[mailgun] url` | Mailgun domain URL |
+| `[mailgun] from_name` | Sender display name |
+| `[mailgun] from_email` | Sender email address |
+
+#### Waiver Forever
+
+Configure Waiver Forever to send webhooks to `https://<your-domain>/dh/wf2dh/`. No credentials are needed in WF2DH's config — it only needs database access.
+
+### Step 6: Start the Stack
+
+```bash
+./start_dh.sh
+```
+
+This script sets the `GIT_VERSION` build arg and runs `docker compose up -d`. To manage the stack:
+
+```bash
+./stop_dh.sh              # Stop all containers and remove volumes
+./reset_for_restart.sh    # Full reset: stop, prune images, restart
+```
+
+Verify everything is running:
+
+```bash
+docker compose ps
+docker compose logs -f     # Watch logs for startup errors
+```
+
+### Step 7: Post-Deployment Verification
+
+- [ ] All containers show as healthy in `docker compose ps`
+- [ ] Member Portal login works via Azure B2C
+- [ ] Admin Portal login works via Azure B2C
+- [ ] Creating a test member triggers the dispatcher pipeline (check DHDispatcher logs)
+- [ ] RFID tag changes propagate to the RFID controller
+- [ ] AD account creation works for new members
+- [ ] Stripe webhooks are received by ST2DH
+- [ ] Monitor logs for the first 24 hours: `docker compose logs -f`
+
+### Not Yet Documented
+
+The following production topics are not yet covered in this guide:
+
+- **SSL/TLS termination** — how to set up HTTPS in front of the stack
+- **Reverse proxy setup** — external nginx/Caddy configuration for production domains
+- **Backup and restore** — database backup procedures and disaster recovery
+- **Monitoring and alerting** — beyond the built-in Grafana dashboards
+- **DNS and domain configuration** — mapping your domain to the stack
