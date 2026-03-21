@@ -71,6 +71,8 @@ if AUTH_MODE == "dev":
 else:
     SECRET_KEY = config.get("flask", "secret_key", fallback=None)
     if not SECRET_KEY:
+        from dhs_logging import logger
+        logger.error("SECRET_KEY is not set. Add [flask] secret_key to config.ini or set the DH_SECRET_KEY environment variable.")
         raise RuntimeError(
             "SECRET_KEY is not set. Add [flask] secret_key to config.ini "
             "or set the DH_SECRET_KEY environment variable."
