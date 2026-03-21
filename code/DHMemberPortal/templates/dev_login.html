@@ -22,6 +22,7 @@
                         <p class="card-text text-muted flex-grow-1">Access your member dashboard and manage your account.</p>
                         <small class="text-warning mb-2"><i class="fa-solid fa-triangle-exclamation"></i> B2C login does not work in dev mode.</small>
                         <form method="POST" action="{{ url_for('dev_login_select') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="hidden" name="member_id" value="{{ preset_users[0].member_id }}">
                             <button type="submit" class="btn btn-primary w-100">Log In as {{ preset_users[0].name.split()[0] }}</button>
                         </form>
@@ -50,6 +51,7 @@
                         <p class="card-text text-muted flex-grow-1">{{ user.description }}</p>
                         <p class="text-muted small mb-2">ID: {{ user.member_id }} | {{ user.email }}</p>
                         <form method="POST" action="{{ url_for('dev_login_select') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="hidden" name="member_id" value="{{ user.member_id }}">
                             <button type="submit" class="btn btn-primary w-100">Log In as {{ user.name.split()[0] }}</button>
                         </form>
@@ -66,6 +68,7 @@
                         <h2 class="card-title h5 mb-2">Manual Login</h2>
                         <p class="text-muted small">Enter any member ID from the seed data</p>
                         <form method="POST" action="{{ url_for('dev_login_select') }}" class="d-flex gap-2 justify-content-center mt-3">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="number" name="member_id" class="form-control" style="max-width: 160px;" placeholder="Member ID" min="1" required>
                             <button type="submit" class="btn btn-secondary">Log In</button>
                         </form>

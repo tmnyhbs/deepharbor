@@ -333,6 +333,9 @@
 </div>
 
 <script>
+// CSRF token for AJAX requests
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
 // Store current member ID
 let currentMemberId = null;
 let membershipLevelsCache = null;
@@ -669,7 +672,8 @@ function saveTabData(tabName) {
     fetch(`/api/member/${tabName}?member_id=${encodeURIComponent(currentMemberId)}`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
         },
         body: JSON.stringify(data)
     })
@@ -1744,7 +1748,8 @@ function logTabSelection(tabName, memberId) {
     fetch('/api/log_activity', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
         },
         body: JSON.stringify({
             action: 'view_tab',

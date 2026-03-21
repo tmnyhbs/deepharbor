@@ -27,3 +27,8 @@ if os.environ.get("DH_CLIENT_SECRET"):
     if not config.has_section("dh_services"):
         config.add_section("dh_services")
     config.set("dh_services", "client_secret", os.environ["DH_CLIENT_SECRET"])
+
+if os.environ.get("DH_SECRET_KEY"):
+    if not config.has_section("flask"):
+        config.add_section("flask")
+    config.set("flask", "secret_key", os.environ["DH_SECRET_KEY"])

@@ -34,6 +34,7 @@
             {% for user in preset_users %}
             <div class="col-md-4">
                 <form method="POST" action="{{ url_for('dev_login_select') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="member_id" value="{{ user.member_id }}">
                     <div class="card dev-user-card" onclick="this.closest('form').submit()">
                         <div class="card-body text-center">
@@ -51,6 +52,7 @@
 
         <h5 class="text-center mb-3">Or enter a member ID manually</h5>
         <form method="POST" action="{{ url_for('dev_login_select') }}" class="d-flex justify-content-center gap-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="number" name="member_id" class="form-control" style="max-width: 200px;"
                    placeholder="Member ID" min="1" required>
             <button type="submit" class="btn btn-primary">Log In</button>

@@ -2,8 +2,9 @@ import uuid
 import requests
 import json
 from datetime import datetime
-from flask import Flask, render_template, session, request, redirect, url_for, make_response
+from flask import Flask, render_template, session, request, redirect, url_for, make_response, flash
 from flask_session import Session
+from flask_wtf.csrf import CSRFProtect, CSRFError
 import msal
 
 # Our stuff
@@ -21,10 +22,19 @@ if AUTH_MODE == "dev":
 app = Flask(__name__)
 app.config.from_object(app_config)
 Session(app)
+csrf = CSRFProtect(app)
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+@app.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    logger.warning(f"CSRF validation failed: {e.description}")
+    if request.is_json or request.content_type == 'application/json':
+        return {"error": "CSRF token missing or invalid"}, 400
+    flash('Your session has expired or this form submission was invalid. Please try again.', 'error')
+    return redirect(request.referrer or url_for('index'))
 
 ###############################################################################
 # Health check endpoint

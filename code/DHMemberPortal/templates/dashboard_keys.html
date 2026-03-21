@@ -31,6 +31,7 @@
                     <h2 class="card-title mb-3">Your Keys</h2>
 
                     <form id="keysForm" method="POST" action="{{ url_for('member_update_profile') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="source_page" value="keys">
                     <input type="hidden" name="first_name" value="{{ identity.first_name or '' }}">
                     <input type="hidden" name="last_name" value="{{ identity.last_name or '' }}">

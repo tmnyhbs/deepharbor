@@ -48,6 +48,7 @@ services:
       DEV_BANNER: "true"
       DH_CLIENT_ID: "dev-member-portal"
       DH_CLIENT_SECRET: "hQgPvJW9RU48tRSQKS8SladAZsKHS34fKetbNr_443E"
+      DH_SECRET_KEY: "dev-csrf-secret-key-do-not-use-in-production"
 
   dhadminportal:
     network_mode: !reset ""
@@ -61,6 +62,7 @@ services:
       DEV_BANNER: "true"
       DH_CLIENT_ID: "dev-admin-portal"
       DH_CLIENT_SECRET: "ikactyRLicKoI8VHiD9KZEwTrOIhtYjfzm1h6YUjj7M"
+      DH_SECRET_KEY: "dev-csrf-secret-key-do-not-use-in-production"
 
   #########################################################
   # External services — move st2dh from host to bridge
