@@ -111,7 +111,7 @@ def update_membership(member):
         # then we need to update their membership status in our database to reflect 
         # that they're not active anymore.
         if update_information == False:
-            logger.info(f"Member ID: {member.id} is active, no need to update membership status in DHService")
+            logger.info(f"Member ID: {member.id} is active (or banned), no need to update membership status in DHService")
             return
         
         logger.info(f"Updating membership status for member ID: {member.id} to {current_status}")
