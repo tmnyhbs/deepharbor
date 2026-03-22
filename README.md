@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="deepharbor_logo_header.svg" alt="Deep Harbor Logo">
+  <img src="docs/deepharbor_logo_header.svg" alt="Deep Harbor Logo">
 </p>
 
 # Deep Harbor CRM
