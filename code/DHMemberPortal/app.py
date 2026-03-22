@@ -573,6 +573,7 @@ def graphcall():
     graph_data = requests.get(  # Use token to call downstream service
         app_config.ENDPOINT,
         headers={"Authorization": "Bearer " + token["access_token"]},
+        timeout=10,
     ).json()
     return render_template("graph.html", result=graph_data)
 
@@ -642,7 +643,7 @@ def _build_auth_code_flow(authority=None, scopes=None):
     )
 
 def _get_token_from_cache(scope=None):
-    print("Getting token from cache")
+    logger.debug("Getting token from cache")
     cache = _load_cache()  # This web app maintains one cache per session
     cca = _build_msal_app(cache=cache)
     accounts = cca.get_accounts()
@@ -682,6 +683,12 @@ def dev_login_select():
 
     member_id = request.form.get("member_id")
     if not member_id:
+        return redirect(url_for("index"))
+
+    try:
+        member_id = int(member_id)
+    except (ValueError, TypeError):
+        flash("Invalid member ID.", "error")
         return redirect(url_for("index"))
 
     try:
