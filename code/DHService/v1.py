@@ -313,7 +313,7 @@ async def search_contacts_by_email(current_user: AuthenticatedClient, email_addr
 ##############################################################################
 
 @app.post("/v1/payment/stripe_webhook/")
-async def handle_stripe_webhook(request: Request):
+async def handle_stripe_webhook(current_client: AuthenticatedClient, request: Request):
     """ We are passed the Stripe payload from ST2DH, and we want 
         to log it and then handle it as needed."""
     payload = await request.body()
