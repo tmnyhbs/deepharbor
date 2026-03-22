@@ -46,8 +46,15 @@ def prepare_return_payload(member_id, error_message="OK"):
 # Generic Database Operations
 ###############################################################################
 
+ALLOWED_MEMBER_FIELDS = {
+    "identity", "connections", "status", "forms",
+    "access", "extras", "authorizations", "notes", "date_modified",
+}
+
 def _get_single_field(member_id: str, field: str):
     """Generic function to get a single field from the member table."""
+    if field not in ALLOWED_MEMBER_FIELDS:
+        raise ValueError(f"Invalid field: {field}")
     logger.debug(f"Getting member {field} for member ID: {member_id}")
     with get_db_connection() as conn:
         with conn.cursor() as cur:
@@ -60,6 +67,8 @@ def _get_single_field(member_id: str, field: str):
 
 def _update_single_field(member_id: int, field: str, value, serialize=True, last_updated_by=None):
     """Generic function to update a single field in the member table."""
+    if field not in ALLOWED_MEMBER_FIELDS:
+        raise ValueError(f"Invalid field: {field}")
     logger.debug(f"Updating member {field} for member ID: {member_id}")
     error_message = "OK"
     try:

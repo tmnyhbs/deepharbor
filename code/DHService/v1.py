@@ -23,7 +23,7 @@ def _create_member_getter(field_name: str, db_func, wrap_key: str = None):
     """Factory function to create member getter endpoints."""
     async def getter(
         current_user: AuthenticatedClient,
-        member_id: str,
+        member_id: int,
     ):
         result = db_func(member_id)
         return {wrap_key: result} if wrap_key else result
@@ -45,7 +45,7 @@ async def get_member_id_from_email(current_user: AuthenticatedClient, email_addr
     return {"member_id": db.get_member_id_from_email(email_address)}
 
 @app.get("/v1/member/identity/")
-async def get_member_identity(current_user: AuthenticatedClient, member_id: str):
+async def get_member_identity(current_user: AuthenticatedClient, member_id: int):
     """Get member identity information."""
     return db.get_member_identity(member_id)
 
@@ -73,48 +73,48 @@ async def check_member_username(current_user: AuthenticatedClient, username: str
 
 # This gets an amalgamation of all member data fields for a given member
 @app.get("/v1/member/full_info/")
-async def get_full_member_info(current_user: AuthenticatedClient, member_id: str):
+async def get_full_member_info(current_user: AuthenticatedClient, member_id: int):
     """Get full member information."""
     return db.get_full_member_info(member_id)
 
 # These services are to get individual member data fields
 @app.get("/v1/member/connections/")
-async def get_member_connections(current_user: AuthenticatedClient, member_id: str):
+async def get_member_connections(current_user: AuthenticatedClient, member_id: int):
     """Get member connections."""
     return db.get_member_connections(member_id)
 
 @app.get("/v1/member/status/")
-async def get_member_status(current_user: AuthenticatedClient, member_id: str):
+async def get_member_status(current_user: AuthenticatedClient, member_id: int):
     """Get member status."""
     return db.get_member_status(member_id)
 
 @app.get("/v1/member/forms/")
-async def get_member_forms(current_user: AuthenticatedClient, member_id: str):
+async def get_member_forms(current_user: AuthenticatedClient, member_id: int):
     """Get member forms data."""
     return db.get_member_forms(member_id)
 
 @app.get("/v1/member/access/")
-async def get_member_access(current_user: AuthenticatedClient, member_id: str):
+async def get_member_access(current_user: AuthenticatedClient, member_id: int):
     """Get member access data."""
     return db.get_member_access(member_id)
 
 @app.get("/v1/member/extras/")
-async def get_member_extras(current_user: AuthenticatedClient, member_id: str):
+async def get_member_extras(current_user: AuthenticatedClient, member_id: int):
     """Get member extras data."""
     return db.get_member_extras(member_id)
 
 @app.get("/v1/member/authorizations/")
-async def get_member_authorizations(current_user: AuthenticatedClient, member_id: str):
+async def get_member_authorizations(current_user: AuthenticatedClient, member_id: int):
     """Get member authorizations."""
     return db.get_member_authorizations(member_id)
 
 @app.get("/v1/member/notes/")
-async def get_member_notes(current_user: AuthenticatedClient, member_id: str):
+async def get_member_notes(current_user: AuthenticatedClient, member_id: int):
     """Get member notes."""
     return db.get_member_notes(member_id)
 
 @app.get("/v1/member/last_updated/")
-async def get_member_last_updated(current_user: AuthenticatedClient, member_id: str):
+async def get_member_last_updated(current_user: AuthenticatedClient, member_id: int):
     """Get member last updated timestamp."""
     return {"last_updated": db.get_member_last_updated(member_id)}
 
@@ -124,17 +124,17 @@ async def get_last_wa_sync(current_user: AuthenticatedClient):
     return {"last_sync": db.get_last_wa_sync_time()}
 
 @app.get("/v1/member/roles/")
-async def get_member_roles(current_user: AuthenticatedClient, member_id: str):
+async def get_member_roles(current_user: AuthenticatedClient, member_id: int):
     """Get member roles within Deep Harbor itself."""
     return {"roles": db.get_member_roles(member_id)}
 
 @app.get("/v1/member/entry_logs/")
-async def get_member_entry_logs(current_user: AuthenticatedClient, member_id: str):
+async def get_member_entry_logs(current_user: AuthenticatedClient, member_id: int):
     """Get member entry logs."""
     return {"entry_logs": db.get_member_entry_logs(member_id)}
 
 @app.get("/v1/member/authorization_changes/")
-async def get_member_authorization_changes(current_user: AuthenticatedClient, member_id: str):
+async def get_member_authorization_changes(current_user: AuthenticatedClient, member_id: int):
     """Get member authorization changes."""
     return db.get_member_authorization_changes(member_id)
 
@@ -171,7 +171,7 @@ async def change_member_email_address(
 async def update_member_connections(
     current_client: AuthenticatedClient,
     request: Request,
-    x_member_id: Annotated[str, Header()],
+    x_member_id: Annotated[int, Header()],
 ):
     """Add or update member connections."""
     data = await request.json()
@@ -182,7 +182,7 @@ async def update_member_connections(
 async def update_member_status(
     current_client: AuthenticatedClient,
     request: Request,
-    x_member_id: Annotated[str, Header()],
+    x_member_id: Annotated[int, Header()],
 ):
     """Add or update member status."""
     data = await request.json()
@@ -193,7 +193,7 @@ async def update_member_status(
 async def update_member_forms(
     current_client: AuthenticatedClient,
     request: Request,
-    x_member_id: Annotated[str, Header()],
+    x_member_id: Annotated[int, Header()],
 ):
     """Add or update member forms data."""
     data = await request.json()
@@ -204,7 +204,7 @@ async def update_member_forms(
 async def update_member_access(
     current_client: AuthenticatedClient,
     request: Request,
-    x_member_id: Annotated[str, Header()],
+    x_member_id: Annotated[int, Header()],
 ):
     """Add or update member access data."""
     data = await request.json()
@@ -215,7 +215,7 @@ async def update_member_access(
 async def update_member_extras(
     current_client: AuthenticatedClient,
     request: Request,
-    x_member_id: Annotated[str, Header()],
+    x_member_id: Annotated[int, Header()],
 ):
     """Add or update member extras data."""
     data = await request.json()
@@ -226,7 +226,7 @@ async def update_member_extras(
 async def update_member_notes(
     current_client: AuthenticatedClient,
     request: Request,
-    x_member_id: Annotated[str, Header()],
+    x_member_id: Annotated[int, Header()],
 ):
     """Add or update member notes."""
     # So, here's how this works. The client will send us a JSON object with the following structure:
@@ -245,7 +245,7 @@ async def update_member_notes(
 async def update_member_authorizations(
     current_client: AuthenticatedClient,
     request: Request,
-    x_member_id: Annotated[str, Header()],
+    x_member_id: Annotated[int, Header()],
 ):
     """Add or update member authorizations."""
     data = await request.json()
@@ -313,7 +313,7 @@ async def search_contacts_by_email(current_user: AuthenticatedClient, email_addr
 ##############################################################################
 
 @app.post("/v1/payment/stripe_webhook/")
-async def handle_stripe_webhook(request: Request):
+async def handle_stripe_webhook(current_client: AuthenticatedClient, request: Request):
     """ We are passed the Stripe payload from ST2DH, and we want 
         to log it and then handle it as needed."""
     payload = await request.body()
