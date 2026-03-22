@@ -335,6 +335,28 @@ def requires_change_permission(tab_name):
     return decorator
 
 
+def requires_view_permission(tab_name):
+    """Check that the logged-in user has 'view' or 'change' permission for the given tab."""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not session.get("user"):
+                return {"error": "Not authenticated"}, 401
+            permissions = session.get("user_permissions", {})
+            view_perms = permissions.get("view", [])
+            change_perms = permissions.get("change", [])
+            if ("all" not in view_perms and tab_name not in view_perms and
+                    "all" not in change_perms and tab_name not in change_perms):
+                user_email = session["user"].get("email") or session["user"].get("preferred_username")
+                logger.warning(
+                    f"Permission denied: {user_email} attempted to view '{tab_name}'"
+                )
+                return {"error": "Permission denied"}, 403
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+
 ###############################################################################
 # Dev mode login routes — only active when AUTH_MODE=dev
 # These replace the B2C authentication flow with a simple user picker
@@ -517,6 +539,7 @@ def api_search():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/identity")
+@requires_view_permission("identity")
 def api_member_identity():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -540,6 +563,7 @@ def api_member_identity():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/roles")
+@requires_view_permission("roles")
 def api_member_roles():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -564,6 +588,7 @@ def api_member_roles():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/status")
+@requires_view_permission("status")
 def api_member_status():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -584,6 +609,7 @@ def api_member_status():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/forms")
+@requires_view_permission("forms")
 def api_member_forms():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -604,6 +630,7 @@ def api_member_forms():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/connections")
+@requires_view_permission("connections")
 def api_member_connections():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -624,6 +651,7 @@ def api_member_connections():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/extras")
+@requires_view_permission("extras")
 def api_member_extras():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -647,6 +675,7 @@ def api_member_extras():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/authorizations")
+@requires_view_permission("authorizations")
 def api_member_authorizations():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -670,6 +699,7 @@ def api_member_authorizations():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/notes")
+@requires_view_permission("notes")
 def api_member_notes():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -690,6 +720,7 @@ def api_member_notes():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/entry")
+@requires_view_permission("entry")
 def api_member_entry():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -710,6 +741,7 @@ def api_member_entry():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/access")
+@requires_view_permission("access")
 def api_member_access():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
