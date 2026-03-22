@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/deepharbor_logo_header.svg" alt="Deep Harbor Logo">
+</p>
+
 # Deep Harbor CRM
 ## Quick Note on configuration (or lack thereof)
 The system makes use of a lot of `config.ini` files in various places. These files are used to configure database connections, service endpoints, and other settings. There are a number of parameters that Deep Harbor uses that require things like an Active Directory server, an RFID controller, and so forth. The default `config.ini` files that are included with the code are meant for development purposes only and will need to be modified to reflect your actual environment.
