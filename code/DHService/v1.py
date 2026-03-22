@@ -55,7 +55,7 @@ async def search_members_by_rfid_tag(current_user: AuthenticatedClient, rfid_tag
     return db.search_members_by_rfid_tag(rfid_tag)
 
 @app.get("/v1/member/search/")
-async def search_members(current_user: AuthenticatedClient, query: str, limit: int = 50, offset: int = 0):
+async def search_members(current_user: AuthenticatedClient, query: str):
     """ Search for members based on a query string.
         Note that this is specifically searching both identity
         and access information, not _everything_ about a member.
@@ -64,7 +64,7 @@ async def search_members(current_user: AuthenticatedClient, query: str, limit: i
         it finds names in too many other fields (e.g., the "notes"
         field).
     """
-    return db.search_members_by_identity_and_access(query, limit, offset)
+    return db.search_members_by_identity_and_access(query)
 
 @app.get("/v1/member/username_check/")
 async def check_member_username(current_user: AuthenticatedClient, username: str):

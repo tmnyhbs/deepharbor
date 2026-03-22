@@ -158,7 +158,7 @@ def search_members(query: str) -> list[dict]:
     logger.debug(f"Found {len(members)} members matching query: {query}")
     return members
 
-def search_members_by_identity_and_access(query: str, limit: int = 50, offset: int = 0) -> list[dict]:
+def search_members_by_identity_and_access(query: str) -> list[dict]:
     logger.debug(f"Searching members with query: {query}")
     members = []
     with get_db_connection() as conn:
@@ -170,9 +170,8 @@ def search_members_by_identity_and_access(query: str, limit: int = 50, offset: i
                           identity -> 'emails' -> 0 ->> 'email_address' primary_email_address,
                           status ->> 'membership_status' membership_status
                    FROM   search_members_by_identity_and_access(%s)
-                   LIMIT %s OFFSET %s
                 """,
-                (query, limit, offset),
+                (query,),
             )
             results = cur.fetchall()
     for result in results:
