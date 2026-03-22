@@ -64,6 +64,11 @@
 {% if user %}
 <!-- We're logged in -->
 
+<script>
+    // Permissions injected from server session — not from a cookie
+    const USER_PERMISSIONS = {{ user_permissions | tojson }};
+</script>
+
 <!-- Logging notice -->
 <div class="row justify-content-center">
     <div class="col-md-8">
@@ -762,53 +767,9 @@ function saveTabData(tabName) {
     });
 }
 
-// Get user permissions from cookie
+// Get user permissions from server-injected template variable
 function getUserPermissions() {
-    console.log('=== Getting user permissions from cookie ===');
-    console.log('All cookies:', document.cookie);
-    
-    const cookieValue = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('user_permissions='));
-    
-    console.log('user_permissions cookie value:', cookieValue);
-    
-    if (cookieValue) {
-        try {
-            let permissionsJson = decodeURIComponent(cookieValue.split('=')[1]);
-            console.log('Decoded permissions JSON string (before fixing):', permissionsJson);
-            
-            // Fix octal escape sequences (e.g., \054 for comma)
-            permissionsJson = permissionsJson.replace(/\\(\d{3})/g, (match, octal) => {
-                return String.fromCharCode(parseInt(octal, 8));
-            });
-            
-            console.log('Decoded permissions JSON string (after fixing):', permissionsJson);
-            
-            // Parse once to get the string (if it's double-encoded)
-            let permissions = JSON.parse(permissionsJson);
-            console.log('First parse result:', permissions);
-            console.log('Type of first parse:', typeof permissions);
-            
-            // If it's still a string, parse again
-            if (typeof permissions === 'string') {
-                console.log('Result is still a string, parsing again...');
-                permissions = JSON.parse(permissions);
-                console.log('Second parse result:', permissions);
-            }
-            
-            console.log('Final permissions object:', permissions);
-            console.log('permissions.view:', permissions.view);
-            console.log('Is permissions.view an array?', Array.isArray(permissions.view));
-            
-            return permissions;
-        } catch (e) {
-            console.error('Error parsing permissions:', e);
-            return null;
-        }
-    }
-    console.warn('No user_permissions cookie found');
-    return null;
+    return USER_PERMISSIONS || null;
 }
 
 // Check if user can change (edit) a specific tab
@@ -834,88 +795,48 @@ function canChangeTab(tabName, permissions) {
 
 // Check if user can view a specific tab
 function canViewTab(tabName, permissions) {
-    console.log(`\n=== Checking permission for tab "${tabName}" ===`);
-    
-    // If no permissions object provided, get it
     if (!permissions) {
-        console.log('No permissions provided, fetching from cookie...');
         permissions = getUserPermissions();
-    } else {
-        console.log('Using provided permissions:', permissions);
     }
-    
-    // If still no permissions or no view array, show all tabs (fallback)
-    if (!permissions) {
-        console.log('❌ No permissions object found - SHOWING ALL TABS (fallback)');
-        return true;
+
+    if (!permissions || !permissions.view || !Array.isArray(permissions.view)) {
+        return false;
     }
-    
-    if (!permissions.view) {
-        console.log('❌ No permissions.view property found - SHOWING ALL TABS (fallback)');
-        return true;
-    }
-    
-    if (!Array.isArray(permissions.view)) {
-        console.log('❌ permissions.view is not an array - SHOWING ALL TABS (fallback)');
-        console.log('permissions.view type:', typeof permissions.view);
-        console.log('permissions.view value:', permissions.view);
-        return true;
-    }
-    
-    console.log('✓ Valid permissions.view array:', permissions.view);
-    
-    // Check if user has "all" permission
+
     if (permissions.view.includes('all')) {
-        console.log('✓ User has "all" permission - ALLOWING tab');
         return true;
     }
-    
-    // Check if specific tab is in view permissions
-    const canView = permissions.view.includes(tabName);
-    console.log(`${canView ? '✓' : '❌'} Tab "${tabName}" ${canView ? 'IS' : 'IS NOT'} in view permissions`);
-    console.log('View permissions array:', permissions.view);
-    
-    return canView;
+
+    return permissions.view.includes(tabName);
 }
 
 // Filter tabs based on user permissions
 function filterTabsByPermissions() {
-    console.log('Filtering tabs by permissions...');
-    const permissions = getUserPermissions(); // Get permissions once
+    const permissions = getUserPermissions();
     // These are the tab names as used in permissions in the "roles" table.
     // If you add another tab, make sure to add it to the roles permissions as well otherwise
     // it won't be shown to anyone!
     const allTabs = ['identity', 'status', 'roles', 'forms', 'connections', 'extras', 'authorizations', 'notes', 'access', 'entry'];
-    
+
     allTabs.forEach(tabName => {
         const tabButton = document.getElementById(`${tabName}-tab`);
         const tabNavItem = tabButton ? tabButton.closest('.nav-item') : null;
         const editBtn = document.getElementById(`${tabName}EditBtn`);
-        
-        console.log(`Processing tab "${tabName}":`, { tabButton, tabNavItem });
-        
+
         const canView = canViewTab(tabName, permissions);
         const canChange = canChangeTab(tabName, permissions);
         const isVisible = canView || canChange;
-        
+
         if (tabNavItem) {
-            if (!isVisible) {
-                // Hide tab if user doesn't have view or change permission
-                console.log(`Hiding tab "${tabName}"`);
-                tabNavItem.style.display = 'none';
-            } else {
-                // Show tab if user has view or change permission
-                console.log(`Showing tab "${tabName}"`);
-                tabNavItem.style.display = 'block';
-            }
+            tabNavItem.style.display = isVisible ? 'block' : 'none';
         }
-        
+
         // Show edit button only if user has change permission for this tab
         if (editBtn) {
             editBtn.style.display = canChange ? '' : 'none';
         }
     });
-    
+
     // Activate the first visible tab
     activateFirstVisibleTab(permissions);
 }
@@ -925,9 +846,9 @@ function activateFirstVisibleTab(permissions) {
     if (!permissions) {
         permissions = getUserPermissions();
     }
-    
+
     const allTabs = ['identity', 'status', 'roles', 'forms', 'connections', 'extras', 'authorizations', 'notes', 'access', 'entry'];
-    
+
     // Deactivate all tabs first
     allTabs.forEach(tabName => {
         const tabButton = document.getElementById(`${tabName}-tab`);
@@ -938,14 +859,13 @@ function activateFirstVisibleTab(permissions) {
             tabPane.classList.remove('show', 'active');
         }
     });
-    
+
     // Find and activate the first visible tab (visible if user has view or change permission)
     for (const tabName of allTabs) {
         if (canViewTab(tabName, permissions) || canChangeTab(tabName, permissions)) {
             const tabButton = document.getElementById(`${tabName}-tab`);
             const tabPane = document.getElementById(tabName);
             if (tabButton && tabPane) {
-                console.log(`Activating tab: ${tabName}`);
                 tabButton.classList.add('active');
                 tabButton.setAttribute('aria-selected', 'true');
                 tabPane.classList.add('show', 'active');

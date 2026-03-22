@@ -1,8 +1,9 @@
 import uuid
 import requests
 import json
+from functools import wraps
 from datetime import datetime
-from flask import Flask, render_template, session, request, redirect, url_for, make_response, flash
+from flask import Flask, render_template, session, request, redirect, url_for, flash
 from flask_session import Session
 from flask_wtf.csrf import CSRFProtect, CSRFError
 import msal
@@ -107,22 +108,13 @@ def index():
             session["user_role"] = "Error"
             session["user_permissions"] = {}
         
-        response = make_response(render_template(
-            "index.html", 
-            user=session["user"], 
+        return render_template(
+            "index.html",
+            user=session["user"],
             user_role=session.get("user_role", "Unknown"),
+            user_permissions=session.get("user_permissions", {}),
             version=msal.__version__
-        ))
-        
-        # Set permissions cookie
-        response.set_cookie(
-            "user_permissions", 
-            json.dumps(session.get("user_permissions", {})),
-            httponly=False,  # Allow JavaScript access
-            samesite="Lax"
         )
-        
-        return response
 
 @app.route("/login")
 def login():
@@ -261,8 +253,6 @@ def logout():
             + url_for("index", _external=True)
         )
 
-    # Clear permissions cookie on logout
-    response.set_cookie("user_permissions", "", expires=0)
     return response
 
 @app.route("/graphcall")
@@ -319,6 +309,52 @@ app.jinja_env.globals.update(git_version=config.get("git", "version", fallback="
 app.jinja_env.globals.update(now=datetime.now)  # Used in footer for dynamic year
 app.jinja_env.globals.update(auth_mode=AUTH_MODE)  # Used in dev login routes
 app.jinja_env.globals.update(dev_banner=DEV_BANNER)  # Used in dev banner
+
+
+###############################################################################
+# Permission checking decorator for admin API endpoints
+###############################################################################
+
+def requires_change_permission(tab_name):
+    """Check that the logged-in user has 'change' permission for the given tab."""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not session.get("user"):
+                return {"error": "Not authenticated"}, 401
+            permissions = session.get("user_permissions", {})
+            change_perms = permissions.get("change", [])
+            if "all" not in change_perms and tab_name not in change_perms:
+                user_email = session["user"].get("email") or session["user"].get("preferred_username")
+                logger.warning(
+                    f"Permission denied: {user_email} attempted to change '{tab_name}'"
+                )
+                return {"error": "Permission denied"}, 403
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+
+def requires_view_permission(tab_name):
+    """Check that the logged-in user has 'view' or 'change' permission for the given tab."""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not session.get("user"):
+                return {"error": "Not authenticated"}, 401
+            permissions = session.get("user_permissions", {})
+            view_perms = permissions.get("view", [])
+            change_perms = permissions.get("change", [])
+            if ("all" not in view_perms and tab_name not in view_perms and
+                    "all" not in change_perms and tab_name not in change_perms):
+                user_email = session["user"].get("email") or session["user"].get("preferred_username")
+                logger.warning(
+                    f"Permission denied: {user_email} attempted to view '{tab_name}'"
+                )
+                return {"error": "Permission denied"}, 403
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 
 ###############################################################################
@@ -503,6 +539,7 @@ def api_search():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/identity")
+@requires_view_permission("identity")
 def api_member_identity():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -526,6 +563,7 @@ def api_member_identity():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/roles")
+@requires_view_permission("roles")
 def api_member_roles():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -550,6 +588,7 @@ def api_member_roles():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/status")
+@requires_view_permission("status")
 def api_member_status():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -570,6 +609,7 @@ def api_member_status():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/forms")
+@requires_view_permission("forms")
 def api_member_forms():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -590,6 +630,7 @@ def api_member_forms():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/connections")
+@requires_view_permission("connections")
 def api_member_connections():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -610,6 +651,7 @@ def api_member_connections():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/extras")
+@requires_view_permission("extras")
 def api_member_extras():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -633,6 +675,7 @@ def api_member_extras():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/authorizations")
+@requires_view_permission("authorizations")
 def api_member_authorizations():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -656,6 +699,7 @@ def api_member_authorizations():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/notes")
+@requires_view_permission("notes")
 def api_member_notes():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -676,6 +720,7 @@ def api_member_notes():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/entry")
+@requires_view_permission("entry")
 def api_member_entry():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -696,6 +741,7 @@ def api_member_entry():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/access")
+@requires_view_permission("access")
 def api_member_access():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -753,6 +799,7 @@ def api_available_membership_levels():
 
 # POST endpoints for updating member data
 @app.route("/api/member/identity", methods=["POST"])
+@requires_change_permission("identity")
 def api_update_member_identity():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -797,6 +844,7 @@ def api_update_member_identity():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/status", methods=["POST"])
+@requires_change_permission("status")
 def api_update_member_status():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -841,6 +889,7 @@ def api_update_member_status():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/roles", methods=["POST"])
+@requires_change_permission("roles")
 def api_update_member_roles():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -885,6 +934,7 @@ def api_update_member_roles():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/extras", methods=["POST"])
+@requires_change_permission("extras")
 def api_update_member_extras():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -929,6 +979,7 @@ def api_update_member_extras():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/authorizations", methods=["POST"])
+@requires_change_permission("authorizations")
 def api_update_member_authorizations():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -973,6 +1024,7 @@ def api_update_member_authorizations():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/notes", methods=["POST"])
+@requires_change_permission("notes")
 def api_update_member_notes():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -1017,6 +1069,7 @@ def api_update_member_notes():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/access", methods=["POST"])
+@requires_change_permission("access")
 def api_update_member_access():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -1061,6 +1114,7 @@ def api_update_member_access():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/forms", methods=["POST"])
+@requires_change_permission("forms")
 def api_update_member_forms():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -1105,6 +1159,7 @@ def api_update_member_forms():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/connections", methods=["POST"])
+@requires_change_permission("connections")
 def api_update_member_connections():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
