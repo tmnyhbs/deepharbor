@@ -292,6 +292,64 @@ def log_user_activity(access_token: str, member_id: str, activity_data: dict):
     return response.json()
 
 ###############################################################################
+# Space endpoints (access logs, etc.)
+###############################################################################
+
+def get_access_logs(access_token: str, start_date: str, end_date: str):
+    url = f"{DH_API_BASE_URL}/v1/space/access_logs/"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    params = {"start_date": start_date, "end_date": end_date}
+    response = requests.get(url, headers=headers, params=params)
+    response.raise_for_status()
+    return response.json()
+
+###############################################################################
+# Admin endpoints (roles management, assign roles)
+###############################################################################
+
+def get_all_roles(access_token: str):
+    url = f"{DH_API_BASE_URL}/v1/admin/roles/"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    return response.json()
+
+def create_role(access_token: str, name: str, permission: dict):
+    url = f"{DH_API_BASE_URL}/v1/admin/roles/"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = requests.post(url, headers=headers, json={"name": name, "permission": permission})
+    response.raise_for_status()
+    return response.json()
+
+def update_role(access_token: str, role_id: int, name: str, permission: dict):
+    url = f"{DH_API_BASE_URL}/v1/admin/roles/"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = requests.put(url, headers=headers, json={"id": role_id, "name": name, "permission": permission})
+    response.raise_for_status()
+    return response.json()
+
+def assign_role_to_member(access_token: str, member_id: int, role_id: int):
+    url = f"{DH_API_BASE_URL}/v1/admin/assign_role/"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = requests.post(url, headers=headers, json={"member_id": member_id, "role_id": role_id})
+    response.raise_for_status()
+    return response.json()
+
+def get_members_with_roles(access_token: str):
+    url = f"{DH_API_BASE_URL}/v1/admin/members_with_roles/"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    return response.json()
+
+def remove_role_from_member(access_token: str, member_id: int):
+    url = f"{DH_API_BASE_URL}/v1/admin/remove_role/"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = requests.post(url, headers=headers, json={"member_id": member_id})
+    response.raise_for_status()
+    return response.json()
+
+###############################################################################
 # Contacts endpoints
 # These endpoints manage contacts that are not members (i.e. no member ID)
 ###############################################################################

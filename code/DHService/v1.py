@@ -329,3 +329,66 @@ async def handle_stripe_webhook(current_client: AuthenticatedClient, request: Re
 async def get_products(current_user: AuthenticatedClient):
     """Get all products."""
     return {"products": db.get_products()}
+
+###############################################################################
+# Space endpoints (access logs, etc.)
+###############################################################################
+
+@app.get("/v1/space/access_logs/")
+async def get_access_logs(
+    current_user: AuthenticatedClient,
+    start_date: str,
+    end_date: str,
+):
+    """Get access logs for a date range."""
+    return {"logs": db.get_access_logs(start_date, end_date)}
+
+###############################################################################
+# Admin endpoints (roles management, assign roles)
+###############################################################################
+
+@app.get("/v1/admin/roles/")
+async def get_all_roles(current_user: AuthenticatedClient):
+    """Get all roles."""
+    return {"roles": db.get_all_roles()}
+
+@app.post("/v1/admin/roles/")
+async def create_role(
+    current_client: AuthenticatedClient,
+    request: Request,
+):
+    """Create a new role."""
+    data = await request.json()
+    return db.create_role(data["name"], data["permission"])
+
+@app.put("/v1/admin/roles/")
+async def update_role(
+    current_client: AuthenticatedClient,
+    request: Request,
+):
+    """Update an existing role."""
+    data = await request.json()
+    return db.update_role(data["id"], data["name"], data["permission"])
+
+@app.get("/v1/admin/members_with_roles/")
+async def get_members_with_roles(current_user: AuthenticatedClient):
+    """Get all members who have a role assigned."""
+    return {"members": db.get_members_with_roles()}
+
+@app.post("/v1/admin/assign_role/")
+async def assign_role_to_member(
+    current_client: AuthenticatedClient,
+    request: Request,
+):
+    """Assign a role to a member, replacing any existing role."""
+    data = await request.json()
+    return db.assign_role_to_member(data["member_id"], data["role_id"])
+
+@app.post("/v1/admin/remove_role/")
+async def remove_role_from_member(
+    current_client: AuthenticatedClient,
+    request: Request,
+):
+    """Remove a member's role assignment."""
+    data = await request.json()
+    return db.remove_role_from_member(data["member_id"])

@@ -79,6 +79,9 @@
     </div>
 </div>
 
+<!-- Member Section -->
+<div id="memberSection">
+
 <!-- Show a search text box that we'll use to look up members -->
 <div class="row justify-content-center">
     <div class="col-md-6">
@@ -332,6 +335,153 @@
                     </div>
                     <div id="entryData"></div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div><!-- end memberSection -->
+
+<!-- ====================================================================== -->
+<!-- Access Logs Section                                                       -->
+<!-- ====================================================================== -->
+<div id="accessLogsSection" style="display:none;">
+    <h3 class="text-center mb-4">Access Logs</h3>
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-end g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold" for="accessLogStartDate">Start Date</label>
+                    <input type="date" class="form-control" id="accessLogStartDate">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold" for="accessLogEndDate">End Date</label>
+                    <input type="date" class="form-control" id="accessLogEndDate">
+                </div>
+                <div class="col-md-auto">
+                    <button class="btn btn-primary" onclick="loadAccessLogs()">Refresh</button>
+                </div>
+                <div class="col-md-auto d-flex align-items-center">
+                    <div class="form-check mb-0">
+                        <input class="form-check-input" type="checkbox" id="accessLogAutoRefresh">
+                        <label class="form-check-label" for="accessLogAutoRefresh">Auto-refresh (30s)</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="accessLogsLoading" class="text-center" style="display:none;">
+        <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+    </div>
+    <div id="accessLogsContent"></div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- Roles Section                                                             -->
+<!-- ====================================================================== -->
+<div id="rolesSection" style="display:none;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">Roles</h3>
+        <button class="btn btn-success" onclick="showRoleModal(null)">+ New Role</button>
+    </div>
+    <div id="rolesLoading" class="text-center" style="display:none;">
+        <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+    </div>
+    <div id="rolesContent"></div>
+</div>
+
+<!-- Role Edit Modal -->
+<div class="modal fade" id="roleModal" tabindex="-1" aria-labelledby="roleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="roleModalLabel">Role</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="roleModalId">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Role Name</label>
+                    <input type="text" class="form-control" id="roleModalName" placeholder="e.g. Administrator">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Permissions</label>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Section</th>
+                                    <th class="text-center">View</th>
+                                    <th class="text-center">Change</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rolePermissionsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveRole()">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- Assign Roles Section                                                      -->
+<!-- ====================================================================== -->
+<div id="assignRolesSection" style="display:none;">
+    <h3 class="text-center mb-4">Assign Roles</h3>
+
+    <!-- Current assignments -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Current Role Assignments</h5>
+            <button class="btn btn-sm btn-outline-secondary" onclick="loadMembersWithRoles()">&#x21bb; Refresh</button>
+        </div>
+        <div class="card-body p-0">
+            <div id="membersWithRolesLoading" class="text-center py-3" style="display:none;">
+                <div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div>
+            </div>
+            <div id="membersWithRolesContent"></div>
+        </div>
+    </div>
+
+    <!-- Assign role to a new member -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Assign Role to Member</h5>
+        </div>
+        <div class="card-body">
+            <div class="input-group" style="max-width: 520px;">
+                <input type="text" class="form-control" id="assignRoleMemberSearch" placeholder="Search by name or email...">
+                <button class="btn btn-primary" type="button" onclick="searchAssignRoleMembers()">Search</button>
+            </div>
+            <div id="assignRoleMemberResults" class="mt-3" style="display:none;">
+                <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="sticky-top bg-white">
+                            <tr><th>Name</th><th>Email</th><th>Status</th><th></th></tr>
+                        </thead>
+                        <tbody id="assignRoleMemberResultsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Role Selection Popup (shared for new assign + edit) -->
+<div class="modal fade" id="roleSelectModal" tabindex="-1" aria-labelledby="roleSelectModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="roleSelectModalLabel">Select Role</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="roleSelectList">
+                <!-- populated dynamically -->
             </div>
         </div>
     </div>
@@ -767,9 +917,53 @@ function saveTabData(tabName) {
     });
 }
 
-// Get user permissions from server-injected template variable
+// Get user permissions from cookie
 function getUserPermissions() {
-    return USER_PERMISSIONS || null;
+    console.log('=== Getting user permissions from cookie ===');
+    console.log('All cookies:', document.cookie);
+    
+    const cookieValue = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('user_permissions='));
+    
+    console.log('user_permissions cookie value:', cookieValue);
+    
+    if (cookieValue) {
+        try {
+            let permissionsJson = decodeURIComponent(cookieValue.split('=')[1]);
+            console.log('Decoded permissions JSON string (before fixing):', permissionsJson);
+            
+            // Fix octal escape sequences (e.g., \054 for comma)
+            permissionsJson = permissionsJson.replace(/\\(\d{3})/g, (match, octal) => {
+                return String.fromCharCode(parseInt(octal, 8));
+            });
+            
+            console.log('Decoded permissions JSON string (after fixing):', permissionsJson);
+            
+            // Parse once to get the string (if it's double-encoded)
+            let permissions = JSON.parse(permissionsJson);
+            console.log('First parse result:', permissions);
+            console.log('Type of first parse:', typeof permissions);
+            
+            // If it's still a string, parse again
+            if (typeof permissions === 'string') {
+                console.log('Result is still a string, parsing again...');
+                permissions = JSON.parse(permissions);
+                console.log('Second parse result:', permissions);
+            }
+            
+            console.log('Final permissions object:', permissions);
+            console.log('permissions.view:', permissions.view);
+            console.log('Is permissions.view an array?', Array.isArray(permissions.view));
+            
+            return permissions;
+        } catch (e) {
+            console.error('Error parsing permissions:', e);
+            return null;
+        }
+    }
+    console.warn('No user_permissions cookie found');
+    return null;
 }
 
 // Check if user can change (edit) a specific tab
@@ -795,40 +989,73 @@ function canChangeTab(tabName, permissions) {
 
 // Check if user can view a specific tab
 function canViewTab(tabName, permissions) {
+    console.log(`\n=== Checking permission for tab "${tabName}" ===`);
+    
+    // If no permissions object provided, get it
     if (!permissions) {
+        console.log('No permissions provided, fetching from cookie...');
         permissions = getUserPermissions();
+    } else {
+        console.log('Using provided permissions:', permissions);
     }
-
-    if (!permissions || !permissions.view || !Array.isArray(permissions.view)) {
-        return false;
-    }
-
-    if (permissions.view.includes('all')) {
+    
+    // If still no permissions or no view array, show all tabs (fallback)
+    if (!permissions) {
+        console.log('❌ No permissions object found - SHOWING ALL TABS (fallback)');
         return true;
     }
-
-    return permissions.view.includes(tabName);
+    
+    if (!permissions.view) {
+        console.log('❌ No permissions.view property found - SHOWING ALL TABS (fallback)');
+        return true;
+    }
+    
+    if (!Array.isArray(permissions.view)) {
+        console.log('❌ permissions.view is not an array - SHOWING ALL TABS (fallback)');
+        console.log('permissions.view type:', typeof permissions.view);
+        console.log('permissions.view value:', permissions.view);
+        return true;
+    }
+    
+    console.log('✓ Valid permissions.view array:', permissions.view);
+    
+    // Check if user has "all" permission
+    if (permissions.view.includes('all')) {
+        console.log('✓ User has "all" permission - ALLOWING tab');
+        return true;
+    }
+    
+    // Check if specific tab is in view permissions
+    const canView = permissions.view.includes(tabName);
+    console.log(`${canView ? '✓' : '❌'} Tab "${tabName}" ${canView ? 'IS' : 'IS NOT'} in view permissions`);
+    console.log('View permissions array:', permissions.view);
+    
+    return canView;
 }
 
 // Filter tabs based on user permissions
 function filterTabsByPermissions() {
-    const permissions = getUserPermissions();
-    // These are the tab names as used in permissions in the "roles" table.
-    // If you add another tab, make sure to add it to the roles permissions as well otherwise
-    // it won't be shown to anyone!
+    console.log('Filtering tabs by permissions...');
+    const permissions = getUserPermissions(); // Get permissions once
+    // Tab names match the HTML ids; permission keys are "member.<tabName>".
+    // Add new tabs here AND to the roles table in the DB.
     const allTabs = ['identity', 'status', 'roles', 'forms', 'connections', 'extras', 'authorizations', 'notes', 'access', 'entry'];
 
     allTabs.forEach(tabName => {
+        const permKey = 'member.' + tabName;
         const tabButton = document.getElementById(`${tabName}-tab`);
         const tabNavItem = tabButton ? tabButton.closest('.nav-item') : null;
         const editBtn = document.getElementById(`${tabName}EditBtn`);
 
-        const canView = canViewTab(tabName, permissions);
-        const canChange = canChangeTab(tabName, permissions);
+        console.log(`Processing tab "${tabName}" (${permKey}):`, { tabButton, tabNavItem });
+
+        const canView = canViewTab(permKey, permissions);
+        const canChange = canChangeTab(permKey, permissions);
         const isVisible = canView || canChange;
 
         if (tabNavItem) {
             tabNavItem.style.display = isVisible ? 'block' : 'none';
+            console.log(`${isVisible ? 'Showing' : 'Hiding'} tab "${tabName}"`);
         }
 
         // Show edit button only if user has change permission for this tab
@@ -862,10 +1089,12 @@ function activateFirstVisibleTab(permissions) {
 
     // Find and activate the first visible tab (visible if user has view or change permission)
     for (const tabName of allTabs) {
-        if (canViewTab(tabName, permissions) || canChangeTab(tabName, permissions)) {
+        const permKey = 'member.' + tabName;
+        if (canViewTab(permKey, permissions) || canChangeTab(permKey, permissions)) {
             const tabButton = document.getElementById(`${tabName}-tab`);
             const tabPane = document.getElementById(tabName);
             if (tabButton && tabPane) {
+                console.log(`Activating tab: ${tabName}`);
                 tabButton.classList.add('active');
                 tabButton.setAttribute('aria-selected', 'true');
                 tabPane.classList.add('show', 'active');
@@ -1661,6 +1890,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+
+    // Apply navbar visibility based on permissions
+    filterNavbarByPermissions();
 });
 
 // Function to log tab selection
@@ -1668,8 +1900,7 @@ function logTabSelection(tabName, memberId) {
     fetch('/api/log_activity', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken
+            'Content-Type': 'application/json'
         },
         body: JSON.stringify({
             action: 'view_tab',
@@ -1695,6 +1926,507 @@ document.getElementById('memberSearch').addEventListener('keypress', function(ev
         searchMembers();
     }
 });
+
+// Allow Enter key in assign-role member search
+document.getElementById('assignRoleMemberSearch').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        searchAssignRoleMembers();
+    }
+});
+
+// ============================================================================
+// Section navigation
+// ============================================================================
+
+const SECTIONS = ['member', 'accessLogs', 'roles', 'assignRoles'];
+const SECTION_EL_IDS = {
+    member: 'memberSection',
+    accessLogs: 'accessLogsSection',
+    roles: 'rolesSection',
+    assignRoles: 'assignRolesSection',
+};
+
+let accessLogsAutoRefreshTimer = null;
+
+// Map section names to the permission key required to view them.
+// Member section has no entry — it's controlled by tab-level permissions.
+const SECTION_PERM_MAP = {
+    accessLogs:  'space.access_logs',
+    roles:       'systems.roles',
+    assignRoles: 'systems.assign_roles',
+};
+
+function showSection(name) {
+    const requiredPerm = SECTION_PERM_MAP[name];
+    if (requiredPerm) {
+        const permissions = getUserPermissions();
+        if (!canViewTab(requiredPerm, permissions)) {
+            console.warn(`Access denied to section "${name}" — requires "${requiredPerm}"`);
+            return;
+        }
+    }
+
+    SECTIONS.forEach(s => {
+        const el = document.getElementById(SECTION_EL_IDS[s]);
+        if (el) el.style.display = (s === name) ? '' : 'none';
+    });
+
+    // Stop auto-refresh when leaving access logs
+    if (name !== 'accessLogs') {
+        clearAutoRefresh();
+        const cb = document.getElementById('accessLogAutoRefresh');
+        if (cb) cb.checked = false;
+    }
+
+    // Load data when switching sections
+    if (name === 'accessLogs') {
+        initAccessLogs();
+    } else if (name === 'roles') {
+        loadRoles();
+    } else if (name === 'assignRoles') {
+        initAssignRoles();
+    }
+}
+
+// Hide navbar items the current user does not have permission to see.
+function filterNavbarByPermissions() {
+    const permissions = getUserPermissions();
+    if (!permissions) return;
+
+    const spaceNavItem   = document.getElementById('spaceDropdown')?.closest('.nav-item');
+    const systemsNavItem = document.getElementById('systemsDropdown')?.closest('.nav-item');
+    const navAccessLogs  = document.getElementById('nav-access-logs');
+    const navRoles       = document.getElementById('nav-roles');
+    const navAssignRoles = document.getElementById('nav-assign-roles');
+
+    const canAccessLogs  = canViewTab('space.access_logs',     permissions);
+    const canRoles       = canViewTab('systems.roles',         permissions);
+    const canAssignRoles = canViewTab('systems.assign_roles',  permissions);
+
+    if (navAccessLogs)  navAccessLogs.closest('li').style.display  = canAccessLogs  ? '' : 'none';
+    if (navRoles)       navRoles.closest('li').style.display        = canRoles       ? '' : 'none';
+    if (navAssignRoles) navAssignRoles.closest('li').style.display  = canAssignRoles ? '' : 'none';
+
+    // Hide parent dropdown if all its children are hidden
+    if (spaceNavItem)   spaceNavItem.style.display   = canAccessLogs            ? '' : 'none';
+    if (systemsNavItem) systemsNavItem.style.display  = (canRoles || canAssignRoles) ? '' : 'none';
+}
+
+// ============================================================================
+// Access Logs
+// ============================================================================
+
+function todayStr() {
+    return new Date().toISOString().slice(0, 10);
+}
+
+function initAccessLogs() {
+    const start = document.getElementById('accessLogStartDate');
+    const end = document.getElementById('accessLogEndDate');
+    if (!start.value) start.value = todayStr();
+    if (!end.value) end.value = todayStr();
+    loadAccessLogs();
+}
+
+function loadAccessLogs() {
+    const startDate = document.getElementById('accessLogStartDate').value;
+    const endDate = document.getElementById('accessLogEndDate').value;
+    if (!startDate || !endDate) return;
+
+    document.getElementById('accessLogsLoading').style.display = '';
+    document.getElementById('accessLogsContent').innerHTML = '';
+
+    fetch(`/api/space/access_logs?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`)
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('accessLogsLoading').style.display = 'none';
+            renderAccessLogs(data.logs || []);
+        })
+        .catch(err => {
+            document.getElementById('accessLogsLoading').style.display = 'none';
+            document.getElementById('accessLogsContent').innerHTML =
+                `<div class="alert alert-danger">Error loading access logs: ${escapeHtml(String(err))}</div>`;
+        });
+}
+
+function renderAccessLogs(logs) {
+    const container = document.getElementById('accessLogsContent');
+    if (!logs.length) {
+        container.innerHTML = '<div class="alert alert-secondary text-center">No access log entries for this date range.</div>';
+        return;
+    }
+    const rows = logs.map(log => {
+        const ts = log.timestamp ? new Date(log.timestamp).toLocaleString() : '';
+        const name = [log.first_name, log.last_name].filter(Boolean).join(' ') || '(unknown)';
+        const granted = log.access_granted === 'GRANTED';
+        const badge = granted
+            ? '<span class="badge bg-success">GRANTED</span>'
+            : '<span class="badge bg-danger">DENIED</span>';
+        return `<tr>
+            <td>${escapeHtml(ts)}</td>
+            <td>${escapeHtml(name)}</td>
+            <td>${escapeHtml(log.access_point || '')}</td>
+            <td>${badge}</td>
+            <td>${escapeHtml(log.rfid_tag || '')}</td>
+            <td>${log.member_id || ''}</td>
+        </tr>`;
+    }).join('');
+    container.innerHTML = `
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-sm">
+                <thead class="sticky-top bg-white">
+                    <tr>
+                        <th>Timestamp</th><th>Member</th><th>Access Point</th>
+                        <th>Result</th><th>RFID Tag</th><th>Member ID</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+        <p class="text-muted text-end">${logs.length} record(s)</p>`;
+}
+
+document.getElementById('accessLogAutoRefresh').addEventListener('change', function() {
+    if (this.checked) {
+        startAutoRefresh();
+    } else {
+        clearAutoRefresh();
+    }
+});
+
+function startAutoRefresh() {
+    clearAutoRefresh();
+    accessLogsAutoRefreshTimer = setInterval(loadAccessLogs, 30000);
+}
+
+function clearAutoRefresh() {
+    if (accessLogsAutoRefreshTimer) {
+        clearInterval(accessLogsAutoRefreshTimer);
+        accessLogsAutoRefreshTimer = null;
+    }
+}
+
+// ============================================================================
+// Roles
+// ============================================================================
+
+// Namespaced permission sections, grouped by area.
+// changeAllowed: false marks panels that are view-only (no edit UI).
+const PERMISSION_SECTIONS = [
+    { area: 'Member', key: 'member.identity',       changeAllowed: true  },
+    { area: 'Member', key: 'member.status',          changeAllowed: true  },
+    { area: 'Member', key: 'member.roles',           changeAllowed: true  },
+    { area: 'Member', key: 'member.forms',           changeAllowed: true  },
+    { area: 'Member', key: 'member.connections',     changeAllowed: true  },
+    { area: 'Member', key: 'member.extras',          changeAllowed: true  },
+    { area: 'Member', key: 'member.authorizations',  changeAllowed: true  },
+    { area: 'Member', key: 'member.notes',           changeAllowed: true  },
+    { area: 'Member', key: 'member.access',          changeAllowed: true  },
+    { area: 'Member', key: 'member.entry',           changeAllowed: false },
+    { area: 'Space',   key: 'space.access_logs',     changeAllowed: false },
+    { area: 'Systems', key: 'systems.roles',         changeAllowed: true  },
+    { area: 'Systems', key: 'systems.assign_roles',  changeAllowed: true  },
+];
+let rolesCache = [];
+let roleModalObj = null;
+
+function loadRoles() {
+    document.getElementById('rolesLoading').style.display = '';
+    document.getElementById('rolesContent').innerHTML = '';
+
+    fetch('/api/admin/roles')
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('rolesLoading').style.display = 'none';
+            rolesCache = data.roles || [];
+            renderRolesTable(rolesCache);
+        })
+        .catch(err => {
+            document.getElementById('rolesLoading').style.display = 'none';
+            document.getElementById('rolesContent').innerHTML =
+                `<div class="alert alert-danger">Error loading roles: ${escapeHtml(String(err))}</div>`;
+        });
+}
+
+function renderRolesTable(roles) {
+    const container = document.getElementById('rolesContent');
+    if (!roles.length) {
+        container.innerHTML = '<div class="alert alert-secondary text-center">No roles defined yet.</div>';
+        return;
+    }
+    const rows = roles.map(role => {
+        const perm = role.permission || {};
+        const viewList = (perm.view || []).join(', ') || '<em class="text-muted">none</em>';
+        const changeList = (perm.change || []).join(', ') || '<em class="text-muted">none</em>';
+        return `<tr>
+            <td>${role.id}</td>
+            <td>${escapeHtml(role.name)}</td>
+            <td>${viewList}</td>
+            <td>${changeList}</td>
+            <td><button class="btn btn-sm btn-outline-primary" onclick='showRoleModal(${JSON.stringify(role)})'>Edit</button></td>
+        </tr>`;
+    }).join('');
+    container.innerHTML = `
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr><th>ID</th><th>Name</th><th>View</th><th>Change</th><th></th></tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>`;
+}
+
+function buildPermissionsTable(viewPerms, changePerms) {
+    const tbody = document.getElementById('rolePermissionsTable');
+    let html = '';
+    let lastArea = null;
+    PERMISSION_SECTIONS.forEach(section => {
+        if (section.area !== lastArea) {
+            html += `<tr class="table-secondary"><td colspan="3" class="fw-semibold small text-uppercase">${section.area}</td></tr>`;
+            lastArea = section.area;
+        }
+        const label = section.key.split('.')[1].replace(/_/g, ' ');
+        const changeCell = section.changeAllowed
+            ? `<input type="checkbox" class="form-check-input perm-change" data-section="${section.key}"
+                   ${changePerms.includes(section.key) ? 'checked' : ''}>`
+            : `<span class="text-muted small">—</span>`;
+        html += `<tr>
+            <td class="ps-3">${label}</td>
+            <td class="text-center">
+                <input type="checkbox" class="form-check-input perm-view" data-section="${section.key}"
+                    ${viewPerms.includes(section.key) ? 'checked' : ''}>
+            </td>
+            <td class="text-center">${changeCell}</td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+}
+
+function showRoleModal(role) {
+    document.getElementById('roleModalId').value = role ? role.id : '';
+    document.getElementById('roleModalName').value = role ? role.name : '';
+    document.getElementById('roleModalLabel').textContent = role ? 'Edit Role' : 'New Role';
+
+    const perm = (role && role.permission) || {};
+    buildPermissionsTable(perm.view || [], perm.change || []);
+
+    if (!roleModalObj) {
+        roleModalObj = new bootstrap.Modal(document.getElementById('roleModal'));
+    }
+    roleModalObj.show();
+}
+
+function saveRole() {
+    const id = document.getElementById('roleModalId').value;
+    const name = document.getElementById('roleModalName').value.trim();
+    if (!name) {
+        alert('Role name is required.');
+        return;
+    }
+
+    const viewPerms = Array.from(document.querySelectorAll('.perm-view:checked')).map(el => el.dataset.section);
+    const changePerms = Array.from(document.querySelectorAll('.perm-change:checked')).map(el => el.dataset.section);
+    const permission = { view: viewPerms, change: changePerms };
+
+    const method = id ? 'PUT' : 'POST';
+    const body = id ? { id: parseInt(id), name, permission } : { name, permission };
+
+    fetch('/api/admin/roles', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    })
+        .then(r => r.json())
+        .then(data => {
+            if (data.message && data.message !== 'OK') {
+                alert('Error saving role: ' + data.message);
+                return;
+            }
+            if (roleModalObj) roleModalObj.hide();
+            loadRoles();
+        })
+        .catch(err => alert('Error saving role: ' + err));
+}
+
+// ============================================================================
+// Assign Roles
+// ============================================================================
+
+let pendingAssignMemberId = null;   // member_id waiting for role selection in popup
+let roleSelectModalObj = null;
+
+function initAssignRoles() {
+    // Refresh roles cache and load current assignments
+    fetch('/api/admin/roles')
+        .then(r => r.json())
+        .then(data => { rolesCache = data.roles || []; })
+        .catch(() => {});
+    loadMembersWithRoles();
+}
+
+// ---------- Members-with-roles table ----------
+
+function loadMembersWithRoles() {
+    document.getElementById('membersWithRolesLoading').style.display = '';
+    document.getElementById('membersWithRolesContent').innerHTML = '';
+
+    fetch('/api/admin/members_with_roles')
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('membersWithRolesLoading').style.display = 'none';
+            renderMembersWithRoles(data.members || []);
+        })
+        .catch(err => {
+            document.getElementById('membersWithRolesLoading').style.display = 'none';
+            document.getElementById('membersWithRolesContent').innerHTML =
+                `<div class="alert alert-danger m-3">Error loading assignments: ${escapeHtml(String(err))}</div>`;
+        });
+}
+
+function renderMembersWithRoles(members) {
+    const container = document.getElementById('membersWithRolesContent');
+    if (!members.length) {
+        container.innerHTML = '<p class="text-muted text-center py-3">No role assignments yet.</p>';
+        return;
+    }
+    const rows = members.map(m => {
+        const name = escapeHtml([m.first_name, m.last_name].filter(Boolean).join(' ') || '(unknown)');
+        const email = escapeHtml(m.primary_email || '');
+        const role = escapeHtml(m.role_name || '');
+        return `<tr>
+            <td>${name}</td>
+            <td class="text-muted">${email}</td>
+            <td><span class="badge bg-primary">${role}</span></td>
+            <td class="text-end">
+                <button class="btn btn-sm btn-outline-secondary me-1"
+                    onclick="openRoleSelectPopup(${m.member_id}, 'edit')">Edit Role</button>
+                <button class="btn btn-sm btn-outline-danger"
+                    onclick="removeMemberRole(${m.member_id}, '${name}')">Remove</button>
+            </td>
+        </tr>`;
+    }).join('');
+    container.innerHTML = `
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr><th>Member</th><th>Email</th><th>Role</th><th></th></tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>`;
+}
+
+function removeMemberRole(memberId, name) {
+    if (!confirm(`Remove the role from ${name}?`)) return;
+
+    fetch('/api/admin/remove_role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: memberId }),
+    })
+        .then(r => r.json())
+        .then(data => {
+            if (data.message && data.message !== 'OK') {
+                alert('Error removing role: ' + data.message);
+            } else {
+                loadMembersWithRoles();
+            }
+        })
+        .catch(err => alert('Error: ' + err));
+}
+
+// ---------- Role selection popup ----------
+
+function openRoleSelectPopup(memberId, mode) {
+    pendingAssignMemberId = memberId;
+
+    // Ensure cache is populated
+    const doOpen = () => {
+        const listEl = document.getElementById('roleSelectList');
+        if (!rolesCache.length) {
+            listEl.innerHTML = '<p class="text-muted">No roles defined.</p>';
+        } else {
+            listEl.innerHTML = rolesCache.map(role =>
+                `<button class="btn btn-outline-primary w-100 mb-2 text-start"
+                    onclick="confirmRoleAssign(${role.id})">${escapeHtml(role.name)}</button>`
+            ).join('');
+        }
+        if (!roleSelectModalObj) {
+            roleSelectModalObj = new bootstrap.Modal(document.getElementById('roleSelectModal'));
+        }
+        roleSelectModalObj.show();
+    };
+
+    if (rolesCache.length) {
+        doOpen();
+    } else {
+        fetch('/api/admin/roles')
+            .then(r => r.json())
+            .then(data => { rolesCache = data.roles || []; doOpen(); })
+            .catch(() => doOpen());
+    }
+}
+
+function confirmRoleAssign(roleId) {
+    if (!pendingAssignMemberId) return;
+    const memberId = pendingAssignMemberId;
+
+    fetch('/api/admin/assign_role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: memberId, role_id: roleId }),
+    })
+        .then(r => r.json())
+        .then(data => {
+            if (roleSelectModalObj) roleSelectModalObj.hide();
+            if (data.message && data.message !== 'OK') {
+                alert('Error assigning role: ' + data.message);
+            } else {
+                // Clear search results and reload the assignments table
+                document.getElementById('assignRoleMemberResults').style.display = 'none';
+                document.getElementById('assignRoleMemberSearch').value = '';
+                loadMembersWithRoles();
+            }
+        })
+        .catch(err => {
+            if (roleSelectModalObj) roleSelectModalObj.hide();
+            alert('Error: ' + err);
+        });
+}
+
+// ---------- Member search (for new assignments) ----------
+
+function searchAssignRoleMembers() {
+    const query = document.getElementById('assignRoleMemberSearch').value.trim();
+    if (!query) return;
+
+    fetch(`/api/search?query=${encodeURIComponent(query)}`)
+        .then(r => r.json())
+        .then(data => {
+            const results = Array.isArray(data) ? data : (data.members || []);
+            const tbody = document.getElementById('assignRoleMemberResultsBody');
+            if (!results.length) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-2">No results found.</td></tr>';
+            } else {
+                tbody.innerHTML = results.map(m => {
+                    const name = escapeHtml([m.first_name, m.last_name].filter(Boolean).join(' '));
+                    const email = escapeHtml(m.primary_email_address || '');
+                    const status = escapeHtml(m.membership_status || '');
+                    return `<tr>
+                        <td>${name}</td>
+                        <td>${email}</td>
+                        <td>${status}</td>
+                        <td><button class="btn btn-sm btn-outline-primary"
+                            onclick="openRoleSelectPopup(${m.member_id}, 'assign')">
+                            Assign Role&hellip;</button></td>
+                    </tr>`;
+                }).join('');
+            }
+            document.getElementById('assignRoleMemberResults').style.display = '';
+        })
+        .catch(err => alert('Search error: ' + err));
+}
 </script>
 
 {% else %}

@@ -108,13 +108,22 @@ def index():
             session["user_role"] = "Error"
             session["user_permissions"] = {}
         
-        return render_template(
-            "index.html",
-            user=session["user"],
+        response = make_response(render_template(
+            "index.html", 
+            user=session["user"], 
             user_role=session.get("user_role", "Unknown"),
-            user_permissions=session.get("user_permissions", {}),
             version=msal.__version__
+        ))
+        
+        # Set permissions cookie
+        response.set_cookie(
+            "user_permissions", 
+            json.dumps(session.get("user_permissions", {})),
+            httponly=False,  # Allow JavaScript access
+            samesite="Lax"
         )
+        
+        return response
 
 @app.route("/login")
 def login():
@@ -253,6 +262,8 @@ def logout():
             + url_for("index", _external=True)
         )
 
+    # Clear permissions cookie on logout
+    response.set_cookie("user_permissions", "", expires=0)
     return response
 
 @app.route("/graphcall")
@@ -1201,4 +1212,126 @@ def api_update_member_connections():
         return result
     except Exception as e:
         logger.error(f"Error updating member connections: {e}")
+        return {"error": str(e)}, 500
+
+###############################################################################
+# Space API routes (access logs, etc.)
+###############################################################################
+
+@app.route("/api/space/access_logs")
+def api_access_logs():
+    if not session.get("user"):
+        return {"error": "Not authenticated"}, 401
+
+    start_date = request.args.get("start_date", "")
+    end_date = request.args.get("end_date", "")
+    if not start_date or not end_date:
+        return {"error": "start_date and end_date required"}, 400
+
+    try:
+        access_token = dhservices.get_access_token(
+            dhservices.DH_CLIENT_ID,
+            dhservices.DH_CLIENT_SECRET
+        )
+        return dhservices.get_access_logs(access_token, start_date, end_date)
+    except Exception as e:
+        logger.error(f"Error fetching access logs: {e}")
+        return {"error": str(e)}, 500
+
+###############################################################################
+# Admin API routes (roles management, assign roles)
+###############################################################################
+
+@app.route("/api/admin/roles")
+def api_get_roles():
+    if not session.get("user"):
+        return {"error": "Not authenticated"}, 401
+
+    try:
+        access_token = dhservices.get_access_token(
+            dhservices.DH_CLIENT_ID,
+            dhservices.DH_CLIENT_SECRET
+        )
+        return dhservices.get_all_roles(access_token)
+    except Exception as e:
+        logger.error(f"Error fetching roles: {e}")
+        return {"error": str(e)}, 500
+
+@app.route("/api/admin/roles", methods=["POST"])
+def api_create_role():
+    if not session.get("user"):
+        return {"error": "Not authenticated"}, 401
+
+    data = request.get_json()
+    try:
+        access_token = dhservices.get_access_token(
+            dhservices.DH_CLIENT_ID,
+            dhservices.DH_CLIENT_SECRET
+        )
+        return dhservices.create_role(access_token, data["name"], data["permission"])
+    except Exception as e:
+        logger.error(f"Error creating role: {e}")
+        return {"error": str(e)}, 500
+
+@app.route("/api/admin/roles", methods=["PUT"])
+def api_update_role():
+    if not session.get("user"):
+        return {"error": "Not authenticated"}, 401
+
+    data = request.get_json()
+    try:
+        access_token = dhservices.get_access_token(
+            dhservices.DH_CLIENT_ID,
+            dhservices.DH_CLIENT_SECRET
+        )
+        return dhservices.update_role(access_token, data["id"], data["name"], data["permission"])
+    except Exception as e:
+        logger.error(f"Error updating role: {e}")
+        return {"error": str(e)}, 500
+
+@app.route("/api/admin/assign_role", methods=["POST"])
+def api_assign_role():
+    if not session.get("user"):
+        return {"error": "Not authenticated"}, 401
+
+    data = request.get_json()
+    try:
+        access_token = dhservices.get_access_token(
+            dhservices.DH_CLIENT_ID,
+            dhservices.DH_CLIENT_SECRET
+        )
+        return dhservices.assign_role_to_member(access_token, data["member_id"], data["role_id"])
+    except Exception as e:
+        logger.error(f"Error assigning role: {e}")
+        return {"error": str(e)}, 500
+
+@app.route("/api/admin/members_with_roles")
+def api_members_with_roles():
+    if not session.get("user"):
+        return {"error": "Not authenticated"}, 401
+
+    try:
+        access_token = dhservices.get_access_token(
+            dhservices.DH_CLIENT_ID,
+            dhservices.DH_CLIENT_SECRET
+        )
+        return dhservices.get_members_with_roles(access_token)
+    except Exception as e:
+        logger.error(f"Error fetching members with roles: {e}")
+        return {"error": str(e)}, 500
+
+@app.route("/api/admin/remove_role", methods=["POST"])
+def api_remove_role():
+    if not session.get("user"):
+        return {"error": "Not authenticated"}, 401
+
+    data = request.get_json()
+    try:
+        access_token = dhservices.get_access_token(
+            dhservices.DH_CLIENT_ID,
+            dhservices.DH_CLIENT_SECRET
+        )
+        return dhservices.remove_role_from_member(access_token, data["member_id"])
+    except Exception as e:
+        logger.error(f"Error removing role: {e}")
         return {"error": str(e)}, 500

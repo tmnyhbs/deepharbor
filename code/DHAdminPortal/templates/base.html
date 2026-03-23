@@ -37,31 +37,45 @@
         {% block header_actions %}{% endblock %}
     </div>
 
-    <!--
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        {% if user %}
+    {% if user %}
+    <nav class="navbar navbar-expand-lg" style="background: linear-gradient(90deg, #ff4d9d 0%, #ff87c8 100%); box-shadow: 0 2px 8px rgba(255,77,157,0.3);">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('index')}}">Deep Harbor Administration</a>
+            <span class="navbar-brand fw-bold" style="color: white; font-family: 'Comic Neue', cursive;">PS:1 Admin</span>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-                aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
+                data-bs-target="#adminNavbar" aria-controls="adminNavbar" aria-expanded="false"
+                aria-label="Toggle navigation" style="border-color: rgba(255,255,255,0.5);">
+                <span class="navbar-toggler-icon" style="filter: brightness(0) invert(1);"></span>
             </button>
-
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <div class="collapse navbar-collapse" id="adminNavbar">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="{{ url_for('index')}}">Home</a>
+                        <a class="nav-link fw-semibold" href="#" onclick="showSection('member'); return false;"
+                           id="nav-member" style="color: white;">Member</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('graphcall')}}">Graph API</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link fw-semibold dropdown-toggle" href="#" id="spaceDropdown"
+                           role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: white;">
+                            Space
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="spaceDropdown">
+                            <li><a class="dropdown-item" id="nav-access-logs" href="#" onclick="showSection('accessLogs'); return false;">Access Logs</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link fw-semibold dropdown-toggle" href="#" id="systemsDropdown"
+                           role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: white;">
+                            Systems
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="systemsDropdown">
+                            <li><a class="dropdown-item" id="nav-roles" href="#" onclick="showSection('roles'); return false;">Roles</a></li>
+                            <li><a class="dropdown-item" id="nav-assign-roles" href="#" onclick="showSection('assignRoles'); return false;">Assign Roles</a></li>
+                        </ul>
                     </li>
                 </ul>
             </div>
         </div>
-        {% endif %}
     </nav>
-    -->
+    {% endif %}
 
     <div class="container body-content">
         {% block content %}

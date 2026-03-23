@@ -758,3 +758,175 @@ def get_products() -> list[dict]:
             })
     logger.debug(f"Retrieved {len(products)} products from the database.")
     return products
+
+###############################################################################
+# Space functions (access logs, etc.)
+###############################################################################
+
+def get_access_logs(start_date: str, end_date: str) -> list[dict]:
+    logger.debug(f"Getting access logs from {start_date} to {end_date}")
+    logs = []
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT   mal.timestamp,
+                         m.identity ->> 'first_name' AS first_name,
+                         m.identity ->> 'last_name' AS last_name,
+                         CASE
+                                WHEN mal.access_point = '1'
+                                THEN 'Front Door'
+                                WHEN mal.access_point = '2'
+                                THEN 'Back Door'
+                                ELSE 'Unknown'
+                         END AS access_point,
+                         CASE
+                                WHEN mal.access_granted
+                                THEN 'GRANTED'
+                                ELSE 'DENIED'
+                         END AS access_granted,
+                         mal.rfid_tag,
+                         mal.member_id
+                FROM     member_access_log mal
+                LEFT JOIN member m ON m.id = mal.member_id
+                WHERE    mal.timestamp >= %s::date
+                AND      mal.timestamp < %s::date + INTERVAL '1 day'
+                ORDER BY mal.timestamp DESC;
+                """,
+                (start_date, end_date),
+            )
+            results = cur.fetchall()
+    for result in results:
+        logs.append({
+            "timestamp": result[0],
+            "first_name": result[1],
+            "last_name": result[2],
+            "access_point": result[3],
+            "access_granted": result[4],
+            "rfid_tag": result[5],
+            "member_id": result[6],
+        })
+    logger.debug(f"Retrieved {len(logs)} access log entries.")
+    return logs
+
+###############################################################################
+# Admin functions (roles management, etc.)
+###############################################################################
+
+def get_all_roles() -> list[dict]:
+    logger.debug("Getting all roles from the database.")
+    roles = []
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id, name, permission FROM roles ORDER BY name")
+            results = cur.fetchall()
+    for result in results:
+        roles.append({
+            "id": result[0],
+            "name": result[1],
+            "permission": result[2],
+        })
+    logger.debug(f"Retrieved {len(roles)} roles from the database.")
+    return roles
+
+def create_role(name: str, permission: dict) -> dict:
+    logger.debug(f"Creating role: {name}")
+    error_message = "OK"
+    role_id = None
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "INSERT INTO roles (name, permission) VALUES (%s, %s) RETURNING id",
+                    (name, json.dumps(permission)),
+                )
+                result = cur.fetchone()
+                if result:
+                    role_id = result[0]
+            conn.commit()
+    except Exception as e:
+        error_message = f"Error creating role: {e}"
+        logger.error(error_message)
+    return {"role_id": role_id, "message": error_message}
+
+def update_role(role_id: int, name: str, permission: dict) -> dict:
+    logger.debug(f"Updating role ID: {role_id}")
+    error_message = "OK"
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "UPDATE roles SET name = %s, permission = %s WHERE id = %s",
+                    (name, json.dumps(permission), role_id),
+                )
+            conn.commit()
+    except Exception as e:
+        error_message = f"Error updating role: {e}"
+        logger.error(error_message)
+    return {"role_id": role_id, "message": error_message}
+
+def assign_role_to_member(member_id: int, role_id: int) -> dict:
+    """Assign a role to a member, replacing any existing role (one role per member)."""
+    logger.debug(f"Assigning role {role_id} to member {member_id}")
+    error_message = "OK"
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                # Remove any existing role(s) for this member first
+                cur.execute("DELETE FROM member_to_role WHERE member_id = %s", (member_id,))
+                cur.execute(
+                    "INSERT INTO member_to_role (member_id, role_id) VALUES (%s, %s)",
+                    (member_id, role_id),
+                )
+            conn.commit()
+    except Exception as e:
+        error_message = f"Error assigning role: {e}"
+        logger.error(error_message)
+    return {"message": error_message}
+
+def get_members_with_roles() -> list[dict]:
+    """Get all members who have a role assigned, with their role info."""
+    logger.debug("Getting all members with roles.")
+    members = []
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT   m.id AS member_id,
+                         m.identity ->> 'first_name' AS first_name,
+                         m.identity ->> 'last_name' AS last_name,
+                         m.identity -> 'emails' -> 0 ->> 'email_address' AS primary_email,
+                         r.id AS role_id,
+                         r.name AS role_name
+                FROM     member_to_role mtr
+                JOIN     member m ON m.id = mtr.member_id
+                JOIN     roles r ON r.id = mtr.role_id
+                ORDER BY r.name, m.identity ->> 'last_name', m.identity ->> 'first_name';
+                """
+            )
+            results = cur.fetchall()
+    for result in results:
+        members.append({
+            "member_id": result[0],
+            "first_name": result[1],
+            "last_name": result[2],
+            "primary_email": result[3],
+            "role_id": result[4],
+            "role_name": result[5],
+        })
+    logger.debug(f"Retrieved {len(members)} members with roles.")
+    return members
+
+def remove_role_from_member(member_id: int) -> dict:
+    """Remove all role assignments for a member."""
+    logger.debug(f"Removing role from member {member_id}")
+    error_message = "OK"
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM member_to_role WHERE member_id = %s", (member_id,))
+            conn.commit()
+    except Exception as e:
+        error_message = f"Error removing role: {e}"
+        logger.error(error_message)
+    return {"message": error_message}
