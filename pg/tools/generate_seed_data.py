@@ -792,12 +792,13 @@ def generate_random_member(
 ### Role assignment SQL
 
 ROLE_ASSIGNMENTS = [
-    (2, 1, "Ada Lovelace", "Administrator"),
+    (5, 1, "Ada Lovelace", "SuperAdmin"),
     (2, 2, "Charles Babbage", "Administrator"),
     (1, 3, "Nikola Tesla", "Authorizer"),
     (1, 4, "Hedy Lamarr", "Authorizer"),
     (3, 5, "Grace Hopper", "Board"),
     (3, 6, "Margaret Hamilton", "Board"),
+    (4, 7, "Rosalind Franklin", "Just Forms"),
 ]
 
 
@@ -880,7 +881,7 @@ def generate_sql(count: int, seed: str) -> str:
     lines.append("")
     lines.append("/* =====================================================")
     lines.append(" * Role Assignments for Dev Bypass Users")
-    lines.append(" * Roles: Authorizer (1), Administrator (2), Board (3)")
+    lines.append(" * Roles: Authorizer (1), Administrator (2), Board (3), Just Forms (4), SuperAdmin (5), just-space-logs (6)")
     lines.append(" * ===================================================== */")
     lines.append("")
     lines.append(generate_role_assignments_sql())

@@ -539,7 +539,7 @@ def api_search():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/identity")
-@requires_view_permission("identity")
+@requires_view_permission("member.identity")
 def api_member_identity():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -563,7 +563,7 @@ def api_member_identity():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/roles")
-@requires_view_permission("roles")
+@requires_view_permission("member.roles")
 def api_member_roles():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -588,7 +588,7 @@ def api_member_roles():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/status")
-@requires_view_permission("status")
+@requires_view_permission("member.status")
 def api_member_status():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -609,7 +609,7 @@ def api_member_status():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/forms")
-@requires_view_permission("forms")
+@requires_view_permission("member.forms")
 def api_member_forms():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -630,7 +630,7 @@ def api_member_forms():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/connections")
-@requires_view_permission("connections")
+@requires_view_permission("member.connections")
 def api_member_connections():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -651,7 +651,7 @@ def api_member_connections():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/extras")
-@requires_view_permission("extras")
+@requires_view_permission("member.extras")
 def api_member_extras():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -675,7 +675,7 @@ def api_member_extras():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/authorizations")
-@requires_view_permission("authorizations")
+@requires_view_permission("member.authorizations")
 def api_member_authorizations():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -699,7 +699,7 @@ def api_member_authorizations():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/notes")
-@requires_view_permission("notes")
+@requires_view_permission("member.notes")
 def api_member_notes():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -720,7 +720,7 @@ def api_member_notes():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/entry")
-@requires_view_permission("entry")
+@requires_view_permission("member.entry")
 def api_member_entry():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -741,7 +741,7 @@ def api_member_entry():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/access")
-@requires_view_permission("access")
+@requires_view_permission("member.access")
 def api_member_access():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -799,7 +799,7 @@ def api_available_membership_levels():
 
 # POST endpoints for updating member data
 @app.route("/api/member/identity", methods=["POST"])
-@requires_change_permission("identity")
+@requires_change_permission("member.identity")
 def api_update_member_identity():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -844,7 +844,7 @@ def api_update_member_identity():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/status", methods=["POST"])
-@requires_change_permission("status")
+@requires_change_permission("member.status")
 def api_update_member_status():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -889,7 +889,7 @@ def api_update_member_status():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/roles", methods=["POST"])
-@requires_change_permission("roles")
+@requires_change_permission("member.roles")
 def api_update_member_roles():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -934,7 +934,7 @@ def api_update_member_roles():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/extras", methods=["POST"])
-@requires_change_permission("extras")
+@requires_change_permission("member.extras")
 def api_update_member_extras():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -979,7 +979,7 @@ def api_update_member_extras():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/authorizations", methods=["POST"])
-@requires_change_permission("authorizations")
+@requires_change_permission("member.authorizations")
 def api_update_member_authorizations():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -1024,7 +1024,7 @@ def api_update_member_authorizations():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/notes", methods=["POST"])
-@requires_change_permission("notes")
+@requires_change_permission("member.notes")
 def api_update_member_notes():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -1069,7 +1069,7 @@ def api_update_member_notes():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/access", methods=["POST"])
-@requires_change_permission("access")
+@requires_change_permission("member.access")
 def api_update_member_access():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -1114,7 +1114,7 @@ def api_update_member_access():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/forms", methods=["POST"])
-@requires_change_permission("forms")
+@requires_change_permission("member.forms")
 def api_update_member_forms():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -1159,7 +1159,7 @@ def api_update_member_forms():
         return {"error": str(e)}, 500
 
 @app.route("/api/member/connections", methods=["POST"])
-@requires_change_permission("connections")
+@requires_change_permission("member.connections")
 def api_update_member_connections():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
@@ -1201,4 +1201,112 @@ def api_update_member_connections():
         return result
     except Exception as e:
         logger.error(f"Error updating member connections: {e}")
+        return {"error": str(e)}, 500
+
+###############################################################################
+# Space API routes (access logs, etc.)
+###############################################################################
+
+@app.route("/api/space/access_logs")
+@requires_view_permission("space.access_logs")
+def api_access_logs():
+    start_date = request.args.get("start_date", "")
+    end_date = request.args.get("end_date", "")
+    if not start_date or not end_date:
+        return {"error": "start_date and end_date required"}, 400
+
+    try:
+        access_token = dhservices.get_access_token(
+            dhservices.DH_CLIENT_ID,
+            dhservices.DH_CLIENT_SECRET
+        )
+        return dhservices.get_access_logs(access_token, start_date, end_date)
+    except Exception as e:
+        logger.error(f"Error fetching access logs: {e}")
+        return {"error": str(e)}, 500
+
+###############################################################################
+# Admin API routes (roles management, assign roles)
+###############################################################################
+
+@app.route("/api/admin/roles")
+@requires_view_permission("systems.roles")
+def api_get_roles():
+    try:
+        access_token = dhservices.get_access_token(
+            dhservices.DH_CLIENT_ID,
+            dhservices.DH_CLIENT_SECRET
+        )
+        return dhservices.get_all_roles(access_token)
+    except Exception as e:
+        logger.error(f"Error fetching roles: {e}")
+        return {"error": str(e)}, 500
+
+@app.route("/api/admin/roles", methods=["POST"])
+@requires_change_permission("systems.roles")
+def api_create_role():
+    data = request.get_json()
+    try:
+        access_token = dhservices.get_access_token(
+            dhservices.DH_CLIENT_ID,
+            dhservices.DH_CLIENT_SECRET
+        )
+        return dhservices.create_role(access_token, data["name"], data["permission"])
+    except Exception as e:
+        logger.error(f"Error creating role: {e}")
+        return {"error": str(e)}, 500
+
+@app.route("/api/admin/roles", methods=["PUT"])
+@requires_change_permission("systems.roles")
+def api_update_role():
+    data = request.get_json()
+    try:
+        access_token = dhservices.get_access_token(
+            dhservices.DH_CLIENT_ID,
+            dhservices.DH_CLIENT_SECRET
+        )
+        return dhservices.update_role(access_token, data["id"], data["name"], data["permission"])
+    except Exception as e:
+        logger.error(f"Error updating role: {e}")
+        return {"error": str(e)}, 500
+
+@app.route("/api/admin/assign_role", methods=["POST"])
+@requires_change_permission("systems.assign_roles")
+def api_assign_role():
+    data = request.get_json()
+    try:
+        access_token = dhservices.get_access_token(
+            dhservices.DH_CLIENT_ID,
+            dhservices.DH_CLIENT_SECRET
+        )
+        return dhservices.assign_role_to_member(access_token, data["member_id"], data["role_id"])
+    except Exception as e:
+        logger.error(f"Error assigning role: {e}")
+        return {"error": str(e)}, 500
+
+@app.route("/api/admin/members_with_roles")
+@requires_view_permission("systems.assign_roles")
+def api_members_with_roles():
+    try:
+        access_token = dhservices.get_access_token(
+            dhservices.DH_CLIENT_ID,
+            dhservices.DH_CLIENT_SECRET
+        )
+        return dhservices.get_members_with_roles(access_token)
+    except Exception as e:
+        logger.error(f"Error fetching members with roles: {e}")
+        return {"error": str(e)}, 500
+
+@app.route("/api/admin/remove_role", methods=["POST"])
+@requires_change_permission("systems.assign_roles")
+def api_remove_role():
+    data = request.get_json()
+    try:
+        access_token = dhservices.get_access_token(
+            dhservices.DH_CLIENT_ID,
+            dhservices.DH_CLIENT_SECRET
+        )
+        return dhservices.remove_role_from_member(access_token, data["member_id"])
+    except Exception as e:
+        logger.error(f"Error removing role: {e}")
         return {"error": str(e)}, 500
