@@ -917,52 +917,11 @@ function saveTabData(tabName) {
     });
 }
 
-// Get user permissions from cookie
+// Get user permissions from template context
 function getUserPermissions() {
-    console.log('=== Getting user permissions from cookie ===');
-    console.log('All cookies:', document.cookie);
-    
-    const cookieValue = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('user_permissions='));
-    
-    console.log('user_permissions cookie value:', cookieValue);
-    
-    if (cookieValue) {
-        try {
-            let permissionsJson = decodeURIComponent(cookieValue.split('=')[1]);
-            console.log('Decoded permissions JSON string (before fixing):', permissionsJson);
-            
-            // Fix octal escape sequences (e.g., \054 for comma)
-            permissionsJson = permissionsJson.replace(/\\(\d{3})/g, (match, octal) => {
-                return String.fromCharCode(parseInt(octal, 8));
-            });
-            
-            console.log('Decoded permissions JSON string (after fixing):', permissionsJson);
-            
-            // Parse once to get the string (if it's double-encoded)
-            let permissions = JSON.parse(permissionsJson);
-            console.log('First parse result:', permissions);
-            console.log('Type of first parse:', typeof permissions);
-            
-            // If it's still a string, parse again
-            if (typeof permissions === 'string') {
-                console.log('Result is still a string, parsing again...');
-                permissions = JSON.parse(permissions);
-                console.log('Second parse result:', permissions);
-            }
-            
-            console.log('Final permissions object:', permissions);
-            console.log('permissions.view:', permissions.view);
-            console.log('Is permissions.view an array?', Array.isArray(permissions.view));
-            
-            return permissions;
-        } catch (e) {
-            console.error('Error parsing permissions:', e);
-            return null;
-        }
+    if (typeof USER_PERMISSIONS !== 'undefined' && USER_PERMISSIONS) {
+        return USER_PERMISSIONS;
     }
-    console.warn('No user_permissions cookie found');
     return null;
 }
 
@@ -1680,7 +1639,7 @@ function loadMemberData(memberOrId) {
     let firstVisibleTab = null;
     
     for (const tabName of allTabs) {
-        if (canViewTab(tabName, permissions) || canChangeTab(tabName, permissions)) {
+        if (canViewTab('member.' + tabName, permissions) || canChangeTab('member.' + tabName, permissions)) {
             firstVisibleTab = tabName;
             break;
         }
@@ -1725,7 +1684,7 @@ function fetchMembershipLevels() {
 
 function fetchTabData(tabName, memberId) {
     // Check if user has permission to view or change this tab
-    if (!canViewTab(tabName) && !canChangeTab(tabName)) {
+    if (!canViewTab('member.' + tabName) && !canChangeTab('member.' + tabName)) {
         console.warn(`User does not have permission to view ${tabName} tab`);
         return;
     }
@@ -1900,7 +1859,8 @@ function logTabSelection(tabName, memberId) {
     fetch('/api/log_activity', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
         },
         body: JSON.stringify({
             action: 'view_tab',
@@ -2234,7 +2194,7 @@ function saveRole() {
 
     fetch('/api/admin/roles', {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
         body: JSON.stringify(body),
     })
         .then(r => r.json())
@@ -2322,7 +2282,7 @@ function removeMemberRole(memberId, name) {
 
     fetch('/api/admin/remove_role', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
         body: JSON.stringify({ member_id: memberId }),
     })
         .then(r => r.json())
@@ -2374,7 +2334,7 @@ function confirmRoleAssign(roleId) {
 
     fetch('/api/admin/assign_role', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
         body: JSON.stringify({ member_id: memberId, role_id: roleId }),
     })
         .then(r => r.json())

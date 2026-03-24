@@ -1222,11 +1222,15 @@ COMMENT ON TABLE roles IS 'This table holds the various roles defined in the Dee
  * in the DHAdminPortal interface. Check index.html in that project to see them in  
  * the filterTabsByPermissions() function.
  */
-INSERT INTO roles (name, permission) VALUES ('Authorizer', '{"view": ["identity", "authorizations", "notes"], "change": ["authorizations", "notes"]}');
-INSERT INTO roles (name, permission) VALUES ('Administrator', '{"view": ["identity", "status", "roles", "forms", "connections", "extras", "authorizations", "notes", "access", "entry"], "change": ["identity", "status", "roles", "forms", "connections", "extras", "authorizations", "notes", "access"]}');
-INSERT into roles (name, permission) VALUES ('Board', '{"view": ["identity", "status", "notes", "entry"], "change": ["status", "notes"]}');
+INSERT INTO roles (id, name, permission) OVERRIDING SYSTEM VALUE VALUES (1, 'Authorizer', '{"view": ["member.identity", "member.authorizations", "member.notes"], "change": ["member.authorizations", "member.notes"]}');
+INSERT INTO roles (id, name, permission) OVERRIDING SYSTEM VALUE VALUES (2, 'Administrator', '{"view": ["member.identity", "member.status", "member.roles", "member.forms", "member.connections", "member.extras", "member.authorizations", "member.notes", "member.access", "member.entry"], "change": ["member.identity", "member.status", "member.roles", "member.forms", "member.connections", "member.extras", "member.authorizations", "member.notes", "member.access"]}');
+INSERT INTO roles (id, name, permission) OVERRIDING SYSTEM VALUE VALUES (3, 'Board', '{"view": ["member.identity", "member.status", "member.notes", "member.entry"], "change": ["member.status", "member.notes"]}');
+INSERT INTO roles (id, name, permission) OVERRIDING SYSTEM VALUE VALUES (4, 'Just Forms', '{"view": ["member.forms"], "change": ["member.forms"]}');
+INSERT INTO roles (id, name, permission) OVERRIDING SYSTEM VALUE VALUES (5, 'SuperAdmin', '{"view": ["member.identity", "member.status", "member.roles", "member.forms", "member.connections", "member.extras", "member.authorizations", "member.notes", "member.access", "member.entry", "space.access_logs", "systems.roles", "systems.assign_roles"], "change": ["member.identity", "member.status", "member.roles", "member.forms", "member.connections", "member.extras", "member.authorizations", "member.notes", "member.access", "systems.roles", "systems.assign_roles"]}');
+INSERT INTO roles (id, name, permission) OVERRIDING SYSTEM VALUE VALUES (6, 'just-space-logs', '{"view": ["space.access_logs"], "change": []}');
+SELECT setval(pg_get_serial_sequence('roles', 'id'), (SELECT MAX(id) FROM roles));
 
-/* 
+/*
  * How we assign roles to members - note that Deep Harbor is written with the idea that anyone who is a 
  * member can have a role, the assumption that the membership is responsible for everything.
  */
