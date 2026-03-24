@@ -6,6 +6,8 @@ import glob
 import uuid
 import datetime
 
+from ldap3 import ALL_ATTRIBUTES
+
 import ad
 import b2c
 from dhs_logging import logger
@@ -176,20 +178,34 @@ def set_user_enabled(username, enabled=True):
                 "status": "failure",
                 "error": f"Failed to set user enabled state in Active Directory: {result['error']} - Does the user exist?"
             }
-            
+
         # Okay cool if we're here, then we successfully set the user's enabled state in Active Directory. 
         # Now we also want to set the user's enabled state in B2C to match, since if a user is disabled in AD, 
         # they should also be disabled in B2C, and vice versa because if you can't log into the computers,
         # then you shouldn't also be able to log into anything else that is B2C-controlled.
         logger.info(f"User {username} enabled state set to {enabled} in Active Directory")
-        
+
+        # We want to get the email address of the user so we can look them up in B2C and 
+        # set their enabled state there as well, since if they're disabled in AD, they should 
+        # also be disabled in B2C.
+        email_address = ad.get_email_by_username(ad_session, username)
+        if not email_address:
+            logger.warning(f"Could not retrieve email address for user {username}. This may cause issues with syncing enabled state to B2C.")
+
         # And also disable/enable in B2C if needed - we can look up the B2C user by the AD Object ID stored in the extension attribute
         ad_object_id = ad.get_ad_object_id(ad_session, username)
         access_token = b2c.get_access_token()
         if not access_token:
             logger.error("Failed to acquire access token for Azure B2C")
             raise Exception("Failed to acquire access token for Azure B2C")
-        b2c_user_id = b2c.get_b2c_user_id_by_ad_object_id(access_token, ad_object_id)
+        # If we have the email address, we can look up the B2C user by that, otherwise we will look up the B2C user by the AD Object ID stored in the extension attribute
+        b2c_user_id = None
+        if email_address:
+            b2c_user_id = b2c.get_b2c_user_id_by_email(access_token, email_address)
+            logger.debug(f"Looked up B2C user ID by email address {email_address}: {b2c_user_id}")
+        if not b2c_user_id and ad_object_id:
+            b2c_user_id = b2c.get_b2c_user_id_by_ad_object_id(access_token, ad_object_id)
+            logger.debug(f"Looked up B2C user ID by AD Object ID {ad_object_id}: {b2c_user_id}")
         if b2c_user_id:            
             b2c.set_user_enabled(access_token, b2c_user_id, enabled=enabled)
         else:

@@ -55,6 +55,19 @@ def get_user_by_username(session, username):
     logger.debug(f"Found {user.distinguished_name}")
     return user
 
+def get_email_by_username(session, username):
+    logger.info(f"Retrieving email address for user: {username}")
+    users = session.find_users_by_attribute('sAMAccountName', username, 
+                                         attributes_to_lookup=[ALL_ATTRIBUTES])
+    if users:
+        user = users[0]
+        email_address = user.all_attributes.get('mail', [None])
+        logger.debug(f"Email address for user {username}: {email_address}")
+        return email_address
+    else:
+        logger.error(f"User {username} not found in Active Directory")
+        return None
+    
 def get_groups_by_username(session, username):
     groups = session.find_groups_for_user(username)
     logger.debug(f'{username} is in these groups: {groups}')
