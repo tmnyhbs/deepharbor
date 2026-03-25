@@ -740,7 +740,8 @@ body {
 
 /* Bubblegum sign-in button */
 
-[data-theme="bubblegum"] .cute-signin {
+[data-theme="bubblegum"] .cute-signin,
+[data-theme="bubblegum"] a.cute-signin {
     background: linear-gradient(135deg, #ff6bb5 0%, #ff4d9d 45%, #ff87c8 100%);
     border: none;
     box-shadow: 0 12px 24px rgba(255, 77, 157, 0.28);
@@ -748,6 +749,7 @@ body {
     position: relative;
     overflow: hidden;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    color: white;
 }
 
 [data-theme="bubblegum"] .cute-signin::after {
