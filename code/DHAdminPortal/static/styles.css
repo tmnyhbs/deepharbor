@@ -1,6 +1,6 @@
 /* ===================================================================
    Deep Harbor Admin Portal — Styles
-   Shared base + Bubblegum theme + Light theme + Dark theme
+   Shared base + Bubblegum + Light + Dark + Midnight + Hacker themes
    =================================================================== */
 
 /* ===================================================================
@@ -1626,6 +1626,1310 @@ body {
     --bs-table-bg: #09090b;
     --bs-table-border-color: var(--border-color);
 }
+
+
+/* ===================================================================
+   MIDNIGHT THEME — deep navy, gold/amber accents, Nothing You Could Do font
+   =================================================================== */
+
+[data-theme="midnight"] {
+    --primary-color: #fbbf24;
+    --secondary-color: #8b9dc3;
+    --success-color: #4ade80;
+    --error-color: #f87171;
+    --info-color: #60a5fa;
+    --bg-color: #080c18;
+    --card-bg: #0f1629;
+    --text-color: #c8d6e5;
+    --border-color: #1a2744;
+
+    --bs-primary: #fbbf24;
+    --bs-secondary: #8b9dc3;
+    --bs-success: #4ade80;
+    --bs-danger: #f87171;
+    --bs-info: #60a5fa;
+    --bs-body-bg: #080c18;
+    --bs-body-color: #c8d6e5;
+    --bs-border-color: #1a2744;
+    --bs-link-color: #fbbf24;
+    --bs-link-hover-color: #fcd34d;
+}
+
+[data-theme="midnight"] body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+/* Midnight — suppress bubblegum pseudo-elements */
+
+[data-theme="midnight"] body::before,
+[data-theme="midnight"] body::after {
+    display: none;
+}
+
+/* Midnight title — starry twinkle with sparkles */
+
+[data-theme="midnight"] .body-content h1 {
+    font-family: 'Nothing You Could Do', cursive;
+    font-size: 2rem;
+    font-weight: 400;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+    color: #fbbf24;
+    text-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+    background: none;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    animation: none;
+    position: relative;
+    z-index: 1;
+}
+
+/* Individual letter twinkle */
+[data-theme="midnight"] .body-content h1 .midnight-char {
+    display: inline-block;
+    animation: midnight-twinkle var(--twinkle-duration, 3s) ease-in-out infinite;
+    animation-delay: var(--twinkle-delay, 0s);
+}
+
+@keyframes midnight-twinkle {
+    0%, 100% {
+        color: #fbbf24;
+        text-shadow: 0 0 6px rgba(251, 191, 36, 0.2);
+    }
+    50% {
+        color: #fef9c3;
+        text-shadow: 0 0 14px rgba(252, 211, 77, 0.6), 0 0 30px rgba(251, 191, 36, 0.3);
+    }
+}
+
+/* Sparkle particles */
+[data-theme="midnight"] .body-content h1 .midnight-sparkle {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: #fef9c3;
+    box-shadow: 0 0 4px 1px rgba(251, 191, 36, 0.6), 0 0 8px 2px rgba(251, 191, 36, 0.3);
+    pointer-events: none;
+    animation: midnight-sparkle-pop var(--sparkle-duration, 2s) ease-in-out infinite;
+    animation-delay: var(--sparkle-delay, 0s);
+    opacity: 0;
+}
+
+@keyframes midnight-sparkle-pop {
+    0%, 100% { opacity: 0; transform: scale(0); }
+    15% { opacity: 1; transform: scale(1.2); }
+    30% { opacity: 1; transform: scale(0.8); }
+    45% { opacity: 0.6; transform: scale(1); }
+    60% { opacity: 0; transform: scale(0); }
+}
+
+[data-theme="midnight"] .body-content h1::before,
+[data-theme="midnight"] .body-content h1::after,
+[data-theme="midnight"] .body-content p::before,
+[data-theme="midnight"] .body-content p::after {
+    content: none;
+}
+
+[data-theme="midnight"] .body-content p {
+    color: var(--text-color);
+    font-size: 1rem;
+    text-align: center;
+    background: none;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    max-width: none;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+}
+
+/* Midnight header & tagline */
+
+[data-theme="midnight"] .header-tagline {
+    color: var(--secondary-color);
+}
+
+/* Midnight Nothing You Could Do font on UI elements */
+
+[data-theme="midnight"] .dh-navbar,
+[data-theme="midnight"] #memberTabs .nav-link,
+[data-theme="midnight"] .card-body h5,
+[data-theme="midnight"] .dh-member-bar,
+[data-theme="midnight"] #resultsSection th,
+[data-theme="midnight"] .cute-signin,
+[data-theme="midnight"] .btn-outline-secondary,
+[data-theme="midnight"] .user-info,
+[data-theme="midnight"] .footer {
+    font-family: 'Nothing You Could Do', cursive;
+}
+
+/* Midnight navbar */
+
+[data-theme="midnight"] .dh-navbar {
+    background: #0f1629;
+    border-bottom: 1px solid #1a2744;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="midnight"] .dh-navbar .navbar-brand {
+    color: var(--primary-color);
+}
+
+[data-theme="midnight"] .dh-navbar .nav-link {
+    color: var(--secondary-color);
+}
+
+[data-theme="midnight"] .dh-navbar .nav-link:hover,
+[data-theme="midnight"] .dh-navbar .nav-link:focus {
+    color: var(--primary-color);
+}
+
+[data-theme="midnight"] .dh-navbar .dropdown-toggle {
+    color: var(--secondary-color);
+}
+
+[data-theme="midnight"] .dh-navbar .dropdown-toggle:hover {
+    color: var(--primary-color);
+}
+
+[data-theme="midnight"] .dh-navbar .navbar-toggler {
+    border-color: #1a2744;
+}
+
+[data-theme="midnight"] .dh-navbar .navbar-toggler-icon {
+    filter: brightness(0) invert(0.8);
+}
+
+/* Midnight dropdown menus */
+
+[data-theme="midnight"] .dropdown-menu {
+    background-color: #0f1629;
+    border-color: #1a2744;
+}
+
+[data-theme="midnight"] .dropdown-item {
+    color: var(--text-color);
+}
+
+[data-theme="midnight"] .dropdown-item:hover,
+[data-theme="midnight"] .dropdown-item:focus {
+    background-color: #1a2744;
+    color: var(--primary-color);
+}
+
+/* Midnight user info */
+
+[data-theme="midnight"] .user-info {
+    color: var(--secondary-color);
+}
+
+[data-theme="midnight"] .user-info a {
+    color: var(--primary-color);
+}
+
+[data-theme="midnight"] .user-info a:hover {
+    color: #fcd34d;
+}
+
+/* Midnight footer */
+
+[data-theme="midnight"] .footer hr {
+    border: none;
+    border-top: 1px solid #1a2744;
+}
+
+[data-theme="midnight"] .footer-text p {
+    color: var(--secondary-color);
+}
+
+[data-theme="midnight"] .footer a {
+    color: var(--secondary-color);
+}
+
+[data-theme="midnight"] .footer a:hover {
+    color: var(--primary-color);
+}
+
+/* Midnight dev login cards */
+
+[data-theme="midnight"] .dev-user-card {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="midnight"] .dev-user-card:hover {
+    border-color: var(--primary-color);
+}
+
+[data-theme="midnight"] .dev-user-card .card-title {
+    color: var(--text-color);
+}
+
+/* Midnight table header */
+
+[data-theme="midnight"] #resultsSection thead th {
+    background-color: #0f1629;
+    border-bottom: 2px solid #243356;
+    color: var(--primary-color);
+}
+
+/* Midnight table */
+
+[data-theme="midnight"] .table {
+    --bs-table-bg: transparent;
+    --bs-table-color: #c8d6e5;
+    --bs-table-border-color: #1a2744;
+    --bs-table-striped-bg: rgba(255, 255, 255, 0.02);
+    --bs-table-striped-color: #c8d6e5;
+    --bs-table-hover-bg: rgba(251, 191, 36, 0.05);
+    --bs-table-hover-color: #c8d6e5;
+    color: #c8d6e5;
+}
+
+[data-theme="midnight"] .table td,
+[data-theme="midnight"] .table th {
+    color: #c8d6e5;
+}
+
+[data-theme="midnight"] #resultsTableBody tr:hover {
+    background-color: rgba(251, 191, 36, 0.08) !important;
+    cursor: pointer;
+}
+
+/* Midnight form controls */
+
+[data-theme="midnight"] .form-control {
+    background-color: #080c18;
+    color: var(--text-color);
+    border-color: #243356;
+}
+
+[data-theme="midnight"] .form-control:focus {
+    background-color: #080c18;
+    color: var(--text-color);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(251, 191, 36, 0.15);
+}
+
+[data-theme="midnight"] .form-select {
+    background-color: #080c18;
+    color: var(--text-color);
+    border-color: #243356;
+}
+
+[data-theme="midnight"] .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(251, 191, 36, 0.15);
+}
+
+/* Midnight sign-in / themed buttons */
+
+[data-theme="midnight"] .cute-signin,
+[data-theme="midnight"] a.cute-signin {
+    background: var(--primary-color);
+    border: none;
+    box-shadow: none;
+    color: #080c18;
+    font-weight: 700;
+}
+
+[data-theme="midnight"] .cute-signin::before,
+[data-theme="midnight"] .cute-signin::after {
+    content: none;
+}
+
+[data-theme="midnight"] .cute-signin:hover {
+    background: #fcd34d;
+}
+
+/* Midnight — no raise on any button */
+[data-theme="midnight"] .btn:hover {
+    transform: none;
+}
+
+/* Midnight button overrides */
+
+[data-theme="midnight"] .btn-primary {
+    --bs-btn-bg: #fbbf24;
+    --bs-btn-border-color: #fbbf24;
+    --bs-btn-color: #080c18;
+    --bs-btn-hover-bg: #fcd34d;
+    --bs-btn-hover-border-color: #fcd34d;
+    --bs-btn-hover-color: #080c18;
+    --bs-btn-active-bg: #f59e0b;
+    --bs-btn-active-border-color: #f59e0b;
+}
+
+[data-theme="midnight"] .btn-primary.btn-sm {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #080c18;
+}
+
+[data-theme="midnight"] .btn-secondary {
+    --bs-btn-color: var(--text-color);
+    --bs-btn-bg: #1a2744;
+    --bs-btn-border-color: #243356;
+    --bs-btn-hover-color: var(--text-color);
+    --bs-btn-hover-bg: #243356;
+    --bs-btn-hover-border-color: #2d4070;
+}
+
+[data-theme="midnight"] .btn-success {
+    --bs-btn-bg: #4ade80;
+    --bs-btn-border-color: #4ade80;
+    --bs-btn-color: #080c18;
+    --bs-btn-hover-bg: #86efac;
+    --bs-btn-hover-border-color: #86efac;
+}
+
+[data-theme="midnight"] .btn-outline-primary {
+    --bs-btn-color: var(--primary-color);
+    --bs-btn-border-color: var(--primary-color);
+    --bs-btn-hover-bg: var(--primary-color);
+    --bs-btn-hover-border-color: var(--primary-color);
+    --bs-btn-hover-color: #080c18;
+}
+
+[data-theme="midnight"] .btn-outline-secondary {
+    --bs-btn-color: var(--secondary-color);
+    --bs-btn-border-color: #243356;
+    --bs-btn-hover-bg: #1a2744;
+    --bs-btn-hover-border-color: var(--secondary-color);
+    --bs-btn-hover-color: var(--text-color);
+}
+
+[data-theme="midnight"] .btn-danger {
+    --bs-btn-bg: #f87171;
+    --bs-btn-border-color: #f87171;
+    --bs-btn-color: #080c18;
+    --bs-btn-hover-bg: #fca5a5;
+    --bs-btn-hover-border-color: #fca5a5;
+}
+
+/* Midnight checkboxes and switches */
+
+[data-theme="midnight"] .form-check-input {
+    background-color: #1a2744;
+    border-color: #243356;
+}
+
+[data-theme="midnight"] .form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+[data-theme="midnight"] .form-check-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(251, 191, 36, 0.15);
+}
+
+/* Midnight cards */
+
+[data-theme="midnight"] .card {
+    background: var(--card-bg);
+    border: none;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    color: var(--text-color);
+}
+
+/* Midnight member bar + tabs + card — gold accents */
+
+[data-theme="midnight"] .dh-member-bar {
+    background: linear-gradient(180deg, #121d35 0%, #0f1629 100%);
+    border-color: #243356;
+    border-left: 4px solid var(--primary-color);
+    color: var(--text-color);
+}
+
+[data-theme="midnight"] #memberTabs {
+    background: var(--card-bg);
+    border-color: #243356;
+    border-top: 2px solid var(--primary-color);
+}
+
+[data-theme="midnight"] #memberTabs .nav-link {
+    color: var(--secondary-color);
+}
+
+[data-theme="midnight"] #memberTabs .nav-link.active {
+    background: var(--card-bg);
+    border-color: #243356 #243356 transparent;
+    color: var(--primary-color);
+}
+
+[data-theme="midnight"] #memberTabs .nav-link:hover:not(.active) {
+    border-color: transparent;
+    background: #1a2744;
+    color: var(--primary-color);
+}
+
+[data-theme="midnight"] #memberTabsContent .card {
+    border: 1px solid #243356;
+}
+
+/* Midnight card section headers */
+
+[data-theme="midnight"] #memberTabsContent .card-body h5 {
+    color: var(--primary-color);
+}
+
+[data-theme="midnight"] #memberTabsContent .card-subtitle.text-muted {
+    color: var(--secondary-color) !important;
+}
+
+/* Midnight inner field cards */
+
+[data-theme="midnight"] #memberTabsContent .card-body .card {
+    background: #080c18;
+    border: 1px solid #243356 !important;
+    box-shadow: none;
+}
+
+/* Midnight alerts */
+
+[data-theme="midnight"] .alert-warning {
+    background-color: #1a1400;
+    border: 2px solid #92400e;
+    color: #fbbf24;
+    font-weight: 600;
+}
+
+/* Midnight suspended warning */
+
+[data-theme="midnight"] .dh-suspended-warning {
+    background: #180a0a;
+    border-left-color: var(--error-color);
+}
+
+[data-theme="midnight"] .dh-member-bar + .dh-suspended-warning {
+    border-left: 4px solid var(--error-color);
+    border-right: 1px solid #243356;
+}
+
+/* Midnight spinner */
+
+[data-theme="midnight"] .spinner-border {
+    color: var(--primary-color);
+}
+
+/* Midnight links */
+
+[data-theme="midnight"] a {
+    color: var(--primary-color);
+}
+
+[data-theme="midnight"] a:hover {
+    color: #fcd34d;
+}
+
+/* Midnight readonly/disabled field overrides */
+
+[data-theme="midnight"] .form-control[readonly] {
+    background-color: #080c18;
+    color: var(--text-color);
+    border-color: transparent;
+}
+
+[data-theme="midnight"] .form-control:disabled,
+[data-theme="midnight"] .form-select:disabled {
+    background-color: #080c18;
+    color: var(--text-color);
+    border-color: transparent;
+}
+
+/* Midnight modal */
+
+[data-theme="midnight"] .modal-content {
+    background-color: var(--card-bg);
+    border-color: #243356;
+    color: var(--text-color);
+}
+
+[data-theme="midnight"] .modal-header {
+    border-color: #243356;
+}
+
+[data-theme="midnight"] .modal-footer {
+    border-color: #243356;
+}
+
+[data-theme="midnight"] .btn-close {
+    filter: invert(0.8);
+}
+
+/* Midnight toast */
+
+[data-theme="midnight"] .toast.dh-toast {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border-left-color: var(--primary-color);
+}
+
+[data-theme="midnight"] .toast-header {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border-color: #1a2744;
+}
+
+/* Midnight input-group */
+
+[data-theme="midnight"] .input-group-text {
+    background-color: #1a2744;
+    border-color: #243356;
+    color: var(--text-color);
+}
+
+/* Midnight sticky table header */
+
+[data-theme="midnight"] .sticky-top.bg-white {
+    background-color: #0f1629 !important;
+}
+
+/* Midnight table-dark header (notes) */
+
+[data-theme="midnight"] .table-dark {
+    --bs-table-bg: #080c18;
+    --bs-table-border-color: #1a2744;
+}
+
+/* Midnight readability — text-muted, placeholders, hr, misc */
+
+[data-theme="midnight"] .text-muted {
+    color: #8b9dc3 !important;
+}
+
+[data-theme="midnight"] .form-control::placeholder {
+    color: #5a6f8f;
+}
+
+[data-theme="midnight"] hr {
+    border-color: #1a2744;
+    opacity: 1;
+}
+
+[data-theme="midnight"] .card-text small {
+    color: #8b9dc3;
+}
+
+[data-theme="midnight"] h3,
+[data-theme="midnight"] h5:not(.card-title) {
+    color: var(--text-color);
+}
+
+[data-theme="midnight"] .form-label {
+    color: var(--text-color);
+}
+
+[data-theme="midnight"] .form-check-label {
+    color: var(--text-color);
+}
+
+[data-theme="midnight"] .table-light {
+    --bs-table-bg: #0f1629;
+    --bs-table-color: var(--text-color);
+    --bs-table-border-color: #1a2744;
+}
+
+/* Dark readability — text-muted, placeholders, hr, misc */
+
+[data-theme="dark"] .text-muted {
+    color: #a1a1aa !important;
+}
+
+[data-theme="dark"] .form-control::placeholder {
+    color: #52525b;
+}
+
+[data-theme="dark"] hr {
+    border-color: #27272a;
+    opacity: 1;
+}
+
+[data-theme="dark"] .card-text small {
+    color: #a1a1aa;
+}
+
+[data-theme="dark"] h3,
+[data-theme="dark"] h5:not(.card-title) {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .form-label {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .form-check-label {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .table-light {
+    --bs-table-bg: #18181b;
+    --bs-table-color: var(--text-color);
+    --bs-table-border-color: var(--border-color);
+}
+
+
+/* ===================================================================
+   HACKER THEME — black, green terminal, CRT scanlines, Workbench font
+   =================================================================== */
+
+[data-theme="hacker"] {
+    --primary-color: #00ff41;
+    --secondary-color: #00cc33;
+    --success-color: #00ff41;
+    --error-color: #ff3333;
+    --info-color: #00ccff;
+    --bg-color: #0a0a0a;
+    --card-bg: #111111;
+    --text-color: #00ff41;
+    --border-color: #1a3a1a;
+
+    --bs-primary: #00ff41;
+    --bs-secondary: #00cc33;
+    --bs-success: #00ff41;
+    --bs-danger: #ff3333;
+    --bs-info: #00ccff;
+    --bs-body-bg: #0a0a0a;
+    --bs-body-color: #00ff41;
+    --bs-border-color: #1a3a1a;
+    --bs-link-color: #00ff41;
+    --bs-link-hover-color: #33ff66;
+}
+
+/* CRT scanline overlay — rolls down continuously */
+[data-theme="hacker"] body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 200%;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15) 0px,
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 3px
+    );
+    pointer-events: none;
+    z-index: 9999;
+    animation: hacker-scanline-roll 8s linear infinite;
+}
+
+@keyframes hacker-scanline-roll {
+    0% { transform: translateY(-50%); }
+    100% { transform: translateY(0); }
+}
+
+/* CRT flicker */
+[data-theme="hacker"] body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 255, 65, 0.02);
+    pointer-events: none;
+    z-index: 9998;
+    animation: hacker-crt-flicker 0.1s infinite;
+}
+
+@keyframes hacker-crt-flicker {
+    0% { opacity: 0.97; }
+    50% { opacity: 1; }
+    100% { opacity: 0.98; }
+}
+
+[data-theme="hacker"] body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Kode Mono', 'Courier New', monospace;
+    text-shadow: 0 0 2px rgba(0, 255, 65, 0.3);
+}
+
+/* Hacker content styles — terminal prompt title */
+
+[data-theme="hacker"] .body-content h1 {
+    font-family: 'Kode Mono', 'Courier New', monospace;
+    font-size: 1.6rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding: 0;
+    color: #00ff41;
+    text-shadow: 0 0 8px rgba(0, 255, 65, 0.5), 0 0 20px rgba(0, 255, 65, 0.2);
+    background: none;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    animation: hacker-text-flicker 4s linear infinite;
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes hacker-text-flicker {
+    0%, 100% { opacity: 1; text-shadow: 0 0 8px rgba(0, 255, 65, 0.5), 0 0 20px rgba(0, 255, 65, 0.2); }
+    4% { opacity: 0.85; text-shadow: 0 0 2px rgba(0, 255, 65, 0.3); }
+    6% { opacity: 1; text-shadow: 0 0 10px rgba(0, 255, 65, 0.6), 0 0 30px rgba(0, 255, 65, 0.3); }
+    12% { opacity: 0.9; text-shadow: 0 0 4px rgba(0, 255, 65, 0.4); }
+    13% { opacity: 1; text-shadow: 0 0 8px rgba(0, 255, 65, 0.5), 0 0 20px rgba(0, 255, 65, 0.2); }
+    40% { opacity: 1; text-shadow: 0 0 12px rgba(0, 255, 65, 0.6), 0 0 25px rgba(0, 255, 65, 0.25); }
+    43% { opacity: 0.7; text-shadow: 0 0 2px rgba(0, 255, 65, 0.2); }
+    44% { opacity: 1; text-shadow: 0 0 8px rgba(0, 255, 65, 0.5), 0 0 20px rgba(0, 255, 65, 0.2); }
+    80% { opacity: 1; text-shadow: 0 0 10px rgba(0, 255, 65, 0.55), 0 0 22px rgba(0, 255, 65, 0.2); }
+    82% { opacity: 0.88; text-shadow: 0 0 3px rgba(0, 255, 65, 0.3); }
+    83% { opacity: 1; text-shadow: 0 0 8px rgba(0, 255, 65, 0.5), 0 0 20px rgba(0, 255, 65, 0.2); }
+}
+
+[data-theme="hacker"] .body-content h1::before,
+[data-theme="hacker"] .body-content p::before,
+[data-theme="hacker"] .body-content p::after {
+    content: none;
+}
+
+[data-theme="hacker"] .body-content h1::after {
+    content: '\2588';
+    display: inline;
+    color: #00ff41;
+    animation: hacker-cursor-blink 1s step-end infinite;
+    text-shadow: 0 0 6px rgba(0, 255, 65, 0.5);
+    margin-left: 2px;
+    font-weight: 400;
+}
+
+@keyframes hacker-cursor-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+[data-theme="hacker"] .body-content p {
+    color: var(--text-color);
+    font-size: 1rem;
+    text-align: center;
+    background: none;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    max-width: none;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+}
+
+/* Hacker header & tagline */
+
+[data-theme="hacker"] .header-tagline {
+    color: var(--secondary-color);
+}
+
+/* Hacker Workbench font on UI elements */
+
+[data-theme="hacker"] .dh-navbar,
+[data-theme="hacker"] #memberTabs .nav-link,
+[data-theme="hacker"] .card-body h5,
+[data-theme="hacker"] .dh-member-bar,
+[data-theme="hacker"] #resultsSection th,
+[data-theme="hacker"] .cute-signin,
+[data-theme="hacker"] .btn-outline-secondary,
+[data-theme="hacker"] .user-info,
+[data-theme="hacker"] .footer,
+[data-theme="hacker"] .form-control,
+[data-theme="hacker"] .form-select,
+[data-theme="hacker"] .btn {
+    font-family: 'Kode Mono', 'Courier New', monospace;
+}
+
+/* Hacker navbar */
+
+[data-theme="hacker"] .dh-navbar {
+    background: #0a0a0a;
+    border-bottom: 1px solid #00ff41;
+    box-shadow: 0 1px 6px rgba(0, 255, 65, 0.15);
+}
+
+[data-theme="hacker"] .dh-navbar .navbar-brand {
+    color: var(--primary-color);
+    text-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
+}
+
+[data-theme="hacker"] .dh-navbar .nav-link {
+    color: var(--secondary-color);
+}
+
+[data-theme="hacker"] .dh-navbar .nav-link:hover,
+[data-theme="hacker"] .dh-navbar .nav-link:focus {
+    color: var(--primary-color);
+    text-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
+}
+
+[data-theme="hacker"] .dh-navbar .dropdown-toggle {
+    color: var(--secondary-color);
+}
+
+[data-theme="hacker"] .dh-navbar .dropdown-toggle:hover {
+    color: var(--primary-color);
+}
+
+[data-theme="hacker"] .dh-navbar .navbar-toggler {
+    border-color: #1a3a1a;
+}
+
+[data-theme="hacker"] .dh-navbar .navbar-toggler-icon {
+    filter: brightness(0) invert(1) sepia(1) saturate(10000%) hue-rotate(85deg);
+}
+
+/* Hacker dropdown menus */
+
+[data-theme="hacker"] .dropdown-menu {
+    background-color: #0a0a0a;
+    border: 1px solid #1a3a1a;
+}
+
+[data-theme="hacker"] .dropdown-item {
+    color: var(--secondary-color);
+}
+
+[data-theme="hacker"] .dropdown-item:hover,
+[data-theme="hacker"] .dropdown-item:focus {
+    background-color: #0d1a0d;
+    color: var(--primary-color);
+}
+
+/* Hacker user info */
+
+[data-theme="hacker"] .user-info {
+    color: var(--secondary-color);
+}
+
+[data-theme="hacker"] .user-info a {
+    color: var(--primary-color);
+}
+
+[data-theme="hacker"] .user-info a:hover {
+    color: #33ff66;
+}
+
+/* Hacker footer */
+
+[data-theme="hacker"] .footer hr {
+    border: none;
+    border-top: 1px solid #1a3a1a;
+}
+
+[data-theme="hacker"] .footer-text p {
+    color: var(--secondary-color);
+}
+
+[data-theme="hacker"] .footer a {
+    color: var(--secondary-color);
+}
+
+[data-theme="hacker"] .footer a:hover {
+    color: var(--primary-color);
+}
+
+/* Hacker dev login cards */
+
+[data-theme="hacker"] .dev-user-card {
+    background: var(--card-bg);
+    border-color: #1a3a1a;
+}
+
+[data-theme="hacker"] .dev-user-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 10px rgba(0, 255, 65, 0.15);
+}
+
+[data-theme="hacker"] .dev-user-card .card-title {
+    color: var(--primary-color);
+}
+
+/* Hacker table header */
+
+[data-theme="hacker"] #resultsSection thead th {
+    background-color: #0a0a0a;
+    border-bottom: 1px solid var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* Hacker table */
+
+[data-theme="hacker"] .table {
+    --bs-table-bg: transparent;
+    --bs-table-color: #00ff41;
+    --bs-table-border-color: #1a3a1a;
+    --bs-table-striped-bg: rgba(0, 255, 65, 0.02);
+    --bs-table-striped-color: #00ff41;
+    --bs-table-hover-bg: rgba(0, 255, 65, 0.05);
+    --bs-table-hover-color: #00ff41;
+    color: #00ff41;
+}
+
+[data-theme="hacker"] .table td,
+[data-theme="hacker"] .table th {
+    color: #00ff41;
+}
+
+[data-theme="hacker"] #resultsTableBody tr:hover {
+    background-color: rgba(0, 255, 65, 0.08) !important;
+    cursor: pointer;
+}
+
+/* Hacker form controls */
+
+[data-theme="hacker"] .form-control {
+    background-color: #0a0a0a;
+    color: var(--primary-color);
+    border: 1px solid #1a3a1a;
+}
+
+[data-theme="hacker"] .form-control:focus {
+    background-color: #0a0a0a;
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 255, 65, 0.15);
+}
+
+[data-theme="hacker"] .form-select {
+    background-color: #0a0a0a;
+    color: var(--primary-color);
+    border: 1px solid #1a3a1a;
+}
+
+[data-theme="hacker"] .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 255, 65, 0.15);
+}
+
+/* Hacker sign-in / themed buttons */
+
+[data-theme="hacker"] .cute-signin,
+[data-theme="hacker"] a.cute-signin {
+    background: transparent;
+    border: 1px solid var(--primary-color);
+    box-shadow: 0 0 6px rgba(0, 255, 65, 0.2);
+    color: var(--primary-color);
+    font-weight: 700;
+    text-shadow: 0 0 4px rgba(0, 255, 65, 0.3);
+}
+
+[data-theme="hacker"] .cute-signin::before,
+[data-theme="hacker"] .cute-signin::after {
+    content: none;
+}
+
+[data-theme="hacker"] .cute-signin:hover {
+    background: rgba(0, 255, 65, 0.1);
+    box-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+}
+
+/* Hacker — no raise on any button */
+[data-theme="hacker"] .btn:hover {
+    transform: none;
+}
+
+/* Hacker button overrides */
+
+[data-theme="hacker"] .btn-primary {
+    --bs-btn-bg: transparent;
+    --bs-btn-border-color: #00ff41;
+    --bs-btn-color: #00ff41;
+    --bs-btn-hover-bg: rgba(0, 255, 65, 0.1);
+    --bs-btn-hover-border-color: #33ff66;
+    --bs-btn-hover-color: #33ff66;
+    --bs-btn-active-bg: rgba(0, 255, 65, 0.15);
+    --bs-btn-active-border-color: #00ff41;
+}
+
+[data-theme="hacker"] .btn-primary.btn-sm {
+    background: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+}
+
+[data-theme="hacker"] .btn-secondary {
+    --bs-btn-color: var(--secondary-color);
+    --bs-btn-bg: transparent;
+    --bs-btn-border-color: #1a3a1a;
+    --bs-btn-hover-color: var(--primary-color);
+    --bs-btn-hover-bg: rgba(0, 255, 65, 0.05);
+    --bs-btn-hover-border-color: var(--secondary-color);
+}
+
+[data-theme="hacker"] .btn-success {
+    --bs-btn-bg: transparent;
+    --bs-btn-border-color: #00ff41;
+    --bs-btn-color: #00ff41;
+    --bs-btn-hover-bg: rgba(0, 255, 65, 0.1);
+    --bs-btn-hover-border-color: #33ff66;
+}
+
+[data-theme="hacker"] .btn-outline-primary {
+    --bs-btn-color: var(--primary-color);
+    --bs-btn-border-color: var(--primary-color);
+    --bs-btn-hover-bg: rgba(0, 255, 65, 0.1);
+    --bs-btn-hover-border-color: #33ff66;
+    --bs-btn-hover-color: #33ff66;
+}
+
+[data-theme="hacker"] .btn-outline-secondary {
+    --bs-btn-color: var(--secondary-color);
+    --bs-btn-border-color: #1a3a1a;
+    --bs-btn-hover-bg: rgba(0, 255, 65, 0.05);
+    --bs-btn-hover-border-color: var(--secondary-color);
+    --bs-btn-hover-color: var(--primary-color);
+}
+
+[data-theme="hacker"] .btn-danger {
+    --bs-btn-bg: transparent;
+    --bs-btn-border-color: #ff3333;
+    --bs-btn-color: #ff3333;
+    --bs-btn-hover-bg: rgba(255, 51, 51, 0.1);
+    --bs-btn-hover-border-color: #ff5555;
+    --bs-btn-hover-color: #ff5555;
+}
+
+/* Hacker checkboxes and switches */
+
+[data-theme="hacker"] .form-check-input {
+    background-color: #0a0a0a;
+    border-color: #1a3a1a;
+}
+
+[data-theme="hacker"] .form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+[data-theme="hacker"] .form-check-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 255, 65, 0.15);
+}
+
+/* Hacker cards */
+
+[data-theme="hacker"] .card {
+    background: var(--card-bg);
+    border: 1px solid #1a3a1a;
+    box-shadow: none;
+    color: var(--text-color);
+}
+
+/* Hacker member bar + tabs + card — green terminal accents */
+
+[data-theme="hacker"] .dh-member-bar {
+    background: #0a0a0a;
+    border-color: #1a3a1a;
+    border-left: 4px solid var(--primary-color);
+    color: var(--primary-color);
+    text-shadow: 0 0 4px rgba(0, 255, 65, 0.3);
+}
+
+[data-theme="hacker"] #memberTabs {
+    background: var(--card-bg);
+    border-color: #1a3a1a;
+    border-top: 1px solid var(--primary-color);
+}
+
+[data-theme="hacker"] #memberTabs .nav-link {
+    color: var(--secondary-color);
+}
+
+[data-theme="hacker"] #memberTabs .nav-link.active {
+    background: var(--card-bg);
+    border-color: #1a3a1a #1a3a1a transparent;
+    color: var(--primary-color);
+    text-shadow: 0 0 6px rgba(0, 255, 65, 0.3);
+}
+
+[data-theme="hacker"] #memberTabs .nav-link:hover:not(.active) {
+    border-color: transparent;
+    background: #0d1a0d;
+    color: var(--primary-color);
+}
+
+[data-theme="hacker"] #memberTabsContent .card {
+    border: 1px solid #1a3a1a;
+}
+
+/* Hacker card section headers */
+
+[data-theme="hacker"] #memberTabsContent .card-body h5 {
+    color: var(--primary-color);
+    text-shadow: 0 0 4px rgba(0, 255, 65, 0.3);
+}
+
+[data-theme="hacker"] #memberTabsContent .card-subtitle.text-muted {
+    color: var(--secondary-color) !important;
+}
+
+/* Hacker inner field cards */
+
+[data-theme="hacker"] #memberTabsContent .card-body .card {
+    background: #0a0a0a;
+    border: 1px solid #1a3a1a !important;
+    box-shadow: none;
+}
+
+/* Hacker alerts */
+
+[data-theme="hacker"] .alert-warning {
+    background-color: #0a0a0a;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    font-weight: 400;
+}
+
+/* Hacker suspended warning */
+
+[data-theme="hacker"] .dh-suspended-warning {
+    background: #0a0a0a;
+    border-left-color: #ff3333;
+}
+
+[data-theme="hacker"] .dh-member-bar + .dh-suspended-warning {
+    border-left: 4px solid #ff3333;
+    border-right: 1px solid #1a3a1a;
+}
+
+/* Hacker spinner */
+
+[data-theme="hacker"] .spinner-border {
+    color: var(--primary-color);
+}
+
+/* Hacker links */
+
+[data-theme="hacker"] a {
+    color: var(--primary-color);
+}
+
+[data-theme="hacker"] a:hover {
+    color: #33ff66;
+}
+
+/* Hacker readonly/disabled field overrides */
+
+[data-theme="hacker"] .form-control[readonly] {
+    background-color: #0a0a0a;
+    color: var(--secondary-color);
+    border-color: transparent;
+}
+
+[data-theme="hacker"] .form-control:disabled,
+[data-theme="hacker"] .form-select:disabled {
+    background-color: #0a0a0a;
+    color: var(--secondary-color);
+    border-color: transparent;
+}
+
+/* Hacker modal */
+
+[data-theme="hacker"] .modal-content {
+    background-color: var(--card-bg);
+    border-color: #1a3a1a;
+    color: var(--text-color);
+}
+
+[data-theme="hacker"] .modal-header {
+    border-color: #1a3a1a;
+}
+
+[data-theme="hacker"] .modal-footer {
+    border-color: #1a3a1a;
+}
+
+[data-theme="hacker"] .btn-close {
+    filter: invert(1) sepia(1) saturate(10000%) hue-rotate(85deg);
+}
+
+/* Hacker toast */
+
+[data-theme="hacker"] .toast.dh-toast {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border-left-color: var(--primary-color);
+}
+
+[data-theme="hacker"] .toast-header {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border-color: #1a3a1a;
+}
+
+/* Hacker input-group */
+
+[data-theme="hacker"] .input-group-text {
+    background-color: #0d1a0d;
+    border-color: #1a3a1a;
+    color: var(--primary-color);
+}
+
+/* Hacker sticky table header */
+
+[data-theme="hacker"] .sticky-top.bg-white {
+    background-color: #0a0a0a !important;
+}
+
+/* Hacker table-dark header (notes) */
+
+[data-theme="hacker"] .table-dark {
+    --bs-table-bg: #0a0a0a;
+    --bs-table-border-color: #1a3a1a;
+}
+
+/* Hacker readability — text-muted, placeholders, hr, misc */
+
+[data-theme="hacker"] .text-muted {
+    color: #00cc33 !important;
+}
+
+[data-theme="hacker"] .form-control::placeholder {
+    color: #1a5a1a;
+}
+
+[data-theme="hacker"] hr {
+    border-color: #1a3a1a;
+    opacity: 1;
+}
+
+[data-theme="hacker"] .card-text small {
+    color: var(--secondary-color);
+}
+
+[data-theme="hacker"] h3,
+[data-theme="hacker"] h5:not(.card-title) {
+    color: var(--primary-color);
+}
+
+[data-theme="hacker"] .form-label {
+    color: var(--primary-color);
+}
+
+[data-theme="hacker"] .form-check-label {
+    color: var(--text-color);
+}
+
+[data-theme="hacker"] .table-light {
+    --bs-table-bg: #111111;
+    --bs-table-color: #00ff41;
+    --bs-table-border-color: #1a3a1a;
+}
+
+/* Hacker dev role badges — green tinted */
+
+[data-theme="hacker"] .role-administrator { background: #0d1a0d; color: #00ff41; }
+[data-theme="hacker"] .role-authorizer { background: #0d1a0d; color: #00cc33; }
+[data-theme="hacker"] .role-board { background: #0d1a0d; color: #00ff41; }
 
 /* Readonly fields — look non-editable but allow click (for edit hint) */
 

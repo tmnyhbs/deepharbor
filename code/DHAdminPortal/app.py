@@ -312,9 +312,9 @@ app.jinja_env.globals.update(dev_banner=DEV_BANNER)  # Used in dev banner
 
 @app.context_processor
 def inject_theme():
-    """Inject admin_theme into all templates (bubblegum, light, or dark)."""
+    """Inject admin_theme into all templates."""
     theme = session.get("admin_theme", "bubblegum")
-    if theme not in ("bubblegum", "light", "dark"):
+    if theme not in ("bubblegum", "light", "dark", "midnight", "hacker"):
         theme = "bubblegum"
     return {"admin_theme": theme}
 

@@ -20,16 +20,16 @@
     (function() {
         var m = document.cookie.match(/(?:^|;\s*)dh_admin_theme=(\w+)/);
         var theme = m ? m[1] : '{{ admin_theme }}';
-        if (theme !== 'bubblegum' && theme !== 'light' && theme !== 'dark') theme = 'bubblegum';
+        if (theme !== 'bubblegum' && theme !== 'light' && theme !== 'dark' && theme !== 'midnight' && theme !== 'hacker') theme = 'bubblegum';
         document.documentElement.setAttribute('data-theme', theme);
     })();
     </script>
     {% block metadata %}{% endblock %}
     <title>{% block title %}{% endblock %}</title>
-    <!-- Google Fonts - Comic Neue for bubblegum, Germania One for dark -->
+    <!-- Google Fonts - Comic Neue (bubblegum), Germania One (dark), Nothing You Could Do (midnight), Kode Mono (hacker) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Germania+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Germania+One&family=Kode+Mono:wght@400;700&family=Nothing+You+Could+Do&display=swap" rel="stylesheet">
     <!-- Bootstrap 5.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
@@ -100,6 +100,10 @@
                                 <i class="fa-solid fa-sun me-2"></i>Light</a></li>
                             <li><a class="dropdown-item" href="#" onclick="setTheme('dark'); return false;">
                                 <i class="fa-solid fa-moon me-2"></i>Dark</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="setTheme('midnight'); return false;">
+                                <i class="fa-solid fa-star me-2"></i>Midnight</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="setTheme('hacker'); return false;">
+                                <i class="fa-solid fa-terminal me-2"></i>Hacker</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -142,7 +146,7 @@
     <!-- Theme switcher -->
     <script>
     function setTheme(theme) {
-        if (theme !== 'bubblegum' && theme !== 'light' && theme !== 'dark') theme = 'bubblegum';
+        if (theme !== 'bubblegum' && theme !== 'light' && theme !== 'dark' && theme !== 'midnight' && theme !== 'hacker') theme = 'bubblegum';
         document.documentElement.setAttribute('data-theme', theme);
         document.cookie = 'dh_admin_theme=' + theme + ';path=/;max-age=31536000;SameSite=Lax';
     }
@@ -269,6 +273,43 @@
                 });
             });
         });
+    })();
+    </script>
+    <!-- Midnight theme: starry twinkle letters + sparkle particles -->
+    <script>
+    (function() {
+        if (document.documentElement.getAttribute('data-theme') !== 'midnight') return;
+        var h1 = document.querySelector('.body-content h1');
+        if (!h1) return;
+
+        // Wrap each character in a span with random twinkle timing
+        var text = h1.textContent;
+        var html = '';
+        for (var i = 0; i < text.length; i++) {
+            var ch = text[i];
+            if (ch === ' ') {
+                html += ' ';
+            } else {
+                var dur = (2 + Math.random() * 3).toFixed(1);
+                var del = (Math.random() * 4).toFixed(1);
+                html += '<span class="midnight-char" style="--twinkle-duration:' + dur + 's;--twinkle-delay:' + del + 's;">' + ch + '</span>';
+            }
+        }
+        h1.innerHTML = html;
+
+        // Spawn sparkle particles around the title
+        var rect = h1.getBoundingClientRect();
+        var sparkleCount = 12;
+        for (var j = 0; j < sparkleCount; j++) {
+            var spark = document.createElement('span');
+            spark.className = 'midnight-sparkle';
+            var x = Math.random() * 100;
+            var y = -5 + Math.random() * 110;
+            var sDur = (1.5 + Math.random() * 2.5).toFixed(1);
+            var sDel = (Math.random() * 4).toFixed(1);
+            spark.style.cssText = 'left:' + x + '%;top:' + y + '%;--sparkle-duration:' + sDur + 's;--sparkle-delay:' + sDel + 's;';
+            h1.appendChild(spark);
+        }
     })();
     </script>
     {% block scripts %}{% endblock %}
