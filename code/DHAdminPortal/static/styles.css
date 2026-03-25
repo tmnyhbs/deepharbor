@@ -210,34 +210,94 @@ body {
     border-right: 1px solid var(--border-color);
 }
 
-/* Side-by-side layout: results table + details sidebar */
+/* Details sidebar — fixed to right edge of viewport, slides in */
+/* Width is set dynamically via JS (CSS custom property --sidebar-width) */
 
-#memberLayout {
-    gap: 0;
-    align-items: flex-start;
+body {
+    transition: margin-right 0.3s ease;
 }
 
-#resultsPanel {
-    transition: flex-basis 0.3s ease;
+body.sidebar-open {
+    margin-right: var(--sidebar-width, 55%);
+}
+
+/* Center page content in remaining space when sidebar is open */
+body.sidebar-open .body-content {
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .details-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
     width: 0;
-    min-width: 0;
     overflow: hidden;
-    transition: width 0.3s ease, min-width 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+    transition: width 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
     opacity: 0;
-    flex-shrink: 0;
+    z-index: 1040;
+    background: #fff;
+    padding: 0;
+    border-left: none;
 }
 
 .details-sidebar.open {
-    width: 55%;
-    min-width: 400px;
+    width: var(--sidebar-width, 55%);
+    min-width: 300px;
+    max-width: 80vw;
     overflow-y: auto;
     overflow-x: hidden;
     border-left: 1px solid #dee2e6;
-    padding-left: 1rem;
+    padding: 1rem;
+    padding-left: 1.5rem; /* extra room for resize handle */
     opacity: 1;
+}
+
+/* Refresh icon next to search bar */
+.dh-refresh-btn {
+    font-size: 1.8rem;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.dh-refresh-btn:hover {
+    opacity: 1;
+    transform: rotate(45deg);
+}
+
+/* Sidebar close button */
+.sidebar-close-btn {
+    font-size: 1.5rem;
+    line-height: 1;
+    padding: 0.25rem 0.6rem;
+}
+
+/* Resize handle on left edge of sidebar */
+.sidebar-resize-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 6px;
+    height: 100%;
+    cursor: col-resize;
+    background: transparent;
+    z-index: 1;
+    transition: background 0.15s ease;
+}
+
+.sidebar-resize-handle:hover,
+.sidebar-resize-handle.dragging {
+    background: rgba(13, 110, 253, 0.3);
+}
+
+/* Disable transitions while dragging for instant feedback */
+body.sidebar-resizing,
+body.sidebar-resizing .details-sidebar {
+    transition: none !important;
 }
 
 /* Highlight selected row in results table */
@@ -245,20 +305,20 @@ body {
     background-color: rgba(13, 110, 253, 0.12) !important;
 }
 
-/* Mobile: sidebar stacks below */
+/* Mobile: sidebar takes full width as overlay */
 @media (max-width: 991.98px) {
-    #memberLayout {
-        flex-direction: column;
+    body.sidebar-open {
+        margin-right: 0;
     }
 
     .details-sidebar.open {
-        width: 100%;
+        width: 100% !important;
         min-width: 0;
-        border-left: none;
-        border-top: 1px solid #dee2e6;
-        padding-left: 0;
-        padding-top: 1rem;
-        margin-top: 1rem;
+        max-width: none;
+    }
+
+    .sidebar-resize-handle {
+        display: none;
     }
 }
 
@@ -841,6 +901,10 @@ body {
     background: linear-gradient(180deg, #ffe0f0 0%, #ffd0e8 100%);
     border-color: #ff69b4;
     color: #1a1a1a;
+}
+
+[data-theme="bubblegum"] .details-sidebar {
+    background: #ffd6e8;
 }
 
 [data-theme="bubblegum"] .details-sidebar.open {
@@ -1610,6 +1674,11 @@ body {
     color: var(--text-color);
 }
 
+[data-theme="dark"] .details-sidebar {
+    background: var(--card-bg);
+    color: var(--text-color);
+}
+
 [data-theme="dark"] .details-sidebar.open {
     border-left-color: #991b1b;
 }
@@ -2194,6 +2263,11 @@ body {
     background: linear-gradient(180deg, #121d35 0%, #0f1629 100%);
     border-color: #243356;
     border-left: 4px solid var(--primary-color);
+    color: var(--text-color);
+}
+
+[data-theme="midnight"] .details-sidebar {
+    background: var(--card-bg);
     color: var(--text-color);
 }
 
@@ -2883,6 +2957,11 @@ body {
 }
 
 /* Hacker member bar + tabs + card — green terminal accents */
+
+[data-theme="hacker"] .details-sidebar {
+    background: #0a0a0a;
+    color: var(--text-color);
+}
 
 [data-theme="hacker"] .details-sidebar.open {
     border-left-color: #1a3a1a;

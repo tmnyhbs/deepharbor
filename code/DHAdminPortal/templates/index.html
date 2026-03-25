@@ -29,9 +29,12 @@
 <div class="row justify-content-center">
     <div class="col-md-6">
         <div class="mb-3">
-            <div class="input-group">
-                <input type="text" class="form-control" id="memberSearch" placeholder="Search for a member..." onkeydown="if(event.key==='Enter')searchMembers()">
-                <button class="btn btn-primary cute-signin" type="button" id="searchButton" onclick="searchMembers()">Search</button>
+            <div class="d-flex gap-2 align-items-center">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="memberSearch" placeholder="Search for a member..." onkeydown="if(event.key==='Enter')searchMembers()">
+                    <button class="btn btn-primary cute-signin" type="button" id="searchButton" onclick="searchMembers()">Search</button>
+                </div>
+                <span class="dh-refresh-btn" onclick="loadMembers(currentPage)" title="Refresh results">&#x21bb;</span>
             </div>
         </div>
     </div>
@@ -68,9 +71,15 @@
             <!-- Pagination controls -->
             <div id="paginationControls" class="d-flex justify-content-between align-items-center mt-2 px-2 pb-2">
                 <span id="paginationInfo" class="text-muted small"></span>
-                <div>
-                    <button class="btn btn-sm btn-outline-secondary me-1" id="prevPageBtn" onclick="loadMembers(currentPage - 1)" disabled>Previous</button>
-                    <button class="btn btn-sm btn-outline-secondary" id="nextPageBtn" onclick="loadMembers(currentPage + 1)" disabled>Next</button>
+                <div class="d-flex align-items-center gap-2">
+                    <select class="form-select form-select-sm" id="perPageSelect" onchange="changePerPage(this.value)" style="width: auto;">
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <button class="btn btn-sm btn-primary" id="prevPageBtn" onclick="loadMembers(currentPage - 1)" disabled>Previous</button>
+                    <button class="btn btn-sm btn-primary" id="nextPageBtn" onclick="loadMembers(currentPage + 1)" disabled>Next</button>
                 </div>
             </div>
         </div>
@@ -78,12 +87,13 @@
 
     <!-- Right panel: member details sidebar -->
     <div id="detailsSidebar" class="details-sidebar">
+        <div class="sidebar-resize-handle" id="sidebarResizeHandle"></div>
         <div id="memberDetailsSection">
 
             <!-- Sidebar header with close button -->
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="fw-bold small text-muted">Member Details</span>
-                <button class="btn btn-sm btn-outline-secondary border-0" onclick="closeSidebar()" title="Close">&times;</button>
+                <button class="btn btn-outline-secondary border-0 sidebar-close-btn" onclick="closeSidebar()" title="Close">&times;</button>
             </div>
 
             <!-- Member identity bar — sits above tabs as a connected header -->
@@ -1111,7 +1121,7 @@ let totalResults = 0;
 let currentQuery = '';
 let currentSort = 'date_added';
 let currentOrder = 'desc';
-let perPage = 25;
+let perPage = parseInt(localStorage.getItem('dh-per-page'), 10) || 20;
 let selectedMemberId = null;
 
 // Core data loading
@@ -1145,7 +1155,7 @@ function loadMembers(page) {
 
             displayResults(currentMembers);
             updatePaginationControls();
-            updateURL();
+            if (!_restoringFromHistory) pushURL();
         })
         .catch(error => {
             alert('Error loading members: ' + error.message);
@@ -1260,37 +1270,113 @@ function updatePaginationControls() {
 
     prevBtn.disabled = currentPage <= 1;
     nextBtn.disabled = currentPage >= totalPages;
+
+    // Sync the per-page dropdown
+    const perPageSelect = document.getElementById('perPageSelect');
+    if (perPageSelect) perPageSelect.value = perPage;
+}
+
+function changePerPage(value) {
+    perPage = parseInt(value, 10) || 20;
+    localStorage.setItem('dh-per-page', perPage);
+    loadMembers(1);
 }
 
 // Details sidebar
 
+function setSidebarWidth(widthPx) {
+    const vw = (widthPx / window.innerWidth * 100).toFixed(1) + '%';
+    document.documentElement.style.setProperty('--sidebar-width', vw);
+}
+
+function loadSavedSidebarWidth() {
+    const saved = localStorage.getItem('dh-sidebar-width');
+    if (saved) {
+        const px = parseInt(saved, 10);
+        if (px >= 300 && px <= window.innerWidth * 0.8) {
+            setSidebarWidth(px);
+            return;
+        }
+    }
+    // Default: 55%
+    document.documentElement.style.setProperty('--sidebar-width', '55%');
+}
+
 function openSidebar() {
+    loadSavedSidebarWidth();
     document.getElementById('detailsSidebar').classList.add('open');
+    document.body.classList.add('sidebar-open');
 }
 
 function closeSidebar() {
     document.getElementById('detailsSidebar').classList.remove('open');
+    document.body.classList.remove('sidebar-open');
     selectedMemberId = null;
     // Remove row highlight
     document.querySelectorAll('#resultsTableBody tr.selected-row').forEach(r => r.classList.remove('selected-row'));
-    updateURL();
+    if (!_restoringFromHistory) pushURL();
 }
+
+// Sidebar resize handle — drag to resize
+(function initSidebarResize() {
+    const handle = document.getElementById('sidebarResizeHandle');
+    if (!handle) return;
+
+    let dragging = false;
+
+    handle.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        dragging = true;
+        handle.classList.add('dragging');
+        document.body.classList.add('sidebar-resizing');
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (!dragging) return;
+        // Sidebar is on the right, so width = viewport width - mouse X
+        let newWidth = window.innerWidth - e.clientX;
+        // Clamp between 300px and 80% of viewport
+        newWidth = Math.max(300, Math.min(newWidth, window.innerWidth * 0.8));
+        setSidebarWidth(newWidth);
+        localStorage.setItem('dh-sidebar-width', newWidth);
+    });
+
+    document.addEventListener('mouseup', function() {
+        if (!dragging) return;
+        dragging = false;
+        handle.classList.remove('dragging');
+        document.body.classList.remove('sidebar-resizing');
+    });
+})();
 
 // URL state management
 
-function updateURL() {
+// Build URL string from current state
+function buildURL() {
     const params = new URLSearchParams();
     if (currentQuery) params.set('query', currentQuery);
     if (currentPage > 1) params.set('page', currentPage);
     if (currentSort !== 'date_added' && !(currentQuery && currentSort === 'rank')) params.set('sort', currentSort);
     if (currentOrder !== 'desc') params.set('order', currentOrder);
     if (selectedMemberId) params.set('member', selectedMemberId);
-
-    const url = params.toString() ? `/?${params.toString()}` : '/';
-    history.replaceState(null, '', url);
+    return params.toString() ? `/?${params.toString()}` : '/';
 }
 
+// Push a new history entry (for user-initiated navigation)
+function pushURL() {
+    history.pushState(null, '', buildURL());
+}
+
+// Replace current history entry (for non-navigational updates)
+function updateURL() {
+    history.replaceState(null, '', buildURL());
+}
+
+// Flag to prevent pushState during popstate-triggered restores
+let _restoringFromHistory = false;
+
 function restoreFromURL() {
+    _restoringFromHistory = true;
     const params = new URLSearchParams(window.location.search);
     currentQuery = params.get('query') || '';
     currentPage = parseInt(params.get('page')) || 1;
@@ -1298,8 +1384,15 @@ function restoreFromURL() {
     currentOrder = params.get('order') || 'desc';
     const memberId = params.get('member');
 
-    if (currentQuery) {
-        document.getElementById('memberSearch').value = currentQuery;
+    // Sync search input
+    document.getElementById('memberSearch').value = currentQuery;
+
+    // Close sidebar if no member selected
+    if (!memberId) {
+        document.getElementById('detailsSidebar').classList.remove('open');
+        document.body.classList.remove('sidebar-open');
+        selectedMemberId = null;
+        document.querySelectorAll('#resultsTableBody tr.selected-row').forEach(r => r.classList.remove('selected-row'));
     }
 
     loadMembers(currentPage).then(() => {
@@ -1309,6 +1402,7 @@ function restoreFromURL() {
                 loadMemberData(member);
             }
         }
+        _restoringFromHistory = false;
     });
 }
 
@@ -1857,7 +1951,7 @@ function loadMemberData(memberOrId) {
         fetchTabData(firstVisibleTab, memberId);
     }
 
-    updateURL();
+    if (!_restoringFromHistory) pushURL();
 }
 
 function fetchMembershipLevels() {
@@ -2149,6 +2243,11 @@ function showSection(name) {
         const el = document.getElementById(SECTION_EL_IDS[s]);
         if (el) el.style.display = (s === name) ? '' : 'none';
     });
+
+    // Close member details sidebar when leaving member section
+    if (name !== 'member') {
+        closeSidebar();
+    }
 
     // Stop auto-refresh when leaving access logs
     if (name !== 'accessLogs') {
