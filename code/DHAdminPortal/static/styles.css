@@ -49,11 +49,20 @@ body {
 
 /* Navbar */
 
+.dh-navbar {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+
 .dh-navbar .navbar-brand {
     font-weight: 700;
+    font-size: 0.95rem;
 }
 
 .dh-navbar .nav-link {
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+    font-size: 0.9rem;
     font-weight: 600;
 }
 
@@ -2442,10 +2451,14 @@ body {
 [data-theme="hacker"] .btn-outline-secondary,
 [data-theme="hacker"] .user-info,
 [data-theme="hacker"] .footer,
-[data-theme="hacker"] .form-control,
-[data-theme="hacker"] .form-select,
 [data-theme="hacker"] .btn {
     font-family: 'Kode Mono', 'Courier New', monospace;
+}
+
+/* Data fields use system font for readability */
+[data-theme="hacker"] .form-control,
+[data-theme="hacker"] .form-select {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
 /* Hacker navbar */
