@@ -310,6 +310,14 @@ app.jinja_env.globals.update(now=datetime.now)  # Used in footer for dynamic yea
 app.jinja_env.globals.update(auth_mode=AUTH_MODE)  # Used in dev login routes
 app.jinja_env.globals.update(dev_banner=DEV_BANNER)  # Used in dev banner
 
+@app.context_processor
+def inject_theme():
+    """Inject admin_theme into all templates (bubblegum or light)."""
+    theme = session.get("admin_theme", "bubblegum")
+    if theme not in ("bubblegum", "light"):
+        theme = "bubblegum"
+    return {"admin_theme": theme}
+
 
 ###############################################################################
 # Permission checking decorator for admin API endpoints

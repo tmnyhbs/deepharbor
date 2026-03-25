@@ -1,4 +1,11 @@
-/* Cute Bubblegum Style */
+/* ===================================================================
+   Deep Harbor Admin Portal — Styles
+   Shared base + Bubblegum theme + Light theme
+   =================================================================== */
+
+/* ===================================================================
+   SHARED BASE (theme-neutral — layout, structure, resets)
+   =================================================================== */
 
 * {
     margin: 0;
@@ -8,142 +15,20 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background: linear-gradient(135deg, #ffd6e8 0%, #ffc0e5 50%, #ffb3e6 100%);
     min-height: 100vh;
-    padding: 20px;
     position: relative;
     overflow-x: hidden;
 }
 
-/* Bubblegum bubbles background animation */
-body::before {
-    content: '';
-    position: fixed;
-    width: 200px;
-    height: 200px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    top: -100px;
-    left: 10%;
-    animation: float 8s infinite ease-in-out;
-    pointer-events: none;
-}
-
-body::after {
-    content: '';
-    position: fixed;
-    width: 150px;
-    height: 150px;
-    background: rgba(255, 182, 230, 0.15);
-    border-radius: 50%;
-    bottom: -75px;
-    right: 15%;
-    animation: float 10s infinite ease-in-out;
-    pointer-events: none;
-}
-
-@keyframes float {
-    0%, 100% {
-        transform: translateY(0) rotate(0deg);
-    }
-    50% {
-        transform: translateY(-20px) rotate(180deg);
-    }
-}
-
-/* Scope bubblegum content styles to .body-content only */
-.body-content h1 {
-    font-family: 'Comic Neue', cursive;
-    color: #ff69b4;
-    font-size: 3em;
-    text-align: center;
-    text-shadow:
-        3px 3px 0px #ff1493,
-        6px 6px 0px rgba(255, 105, 180, 0.3);
-    margin-bottom: 30px;
-    padding: 20px 40px;
-    background: white;
-    border-radius: 50px;
-    border: 5px solid #ff69b4;
-    box-shadow:
-        0 8px 20px rgba(255, 105, 180, 0.4),
-        inset 0 2px 10px rgba(255, 255, 255, 0.8);
-    animation: bounce 2s infinite;
-    position: relative;
-    z-index: 1;
-}
-
-@keyframes bounce {
-    0%, 100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(10px);
-    }
-}
-
-.body-content p {
-    color: #ff1493;
-    font-size: 1.5em;
-    text-align: center;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 25px 40px;
-    border-radius: 30px;
-    border: 4px dashed #ff69b4;
-    box-shadow:
-        0 6px 15px rgba(255, 105, 180, 0.3),
-        inset 0 2px 5px rgba(255, 192, 229, 0.5);
-    max-width: 600px;
-    line-height: 1.6;
-    position: relative;
-    z-index: 1;
-}
-
-/* Add cute sparkle effects to content area only */
-.body-content h1::before,
-.body-content p::before {
-    content: '✨';
-    position: absolute;
-    top: -10px;
-    left: -10px;
-    font-size: 1.5em;
-    animation: sparkle 1.5s infinite;
-}
-
-.body-content h1::after,
-.body-content p::after {
-    content: '💕';
-    position: absolute;
-    bottom: -10px;
-    right: -10px;
-    font-size: 1.5em;
-    animation: pulse 2s infinite;
-}
-
-@keyframes sparkle {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1) rotate(0deg);
-    }
-    50% {
-        opacity: 0.5;
-        transform: scale(1.2) rotate(180deg);
-    }
-}
-
-@keyframes pulse {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.3);
-    }
+/* Cap Bootstrap container at xl breakpoint (1140px) instead of xxl (1320px) */
+.container {
+    max-width: 1140px;
 }
 
 /* Header */
+
 .header {
     text-align: center;
-    /* margin-bottom: 1.5rem; */
     position: relative;
     z-index: 1;
 }
@@ -155,46 +40,43 @@ body::after {
 }
 
 .header-tagline {
-    color: #ff1493;
     font-size: 1em;
     background: none;
     border: none;
     box-shadow: none;
-    /* padding: 0.5rem 0; */
     max-width: none;
 }
 
-/* User info section above footer */
-.user-info p {
-    color: #ff1493;
-    font-size: 1em;
-    background: rgba(255, 255, 255, 0.9);
-    border: none;
-    box-shadow: none;
-    padding: 10px 20px;
-    border-radius: 10px;
-    max-width: none;
+/* Navbar */
+
+.dh-navbar .navbar-brand {
+    font-weight: 700;
+}
+
+.dh-navbar .nav-link {
+    font-weight: 600;
+}
+
+.dh-navbar .dropdown-toggle {
+    font-weight: 600;
+}
+
+/* User info */
+
+.user-info {
     text-align: center;
-}
-
-.user-info a {
-    color: #ff69b4;
-}
-
-.user-info a:hover {
-    color: #ff1493;
+    padding: 0.75rem 0;
+    font-size: 0.9rem;
 }
 
 /* Footer */
+
 .footer {
-    margin-top: 2rem;
     position: relative;
     z-index: 1;
 }
 
 .footer hr {
-    border: none;
-    border-top: 2px dashed #ff69b4;
     margin-bottom: 1.5rem;
 }
 
@@ -221,7 +103,6 @@ body::after {
     margin: 0;
     font-size: 0.875rem;
     line-height: 1.3;
-    color: #ff1493;
     background: none;
     border: none;
     box-shadow: none;
@@ -232,12 +113,7 @@ body::after {
 }
 
 .footer a {
-    color: #ff69b4;
     text-decoration: none;
-}
-
-.footer a:hover {
-    color: #ff1493;
 }
 
 .footer-help a {
@@ -256,30 +132,8 @@ body::after {
     font-size: 0.875rem;
 }
 
-/* Responsive sizing for mobile */
-@media (max-width: 768px) {
-    .body-content h1 {
-        font-size: 1.5em;
-        padding: 12px 20px;
-        border-radius: 30px;
-        border-width: 3px;
-        text-shadow: 1px 1px 0px #ff1493;
-    }
+/* Dev banner */
 
-    .body-content h1::before,
-    .body-content p::before,
-    .body-content h1::after,
-    .body-content p::after {
-        display: none;
-    }
-
-    .body-content p {
-        font-size: 1.1em;
-        padding: 15px 20px;
-    }
-}
-
-/* Dev mode banner */
 .dev-banner {
     background: #f59e0b;
     color: #78350f;
@@ -289,4 +143,948 @@ body::after {
     padding: 2px 0;
     letter-spacing: 0.05em;
     width: 100%;
+}
+
+/* Dev login cards (shared) */
+
+.dev-user-card {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.dev-user-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dev-role-badge {
+    font-size: 0.8em;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.role-administrator { background: #dbeafe; color: #1e40af; }
+.role-authorizer { background: #d1fae5; color: #065f46; }
+.role-board { background: #ede9fe; color: #5b21b6; }
+
+/* Member identity bar — connected header above tabs */
+
+.dh-member-bar {
+    padding: 0.6rem 1rem;
+    font-size: 1.1rem;
+    color: #1a1a1a;
+    border: 1px solid #dee2e6;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    background: linear-gradient(180deg, #f0f0f0 0%, #e2e2e2 100%);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Suspended warning flush between bar and tabs */
+.dh-member-bar + .dh-suspended-warning,
+.dh-member-bar + .dh-suspended-warning.show {
+    border-radius: 0;
+    margin-bottom: 0;
+}
+
+[data-theme="bubblegum"] .dh-member-bar + .dh-suspended-warning {
+    border-left: 4px solid #ff1493;
+    border-right: 1px solid #ff69b4;
+}
+
+[data-theme="light"] .dh-member-bar + .dh-suspended-warning {
+    border-left: 4px solid var(--error-color);
+    border-right: 1px solid var(--border-color);
+}
+
+/* Tabs + card — visually connected as one block */
+
+#memberTabs {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-top: none;
+    margin-bottom: -1px;
+    padding: 0.5rem 0.5rem 0;
+    position: relative;
+    z-index: 1;
+}
+
+#memberTabs .nav-link {
+    border-radius: 4px 4px 0 0;
+    border: 1px solid transparent;
+    margin-bottom: -1px;
+    color: inherit;
+}
+
+#memberTabs .nav-link.active {
+    background: white;
+    border-color: #dee2e6 #dee2e6 transparent;
+}
+
+#memberTabsContent .card {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+/* Card section headers — black text */
+
+#memberTabsContent .card-body h5 {
+    color: #1a1a1a;
+}
+
+/* Field label subtitles — black text (override Bootstrap text-muted) */
+
+#memberTabsContent .card-subtitle.text-muted {
+    color: #1a1a1a !important;
+}
+
+/* Inner field cards — rounded corners */
+
+#memberTabsContent .card-body .card {
+    border-radius: 8px;
+}
+
+/* Table hover (shared layout) */
+
+#resultsTableBody tr {
+    transition: all 0.2s ease;
+}
+
+/* Validation framework (dh-validate) */
+
+.required-badge {
+    font-size: 0.65rem;
+    vertical-align: middle;
+    margin-left: 0.35rem;
+    padding: 0.15em 0.45em;
+    border-radius: 3px;
+}
+
+.field-error {
+    border-color: #dc2626 !important;
+    background-color: #fef2f2 !important;
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.15) !important;
+}
+
+@keyframes field-shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-4px); }
+    40%, 80% { transform: translateX(4px); }
+}
+
+.field-shake {
+    animation: field-shake 0.4s ease-in-out;
+}
+
+.toast-container {
+    z-index: 1090;
+}
+
+.toast.dh-toast {
+    opacity: 1 !important;
+    background: #ffffff;
+    border-left: 4px solid #dc2626;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.toast.dh-toast.toast-success {
+    border-left-color: #16a34a;
+}
+
+.toast.dh-toast .toast-body ul {
+    margin-bottom: 0;
+    padding-left: 1.25rem;
+}
+
+/* Suspended member warning */
+
+.dh-suspended-warning {
+    border-left: 4px solid #dc2626;
+    border-radius: 6px;
+}
+
+
+/* ===================================================================
+   BUBBLEGUM THEME
+   =================================================================== */
+
+[data-theme="bubblegum"] body {
+    background: linear-gradient(135deg, #ffd6e8 0%, #ffc0e5 50%, #ffb3e6 100%);
+}
+
+/* Floating bubbles */
+
+[data-theme="bubblegum"] body::before {
+    content: '';
+    position: fixed;
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    top: -100px;
+    left: 10%;
+    animation: bg-float 8s infinite ease-in-out;
+    pointer-events: none;
+}
+
+[data-theme="bubblegum"] body::after {
+    display: none;
+}
+
+@keyframes bg-float {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-20px) rotate(180deg);
+    }
+}
+
+/* Bubblegum content styles */
+
+[data-theme="bubblegum"] .body-content h1 {
+    font-family: 'Comic Neue', cursive;
+    color: #ff69b4;
+    font-size: 3em;
+    text-align: center;
+    text-shadow:
+        3px 3px 0px #ff1493,
+        6px 6px 0px rgba(255, 105, 180, 0.3);
+    margin-bottom: 30px;
+    padding: 20px 40px;
+    background: white;
+    border-radius: 50px;
+    border: 5px solid #ff69b4;
+    box-shadow:
+        0 8px 20px rgba(255, 105, 180, 0.4),
+        inset 0 2px 10px rgba(255, 255, 255, 0.8);
+    animation: bg-bounce 2s infinite;
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes bg-bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(10px);
+    }
+}
+
+[data-theme="bubblegum"] .body-content p {
+    color: #ff1493;
+    font-size: 1.5em;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 25px 40px;
+    border-radius: 30px;
+    border: 4px dashed #ff69b4;
+    box-shadow:
+        0 6px 15px rgba(255, 105, 180, 0.3),
+        inset 0 2px 5px rgba(255, 192, 229, 0.5);
+    max-width: 600px;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+}
+
+/* Sparkle effects */
+
+[data-theme="bubblegum"] .body-content h1::before,
+[data-theme="bubblegum"] .body-content p::before {
+    content: '\2728';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    font-size: 1.5em;
+    animation: bg-sparkle 1.5s infinite;
+}
+
+[data-theme="bubblegum"] .body-content h1::after,
+[data-theme="bubblegum"] .body-content p::after {
+    content: '\1F495';
+    position: absolute;
+    bottom: -10px;
+    right: -10px;
+    font-size: 1.5em;
+    animation: bg-pulse 2s infinite;
+}
+
+@keyframes bg-sparkle {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2) rotate(180deg);
+    }
+}
+
+@keyframes bg-pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.3);
+    }
+}
+
+/* Bubblegum header & tagline */
+
+[data-theme="bubblegum"] .header-tagline {
+    color: #ff1493;
+}
+
+/* Bubblegum navbar — Comic Neue throughout */
+
+[data-theme="bubblegum"] .dh-navbar {
+    background: linear-gradient(90deg, #ff4d9d 0%, #ff87c8 100%);
+    box-shadow: 0 2px 8px rgba(255, 77, 157, 0.3);
+    font-family: 'Comic Neue', cursive;
+}
+
+[data-theme="bubblegum"] .dh-navbar .navbar-brand {
+    color: white;
+}
+
+[data-theme="bubblegum"] .dh-navbar .nav-link {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="bubblegum"] .dh-navbar .nav-link:hover,
+[data-theme="bubblegum"] .dh-navbar .nav-link:focus {
+    color: white;
+}
+
+[data-theme="bubblegum"] .dh-navbar .dropdown-toggle {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="bubblegum"] .dh-navbar .dropdown-toggle:hover {
+    color: white;
+}
+
+[data-theme="bubblegum"] .dh-navbar .navbar-toggler {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="bubblegum"] .dh-navbar .navbar-toggler-icon {
+    filter: brightness(0) invert(1);
+}
+
+/* Bubblegum Comic Neue on UI elements */
+
+[data-theme="bubblegum"] #memberTabs .nav-link,
+[data-theme="bubblegum"] .card-body h5,
+[data-theme="bubblegum"] .dh-member-bar,
+[data-theme="bubblegum"] #resultsSection th,
+[data-theme="bubblegum"] .cute-signin,
+[data-theme="bubblegum"] .btn-outline-secondary,
+[data-theme="bubblegum"] .user-info,
+[data-theme="bubblegum"] .footer {
+    font-family: 'Comic Neue', cursive;
+}
+
+/* Bubblegum search field focus */
+
+[data-theme="bubblegum"] .form-control:focus {
+    border-color: #ff69b4;
+    box-shadow: 0 0 0 0.2rem rgba(255, 105, 180, 0.25);
+}
+
+[data-theme="bubblegum"] .form-select:focus {
+    border-color: #ff69b4;
+    box-shadow: 0 0 0 0.2rem rgba(255, 105, 180, 0.25);
+}
+
+/* Bubblegum buttons — primary uses pink gradient */
+
+[data-theme="bubblegum"] .btn-primary {
+    --bs-btn-bg: #ff4d9d;
+    --bs-btn-border-color: #ff4d9d;
+    --bs-btn-hover-bg: #ff1493;
+    --bs-btn-hover-border-color: #ff1493;
+    --bs-btn-active-bg: #e0117f;
+    --bs-btn-active-border-color: #e0117f;
+}
+
+[data-theme="bubblegum"] .btn-primary.btn-sm {
+    background: linear-gradient(135deg, #ff6bb5 0%, #ff4d9d 45%, #ff87c8 100%);
+    border: none;
+    color: white;
+    box-shadow: 0 4px 10px rgba(255, 77, 157, 0.25);
+    position: relative;
+    overflow: hidden;
+}
+
+[data-theme="bubblegum"] .btn-primary.btn-sm:hover {
+    box-shadow: 0 6px 14px rgba(255, 77, 157, 0.35);
+}
+
+[data-theme="bubblegum"] .btn-success {
+    --bs-btn-bg: #ff69b4;
+    --bs-btn-border-color: #ff69b4;
+    --bs-btn-hover-bg: #ff4d9d;
+    --bs-btn-hover-border-color: #ff4d9d;
+    --bs-btn-active-bg: #ff1493;
+    --bs-btn-active-border-color: #ff1493;
+}
+
+[data-theme="bubblegum"] .btn-outline-primary {
+    --bs-btn-color: #ff4d9d;
+    --bs-btn-border-color: #ff4d9d;
+    --bs-btn-hover-bg: #ff4d9d;
+    --bs-btn-hover-border-color: #ff4d9d;
+    --bs-btn-hover-color: white;
+    --bs-btn-active-bg: #ff1493;
+}
+
+[data-theme="bubblegum"] .btn-outline-secondary {
+    --bs-btn-color: #6c757d;
+    --bs-btn-border-color: #ccc;
+    --bs-btn-hover-bg: #f8f9fa;
+    --bs-btn-hover-border-color: #ff69b4;
+    --bs-btn-hover-color: #ff1493;
+}
+
+/* Bubblegum checkboxes and switches */
+
+[data-theme="bubblegum"] .form-check-input:checked {
+    background-color: #ff4d9d;
+    border-color: #ff4d9d;
+}
+
+[data-theme="bubblegum"] .form-check-input:focus {
+    border-color: #ff69b4;
+    box-shadow: 0 0 0 0.2rem rgba(255, 105, 180, 0.25);
+}
+
+[data-theme="bubblegum"] .form-switch .form-check-input:checked {
+    background-color: #ff4d9d;
+    border-color: #ff4d9d;
+}
+
+/* Bubblegum spinner */
+
+[data-theme="bubblegum"] .spinner-border {
+    color: #ff4d9d;
+}
+
+/* Bubblegum links */
+
+[data-theme="bubblegum"] a {
+    color: #ff4d9d;
+}
+
+[data-theme="bubblegum"] a:hover {
+    color: #ff1493;
+}
+
+/* Bubblegum alerts */
+
+[data-theme="bubblegum"] .alert-warning {
+    background-color: #ffe0f0;
+    border: 2px solid #ff1493;
+    color: #1a1a1a;
+    font-weight: 600;
+}
+
+/* Bubblegum nav-tabs active indicator */
+
+[data-theme="bubblegum"] .nav-tabs .nav-link.active {
+    color: #ff1493;
+}
+
+/* Bubblegum logout button */
+
+[data-theme="bubblegum"] .dh-logout-btn {
+    color: white !important;
+    font-weight: 700;
+}
+
+/* Bubblegum user info */
+
+[data-theme="bubblegum"] .user-info {
+    color: #ff1493;
+}
+
+[data-theme="bubblegum"] .user-info a {
+    color: #ff69b4;
+}
+
+[data-theme="bubblegum"] .user-info a:hover {
+    color: #ff1493;
+}
+
+/* Bubblegum footer */
+
+[data-theme="bubblegum"] .footer hr {
+    border: none;
+    border-top: 2px dashed #ff69b4;
+}
+
+[data-theme="bubblegum"] .footer-text p {
+    color: #ff1493;
+}
+
+[data-theme="bubblegum"] .footer a {
+    color: #ff69b4;
+}
+
+[data-theme="bubblegum"] .footer a:hover {
+    color: #ff1493;
+}
+
+/* Bubblegum dev login cards */
+
+[data-theme="bubblegum"] .dev-user-card:hover {
+    border-color: #ff69b4;
+}
+
+/* Bubblegum table hover */
+
+[data-theme="bubblegum"] #resultsTableBody tr:hover {
+    background-color: #e888e0 !important;
+    cursor: pointer;
+}
+
+/* Bubblegum sign-in button */
+
+[data-theme="bubblegum"] .cute-signin {
+    background: linear-gradient(135deg, #ff6bb5 0%, #ff4d9d 45%, #ff87c8 100%);
+    border: none;
+    box-shadow: 0 12px 24px rgba(255, 77, 157, 0.28);
+    letter-spacing: 0.01em;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-theme="bubblegum"] .cute-signin::after {
+    content: "";
+    position: absolute;
+    top: -60%;
+    left: -40%;
+    width: 45%;
+    height: 220%;
+    background: rgba(255, 255, 255, 0.45);
+    transform: rotate(18deg);
+    transition: left 0.4s ease;
+}
+
+[data-theme="bubblegum"] .cute-signin::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.75) 0 2px, transparent 3px),
+        radial-gradient(circle at 70% 35%, rgba(255, 255, 255, 0.6) 0 2px, transparent 3px),
+        radial-gradient(circle at 40% 75%, rgba(255, 255, 255, 0.5) 0 2px, transparent 3px);
+    opacity: 0.7;
+    mix-blend-mode: screen;
+}
+
+[data-theme="bubblegum"] .cute-signin:hover {
+    box-shadow: 0 16px 28px rgba(255, 77, 157, 0.35);
+}
+
+[data-theme="bubblegum"] .cute-signin:hover::after {
+    left: 120%;
+}
+
+/* Bubblegum member bar + tabs + card borders */
+
+[data-theme="bubblegum"] .dh-member-bar {
+    background: linear-gradient(180deg, #ffe0f0 0%, #ffd0e8 100%);
+    border-color: #ff69b4;
+    color: #1a1a1a;
+}
+
+[data-theme="bubblegum"] #memberTabs {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: #ff69b4;
+}
+
+[data-theme="bubblegum"] #memberTabs .nav-link {
+    color: #1a1a1a;
+}
+
+[data-theme="bubblegum"] #memberTabs .nav-link.active {
+    background: white;
+    border-color: #ff69b4 #ff69b4 transparent;
+    color: #ff1493;
+}
+
+[data-theme="bubblegum"] #memberTabs .nav-link:hover:not(.active) {
+    border-color: transparent;
+    background: rgba(255, 105, 180, 0.1);
+}
+
+[data-theme="bubblegum"] #memberTabsContent .card {
+    border: 1px solid #ff69b4;
+}
+
+/* Bubblegum suspended warning */
+
+[data-theme="bubblegum"] .dh-suspended-warning {
+    background: rgba(255, 255, 255, 0.9);
+    border-left-color: #ff1493;
+}
+
+/* Bubblegum responsive */
+
+@media (max-width: 768px) {
+    [data-theme="bubblegum"] .body-content h1 {
+        font-size: 1.5em;
+        padding: 12px 20px;
+        border-radius: 30px;
+        border-width: 3px;
+        text-shadow: 1px 1px 0px #ff1493;
+    }
+
+    [data-theme="bubblegum"] .body-content h1::before,
+    [data-theme="bubblegum"] .body-content p::before,
+    [data-theme="bubblegum"] .body-content h1::after,
+    [data-theme="bubblegum"] .body-content p::after {
+        display: none;
+    }
+
+    [data-theme="bubblegum"] .body-content p {
+        font-size: 1.1em;
+        padding: 15px 20px;
+    }
+}
+
+
+/* ===================================================================
+   LIGHT THEME
+   =================================================================== */
+
+[data-theme="light"] {
+    --primary-color: #2563eb;
+    --secondary-color: #64748b;
+    --success-color: #16a34a;
+    --error-color: #dc2626;
+    --info-color: #0891b2;
+    --bg-color: #f8fafc;
+    --card-bg: #ffffff;
+    --text-color: #1e293b;
+    --border-color: #e2e8f0;
+
+    /* Bootstrap variable overrides */
+    --bs-primary: #2563eb;
+    --bs-secondary: #64748b;
+    --bs-success: #16a34a;
+    --bs-danger: #dc2626;
+    --bs-info: #0891b2;
+    --bs-body-bg: #f8fafc;
+    --bs-body-color: #1e293b;
+    --bs-border-color: #e2e8f0;
+    --bs-link-color: #2563eb;
+    --bs-link-hover-color: #1d4ed8;
+}
+
+[data-theme="light"] body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+/* Light — suppress bubblegum pseudo-elements */
+
+[data-theme="light"] body::before,
+[data-theme="light"] body::after {
+    display: none;
+}
+
+/* Light content styles */
+
+[data-theme="light"] .body-content h1 {
+    font-family: inherit;
+    color: var(--text-color);
+    font-size: 1.75rem;
+    font-weight: 700;
+    text-align: center;
+    text-shadow: none;
+    margin-bottom: 1.5rem;
+    padding: 0;
+    background: none;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    animation: none;
+    position: relative;
+    z-index: 1;
+}
+
+[data-theme="light"] .body-content h1::before,
+[data-theme="light"] .body-content h1::after,
+[data-theme="light"] .body-content p::before,
+[data-theme="light"] .body-content p::after {
+    content: none;
+}
+
+[data-theme="light"] .body-content p {
+    color: var(--text-color);
+    font-size: 1rem;
+    text-align: center;
+    background: none;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    max-width: none;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+}
+
+/* Light header & tagline */
+
+[data-theme="light"] .header-tagline {
+    color: var(--secondary-color);
+}
+
+/* Light navbar */
+
+[data-theme="light"] .dh-navbar {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .dh-navbar .navbar-brand {
+    color: var(--text-color);
+}
+
+[data-theme="light"] .dh-navbar .nav-link {
+    color: var(--text-color);
+}
+
+[data-theme="light"] .dh-navbar .nav-link:hover,
+[data-theme="light"] .dh-navbar .nav-link:focus {
+    color: var(--primary-color);
+}
+
+[data-theme="light"] .dh-navbar .dropdown-toggle {
+    color: var(--text-color);
+}
+
+[data-theme="light"] .dh-navbar .dropdown-toggle:hover {
+    color: var(--primary-color);
+}
+
+[data-theme="light"] .dh-navbar .navbar-toggler {
+    border-color: var(--border-color);
+}
+
+/* Light user info */
+
+[data-theme="light"] .user-info {
+    color: var(--secondary-color);
+}
+
+[data-theme="light"] .user-info a {
+    color: var(--primary-color);
+}
+
+[data-theme="light"] .user-info a:hover {
+    color: #1d4ed8;
+}
+
+/* Light footer */
+
+[data-theme="light"] .footer hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+}
+
+[data-theme="light"] .footer-text p {
+    color: var(--secondary-color);
+}
+
+[data-theme="light"] .footer a {
+    color: var(--secondary-color);
+}
+
+[data-theme="light"] .footer a:hover {
+    color: var(--primary-color);
+}
+
+/* Light dev login cards */
+
+[data-theme="light"] .dev-user-card:hover {
+    border-color: var(--primary-color);
+}
+
+/* Light table header */
+
+[data-theme="light"] #resultsSection thead th {
+    background-color: #f1f5f9;
+    border-bottom: 2px solid var(--border-color);
+}
+
+/* Light table hover */
+
+[data-theme="light"] #resultsTableBody tr:hover {
+    background-color: #e2e8f0 !important;
+    cursor: pointer;
+}
+
+/* Light search field focus */
+
+[data-theme="light"] .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.2);
+}
+
+/* Light sign-in button */
+
+[data-theme="light"] .cute-signin,
+[data-theme="light"] a.cute-signin {
+    background: var(--primary-color);
+    border: none;
+    box-shadow: none;
+    letter-spacing: 0.01em;
+    position: relative;
+    overflow: hidden;
+    color: white;
+}
+
+[data-theme="light"] .cute-signin::before,
+[data-theme="light"] .cute-signin::after {
+    content: none;
+}
+
+[data-theme="light"] .cute-signin:hover {
+    background: #1d4ed8;
+}
+
+/* Light — no raise on any button */
+[data-theme="light"] .btn:hover {
+    transform: none;
+}
+
+/* Light button overrides */
+
+[data-theme="light"] .btn-primary {
+    --bs-btn-bg: #2563eb;
+    --bs-btn-border-color: #2563eb;
+    --bs-btn-hover-bg: #1d4ed8;
+    --bs-btn-hover-border-color: #1d4ed8;
+    --bs-btn-active-bg: #1e40af;
+    --bs-btn-active-border-color: #1e40af;
+}
+
+[data-theme="light"] .btn-secondary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #64748b;
+    --bs-btn-border-color: #64748b;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #475569;
+    --bs-btn-hover-border-color: #475569;
+}
+
+[data-theme="light"] .btn-outline-primary {
+    --bs-btn-color: #2563eb;
+    --bs-btn-border-color: #2563eb;
+    --bs-btn-hover-bg: #2563eb;
+    --bs-btn-hover-border-color: #2563eb;
+}
+
+[data-theme="light"] .btn-danger {
+    --bs-btn-bg: #dc2626;
+    --bs-btn-border-color: #dc2626;
+    --bs-btn-hover-bg: #b91c1c;
+    --bs-btn-hover-border-color: #b91c1c;
+}
+
+/* Light cards */
+
+[data-theme="light"] .card {
+    background: var(--card-bg);
+    border: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Light member bar + tabs + card borders */
+
+[data-theme="light"] .dh-member-bar {
+    background: linear-gradient(180deg, #f1f5f9 0%, #e8ecf1 100%);
+    border-color: var(--border-color);
+    color: #1a1a1a;
+}
+
+[data-theme="light"] #memberTabs {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="light"] #memberTabs .nav-link {
+    color: var(--secondary-color);
+}
+
+[data-theme="light"] #memberTabs .nav-link.active {
+    background: var(--card-bg);
+    border-color: var(--border-color) var(--border-color) transparent;
+    color: var(--text-color);
+}
+
+[data-theme="light"] #memberTabs .nav-link:hover:not(.active) {
+    border-color: transparent;
+    background: var(--bg-color);
+}
+
+[data-theme="light"] #memberTabsContent .card {
+    border: 1px solid var(--border-color);
+}
+
+/* Light suspended warning */
+
+[data-theme="light"] .dh-suspended-warning {
+    background: #fef2f2;
+    border-left-color: var(--error-color);
+}
+
+/* Readonly fields — look non-editable but allow click (for edit hint) */
+
+.form-control[readonly] {
+    background-color: #f1f5f9;
+    color: #1a1a1a;
+    cursor: default;
+    caret-color: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    opacity: 1;
+}
+
+.form-control[readonly]:focus {
+    border-color: transparent;
+    box-shadow: none;
+    outline: none;
+}
+
+/* Disabled fields — fully non-interactive */
+
+.form-control:disabled,
+.form-select:disabled {
+    background-color: #f1f5f9;
+    color: #1a1a1a;
+    cursor: default;
+    pointer-events: none;
+    border-color: transparent;
+    box-shadow: none;
+    opacity: 1;
+}
+
+.form-check-input:disabled {
+    opacity: 0.6;
+}
+
+.form-control {
+    background-color: #ffffff;
 }
