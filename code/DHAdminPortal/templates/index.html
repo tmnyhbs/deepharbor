@@ -30,268 +30,288 @@
     <div class="col-md-6">
         <div class="mb-3">
             <div class="input-group">
-                <input type="text" class="form-control" id="memberSearch" placeholder="Search for a member...">
+                <input type="text" class="form-control" id="memberSearch" placeholder="Search for a member..." onkeydown="if(event.key==='Enter')searchMembers()">
                 <button class="btn btn-primary cute-signin" type="button" id="searchButton" onclick="searchMembers()">Search</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Results table -->
-<div id="resultsSection" style="display: none;">
-    <div class="table-responsive" style="max-height: 500px; overflow-y: auto; overflow-x: hidden;">
-        <table class="table table-striped table-hover">
-            <thead class="sticky-top bg-white">
-                <tr>
-                    <th onclick="sortTable('member_id')" style="cursor: pointer;">
-                        Member ID <span id="sort-member_id"></span>
-                    </th>
-                    <th onclick="sortTable('first_name')" style="cursor: pointer;">
-                        First Name <span id="sort-first_name"></span>
-                    </th>
-                    <th onclick="sortTable('last_name')" style="cursor: pointer;">
-                        Last Name <span id="sort-last_name"></span>
-                    </th>
-                    <th onclick="sortTable('primary_email_address')" style="cursor: pointer;">
-                        Email <span id="sort-primary_email_address"></span>
-                    </th>
-                    <th onclick="sortTable('membership_status')" style="cursor: pointer;">
-                        Membership Status <span id="sort-membership_status"></span>
-                    </th>
-                </tr>
-            </thead>
-            <tbody id="resultsTableBody">
-            </tbody>
-        </table>
-    </div>
-</div>
+<!-- Two-column layout: results list + member details sidebar -->
+<div id="memberLayout" class="d-flex">
 
-<!-- Member Details Panel with Tabs -->
-<div id="memberDetailsSection" style="display: none; margin-top: 30px;">
-
-    <!-- Member identity bar — sits above tabs as a connected header -->
-    <div id="memberHeaderInfo" class="dh-member-bar" style="display: none;">
-        <span id="memberHeaderName" class="fw-bold"></span>
-        <span class="mx-1">&middot;</span>
-        <span id="memberHeaderEmail"></span>
-        <span class="mx-1">&middot;</span>
-        <span id="memberHeaderId"></span>
-    </div>
-
-    <!-- Suspended member warning (shown dynamically by loadMemberData) -->
-    <div id="memberSuspendedWarning" class="alert dh-suspended-warning alert-dismissible fade show mb-0" role="alert" style="display: none;">
-        <i class="fa-solid fa-triangle-exclamation me-2"></i>
-        <strong>This member is not active.</strong> Status: <span id="memberSuspendedStatus"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-
-    <!-- Tabs Navigation -->
-    <div class="tabs-scroll-wrapper">
-    <ul class="nav nav-tabs" id="memberTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="identity-tab" data-bs-toggle="tab" data-bs-target="#identity" type="button" role="tab" aria-controls="identity" aria-selected="true">Identity</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="status-tab" data-bs-toggle="tab" data-bs-target="#status" type="button" role="tab" aria-controls="status" aria-selected="false">Status</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="roles-tab" data-bs-toggle="tab" data-bs-target="#roles" type="button" role="tab" aria-controls="roles" aria-selected="false">Roles</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="forms-tab" data-bs-toggle="tab" data-bs-target="#forms" type="button" role="tab" aria-controls="forms" aria-selected="false">Forms</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="connections-tab" data-bs-toggle="tab" data-bs-target="#connections" type="button" role="tab" aria-controls="connections" aria-selected="false">Connections</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="extras-tab" data-bs-toggle="tab" data-bs-target="#extras" type="button" role="tab" aria-controls="extras" aria-selected="false">Extras</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="authorizations-tab" data-bs-toggle="tab" data-bs-target="#authorizations" type="button" role="tab" aria-controls="authorizations" aria-selected="false">Authorizations</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes" type="button" role="tab" aria-controls="notes" aria-selected="false">Notes</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="access-tab" data-bs-toggle="tab" data-bs-target="#access" type="button" role="tab" aria-controls="access" aria-selected="false">Access</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="entry-tab" data-bs-toggle="tab" data-bs-target="#entry" type="button" role="tab" aria-controls="entry" aria-selected="false">Entry</button>
-        </li>
-    </ul>
-    </div>
-
-    <!-- Tabs Content -->
-    <div class="tab-content" id="memberTabsContent">
-        <div class="tab-pane fade show active" id="identity" role="tabpanel" aria-labelledby="identity-tab">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Identity Information</h5>
-                        <button class="btn btn-primary btn-sm" id="identityEditBtn" onclick="toggleEditMode('identity')">Edit</button>
-                    </div>
-                    <div id="identityLoading" class="text-center" style="display: none;">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                    <div id="identityData"></div>
-                </div>
+    <!-- Left panel: results table + pagination -->
+    <div id="resultsPanel" class="flex-grow-1" style="min-width: 0;">
+        <div id="resultsSection" style="display: none;">
+            <div class="table-responsive" style="overflow-x: hidden;">
+                <table class="table table-striped table-hover mb-0">
+                    <thead class="sticky-top bg-white">
+                        <tr>
+                            <th onclick="sortTable('id')" style="cursor: pointer;">
+                                ID <span id="sort-id"></span>
+                            </th>
+                            <th onclick="sortTable('first_name')" style="cursor: pointer;">
+                                First Name <span id="sort-first_name"></span>
+                            </th>
+                            <th onclick="sortTable('last_name')" style="cursor: pointer;">
+                                Last Name <span id="sort-last_name"></span>
+                            </th>
+                            <th onclick="sortTable('membership_status')" style="cursor: pointer;">
+                                Status <span id="sort-membership_status"></span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTableBody">
+                    </tbody>
+                </table>
             </div>
-        </div>
-        
-        <div class="tab-pane fade" id="status" role="tabpanel" aria-labelledby="status-tab">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Status Information</h5>
-                        <button class="btn btn-primary btn-sm" id="statusEditBtn" onclick="toggleEditMode('status')">Edit</button>
-                    </div>
-                    <div id="statusLoading" class="text-center" style="display: none;">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                    <div id="statusData"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="tab-pane fade" id="roles" role="tabpanel" aria-labelledby="roles-tab">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Roles Information</h5>
-                        <button class="btn btn-primary btn-sm" id="rolesEditBtn" onclick="toggleEditMode('roles')">Edit</button>
-                    </div>
-                    <div id="rolesLoading" class="text-center" style="display: none;">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                    <div id="rolesData"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="tab-pane fade" id="forms" role="tabpanel" aria-labelledby="forms-tab">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Forms Information</h5>
-                        <button class="btn btn-primary btn-sm" id="formsEditBtn" onclick="toggleEditMode('forms')">Edit</button>
-                    </div>
-                    <div id="formsLoading" class="text-center" style="display: none;">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                    <div id="formsData"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="tab-pane fade" id="connections" role="tabpanel" aria-labelledby="connections-tab">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Connections Information</h5>
-                        <button class="btn btn-primary btn-sm" id="connectionsEditBtn" onclick="toggleEditMode('connections')">Edit</button>
-                    </div>
-                    <div id="connectionsLoading" class="text-center" style="display: none;">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                    <div id="connectionsData"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="tab-pane fade" id="extras" role="tabpanel" aria-labelledby="extras-tab">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Extras Information</h5>
-                        <button class="btn btn-primary btn-sm" id="extrasEditBtn" onclick="toggleEditMode('extras')">Edit</button>
-                    </div>
-                    <div id="extrasLoading" class="text-center" style="display: none;">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                    <div id="extrasData"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="tab-pane fade" id="authorizations" role="tabpanel" aria-labelledby="authorizations-tab">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Authorizations Information</h5>
-                        <button class="btn btn-primary btn-sm" id="authorizationsEditBtn" onclick="toggleEditMode('authorizations')">Edit</button>
-                    </div>
-                    <div id="authorizationsLoading" class="text-center" style="display: none;">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                    <div id="authorizationsData"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="tab-pane fade" id="notes" role="tabpanel" aria-labelledby="notes-tab">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Notes Information</h5>
-                        <button class="btn btn-primary btn-sm" id="notesEditBtn" onclick="toggleEditMode('notes')">Add note</button>
-                    </div>
-                    <div id="notesLoading" class="text-center" style="display: none;">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                    <div id="notesData"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="tab-pane fade" id="access" role="tabpanel" aria-labelledby="access-tab">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Access Information (Tags)</h5>
-                        <button class="btn btn-primary btn-sm" id="accessEditBtn" onclick="toggleEditMode('access')">Edit</button>
-                    </div>
-                    <div id="accessLoading" class="text-center" style="display: none;">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                    <div id="accessData"></div>
-                </div>
-            </div>
-        </div>
-        <div class="tab-pane fade" id="entry" role="tabpanel" aria-labelledby="entry-tab">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Entry Logs</h5>
-                    </div>
-                    <div id="entryLoading" class="text-center" style="display: none;">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                    <div id="entryData"></div>
+            <!-- Pagination controls -->
+            <div id="paginationControls" class="d-flex justify-content-between align-items-center mt-2 px-2 pb-2">
+                <span id="paginationInfo" class="text-muted small"></span>
+                <div>
+                    <button class="btn btn-sm btn-outline-secondary me-1" id="prevPageBtn" onclick="loadMembers(currentPage - 1)" disabled>Previous</button>
+                    <button class="btn btn-sm btn-outline-secondary" id="nextPageBtn" onclick="loadMembers(currentPage + 1)" disabled>Next</button>
                 </div>
             </div>
         </div>
     </div>
-</div>
+
+    <!-- Right panel: member details sidebar -->
+    <div id="detailsSidebar" class="details-sidebar">
+        <div id="memberDetailsSection">
+
+            <!-- Sidebar header with close button -->
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold small text-muted">Member Details</span>
+                <button class="btn btn-sm btn-outline-secondary border-0" onclick="closeSidebar()" title="Close">&times;</button>
+            </div>
+
+            <!-- Member identity bar — sits above tabs as a connected header -->
+            <div id="memberHeaderInfo" class="dh-member-bar" style="display: none;">
+                <span id="memberHeaderName" class="fw-bold"></span>
+                <span class="mx-1">&middot;</span>
+                <span id="memberHeaderEmail"></span>
+                <span class="mx-1">&middot;</span>
+                <span id="memberHeaderId"></span>
+            </div>
+
+            <!-- Suspended member warning (shown dynamically by loadMemberData) -->
+            <div id="memberSuspendedWarning" class="alert dh-suspended-warning alert-dismissible fade show mb-0" role="alert" style="display: none;">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                <strong>This member is not active.</strong> Status: <span id="memberSuspendedStatus"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <!-- Tabs Navigation -->
+            <div class="tabs-scroll-wrapper">
+            <ul class="nav nav-tabs" id="memberTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="identity-tab" data-bs-toggle="tab" data-bs-target="#identity" type="button" role="tab" aria-controls="identity" aria-selected="true">Identity</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="status-tab" data-bs-toggle="tab" data-bs-target="#status" type="button" role="tab" aria-controls="status" aria-selected="false">Status</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="roles-tab" data-bs-toggle="tab" data-bs-target="#roles" type="button" role="tab" aria-controls="roles" aria-selected="false">Roles</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="forms-tab" data-bs-toggle="tab" data-bs-target="#forms" type="button" role="tab" aria-controls="forms" aria-selected="false">Forms</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="connections-tab" data-bs-toggle="tab" data-bs-target="#connections" type="button" role="tab" aria-controls="connections" aria-selected="false">Connections</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="extras-tab" data-bs-toggle="tab" data-bs-target="#extras" type="button" role="tab" aria-controls="extras" aria-selected="false">Extras</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="authorizations-tab" data-bs-toggle="tab" data-bs-target="#authorizations" type="button" role="tab" aria-controls="authorizations" aria-selected="false">Authorizations</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes" type="button" role="tab" aria-controls="notes" aria-selected="false">Notes</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="access-tab" data-bs-toggle="tab" data-bs-target="#access" type="button" role="tab" aria-controls="access" aria-selected="false">Access</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="entry-tab" data-bs-toggle="tab" data-bs-target="#entry" type="button" role="tab" aria-controls="entry" aria-selected="false">Entry</button>
+                </li>
+            </ul>
+            </div>
+
+            <!-- Tabs Content -->
+            <div class="tab-content" id="memberTabsContent">
+                <div class="tab-pane fade show active" id="identity" role="tabpanel" aria-labelledby="identity-tab">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">Identity Information</h5>
+                                <button class="btn btn-primary btn-sm" id="identityEditBtn" onclick="toggleEditMode('identity')">Edit</button>
+                            </div>
+                            <div id="identityLoading" class="text-center" style="display: none;">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <div id="identityData"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="status" role="tabpanel" aria-labelledby="status-tab">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">Status Information</h5>
+                                <button class="btn btn-primary btn-sm" id="statusEditBtn" onclick="toggleEditMode('status')">Edit</button>
+                            </div>
+                            <div id="statusLoading" class="text-center" style="display: none;">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <div id="statusData"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="roles" role="tabpanel" aria-labelledby="roles-tab">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">Roles Information</h5>
+                                <button class="btn btn-primary btn-sm" id="rolesEditBtn" onclick="toggleEditMode('roles')">Edit</button>
+                            </div>
+                            <div id="rolesLoading" class="text-center" style="display: none;">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <div id="rolesData"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="forms" role="tabpanel" aria-labelledby="forms-tab">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">Forms Information</h5>
+                                <button class="btn btn-primary btn-sm" id="formsEditBtn" onclick="toggleEditMode('forms')">Edit</button>
+                            </div>
+                            <div id="formsLoading" class="text-center" style="display: none;">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <div id="formsData"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="connections" role="tabpanel" aria-labelledby="connections-tab">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">Connections Information</h5>
+                                <button class="btn btn-primary btn-sm" id="connectionsEditBtn" onclick="toggleEditMode('connections')">Edit</button>
+                            </div>
+                            <div id="connectionsLoading" class="text-center" style="display: none;">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <div id="connectionsData"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="extras" role="tabpanel" aria-labelledby="extras-tab">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">Extras Information</h5>
+                                <button class="btn btn-primary btn-sm" id="extrasEditBtn" onclick="toggleEditMode('extras')">Edit</button>
+                            </div>
+                            <div id="extrasLoading" class="text-center" style="display: none;">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <div id="extrasData"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="authorizations" role="tabpanel" aria-labelledby="authorizations-tab">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">Authorizations Information</h5>
+                                <button class="btn btn-primary btn-sm" id="authorizationsEditBtn" onclick="toggleEditMode('authorizations')">Edit</button>
+                            </div>
+                            <div id="authorizationsLoading" class="text-center" style="display: none;">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <div id="authorizationsData"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="notes" role="tabpanel" aria-labelledby="notes-tab">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">Notes Information</h5>
+                                <button class="btn btn-primary btn-sm" id="notesEditBtn" onclick="toggleEditMode('notes')">Add note</button>
+                            </div>
+                            <div id="notesLoading" class="text-center" style="display: none;">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <div id="notesData"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="access" role="tabpanel" aria-labelledby="access-tab">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">Access Information (Tags)</h5>
+                                <button class="btn btn-primary btn-sm" id="accessEditBtn" onclick="toggleEditMode('access')">Edit</button>
+                            </div>
+                            <div id="accessLoading" class="text-center" style="display: none;">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <div id="accessData"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="entry" role="tabpanel" aria-labelledby="entry-tab">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">Entry Logs</h5>
+                            </div>
+                            <div id="entryLoading" class="text-center" style="display: none;">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <div id="entryData"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- end memberLayout -->
 
 </div><!-- end memberSection -->
 
@@ -1082,126 +1102,219 @@ function activateFirstVisibleTab(permissions) {
     }
 }
 
-function searchMembers() {
-    const query = document.getElementById('memberSearch').value;
-    if (!query.trim()) {
-        alert('Please enter a member name or email to search.');
-        return;
-    }
-    
-    // Show loading state
-    document.getElementById('searchButton').disabled = true;
-    document.getElementById('searchButton').textContent = 'Searching...';
-    
-    // Call the search API
-    fetch(`/api/search?query=${encodeURIComponent(query)}`)
+// Pagination state
+
+let currentMembers = [];
+let currentPage = 1;
+let totalPages = 1;
+let totalResults = 0;
+let currentQuery = '';
+let currentSort = 'date_added';
+let currentOrder = 'desc';
+let perPage = 25;
+let selectedMemberId = null;
+
+// Core data loading
+
+function loadMembers(page) {
+    if (page < 1) return Promise.resolve();
+    currentPage = page;
+
+    const params = new URLSearchParams();
+    params.set('page', currentPage);
+    params.set('per_page', perPage);
+    params.set('sort', currentSort);
+    params.set('order', currentOrder);
+    if (currentQuery) params.set('query', currentQuery);
+
+    // Show loading state on search button
+    const searchBtn = document.getElementById('searchButton');
+    searchBtn.disabled = true;
+    searchBtn.textContent = 'Loading...';
+
+    return fetch(`/api/members?${params.toString()}`)
         .then(response => {
-            if (!response.ok) {
-                throw new Error('Search failed');
-            }
+            if (!response.ok) throw new Error('Failed to load members');
             return response.json();
         })
         .then(data => {
-            displayResults(data);
+            currentMembers = data.members || [];
+            totalResults = data.total || 0;
+            totalPages = data.total_pages || 1;
+            currentPage = data.page || 1;
+
+            displayResults(currentMembers);
+            updatePaginationControls();
+            updateURL();
         })
         .catch(error => {
-            alert('Error searching members: ' + error.message);
+            alert('Error loading members: ' + error.message);
         })
         .finally(() => {
-            // Reset button state
-            document.getElementById('searchButton').disabled = false;
-            document.getElementById('searchButton').textContent = 'Search';
+            searchBtn.disabled = false;
+            searchBtn.textContent = 'Search';
         });
 }
 
-// Global variables for sorting
-let currentMembers = [];
-let currentSortField = null;
-let currentSortDirection = 'asc';
+// Search
+
+function searchMembers() {
+    const input = document.getElementById('memberSearch').value.trim();
+    if (!input && currentQuery) {
+        // Cleared search — revert to browse mode
+        currentQuery = '';
+        currentSort = 'date_added';
+        currentOrder = 'desc';
+        loadMembers(1);
+        return;
+    }
+    if (!input) {
+        // Empty input, no existing query — just reload
+        loadMembers(1);
+        return;
+    }
+    currentQuery = input;
+    currentSort = 'rank';
+    currentOrder = 'desc';
+    loadMembers(1);
+}
+
+// Server-side sorting via column headers
 
 function sortTable(field) {
-    // Toggle direction if clicking the same field
-    if (currentSortField === field) {
-        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+    if (currentSort === field) {
+        currentOrder = currentOrder === 'asc' ? 'desc' : 'asc';
     } else {
-        currentSortField = field;
-        currentSortDirection = 'asc';
+        currentSort = field;
+        currentOrder = 'asc';
     }
-    
-    // Sort the current members array
-    const sortedMembers = [...currentMembers].sort((a, b) => {
-        let aVal = a[field] || '';
-        let bVal = b[field] || '';
-        
-        // Handle numeric fields (member_id)
-        if (field === 'member_id') {
-            aVal = parseInt(aVal) || 0;
-            bVal = parseInt(bVal) || 0;
-        } else {
-            // Case-insensitive string comparison
-            aVal = String(aVal).toLowerCase();
-            bVal = String(bVal).toLowerCase();
-        }
-        
-        if (aVal < bVal) return currentSortDirection === 'asc' ? -1 : 1;
-        if (aVal > bVal) return currentSortDirection === 'asc' ? 1 : -1;
-        return 0;
-    });
-    
-    // Update sort indicators
-    ['member_id', 'first_name', 'last_name', 'primary_email_address'].forEach(f => {
+    updateSortIndicators();
+    loadMembers(1);
+}
+
+function updateSortIndicators() {
+    ['id', 'first_name', 'last_name', 'membership_status'].forEach(f => {
         const indicator = document.getElementById(`sort-${f}`);
         if (indicator) {
-            if (f === field) {
-                indicator.textContent = currentSortDirection === 'asc' ? '▲' : '▼';
+            if (f === currentSort) {
+                indicator.textContent = currentOrder === 'asc' ? '▲' : '▼';
             } else {
                 indicator.textContent = '';
             }
         }
     });
-    
-    // Re-display with sorted data
-    displayResults(sortedMembers, false);
 }
 
-function displayResults(members, updateCache = true) {
-    // Store the members for sorting
-    if (updateCache) {
-        currentMembers = members;
-    }
+// Display results table
+
+function displayResults(members) {
     const tbody = document.getElementById('resultsTableBody');
     const resultsSection = document.getElementById('resultsSection');
-    const memberDetailsSection = document.getElementById('memberDetailsSection');
-    
-    // Clear previous results and hide member details section
+
     tbody.innerHTML = '';
-    if (memberDetailsSection) {
-        memberDetailsSection.style.display = 'none';
-    }
-    
+
     if (members.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No members found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center">No members found</td></tr>';
     } else {
         members.forEach(member => {
             const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${member.member_id}</td>
-                <td>${member.first_name || ''}</td>
-                <td>${member.last_name || ''}</td>
-                <td>${member.primary_email_address || ''}</td>
-                <td>${member.membership_status || ''}</td>
-            `;
-            // Add click handler to fetch member data
+            row.style.cursor = 'pointer';
+            if (selectedMemberId && member.member_id == selectedMemberId) {
+                row.classList.add('selected-row');
+            }
+            // Use textContent to prevent XSS from member data
+            const cells = [
+                member.member_id,
+                member.first_name || '',
+                member.last_name || '',
+                member.membership_status || '',
+            ];
+            cells.forEach(text => {
+                const td = document.createElement('td');
+                td.textContent = text;
+                row.appendChild(td);
+            });
             row.onclick = function() {
                 loadMemberData(member);
             };
             tbody.appendChild(row);
         });
     }
-    
-    // Show results section
+
     resultsSection.style.display = 'block';
+    updateSortIndicators();
 }
+
+// Pagination controls
+
+function updatePaginationControls() {
+    const info = document.getElementById('paginationInfo');
+    const prevBtn = document.getElementById('prevPageBtn');
+    const nextBtn = document.getElementById('nextPageBtn');
+
+    if (currentQuery) {
+        info.textContent = `${totalResults} result${totalResults !== 1 ? 's' : ''} for "${currentQuery}" — Page ${currentPage} of ${totalPages}`;
+    } else {
+        info.textContent = `${totalResults} member${totalResults !== 1 ? 's' : ''} — Page ${currentPage} of ${totalPages}`;
+    }
+
+    prevBtn.disabled = currentPage <= 1;
+    nextBtn.disabled = currentPage >= totalPages;
+}
+
+// Details sidebar
+
+function openSidebar() {
+    document.getElementById('detailsSidebar').classList.add('open');
+}
+
+function closeSidebar() {
+    document.getElementById('detailsSidebar').classList.remove('open');
+    selectedMemberId = null;
+    // Remove row highlight
+    document.querySelectorAll('#resultsTableBody tr.selected-row').forEach(r => r.classList.remove('selected-row'));
+    updateURL();
+}
+
+// URL state management
+
+function updateURL() {
+    const params = new URLSearchParams();
+    if (currentQuery) params.set('query', currentQuery);
+    if (currentPage > 1) params.set('page', currentPage);
+    if (currentSort !== 'date_added' && !(currentQuery && currentSort === 'rank')) params.set('sort', currentSort);
+    if (currentOrder !== 'desc') params.set('order', currentOrder);
+    if (selectedMemberId) params.set('member', selectedMemberId);
+
+    const url = params.toString() ? `/?${params.toString()}` : '/';
+    history.replaceState(null, '', url);
+}
+
+function restoreFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    currentQuery = params.get('query') || '';
+    currentPage = parseInt(params.get('page')) || 1;
+    currentSort = params.get('sort') || (currentQuery ? 'rank' : 'date_added');
+    currentOrder = params.get('order') || 'desc';
+    const memberId = params.get('member');
+
+    if (currentQuery) {
+        document.getElementById('memberSearch').value = currentQuery;
+    }
+
+    loadMembers(currentPage).then(() => {
+        if (memberId) {
+            const member = currentMembers.find(m => m.member_id == memberId);
+            if (member) {
+                loadMemberData(member);
+            }
+        }
+    });
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', restoreFromURL);
+window.addEventListener('popstate', restoreFromURL);
 
 // Special format function for authorizations tab
 function formatAuthorizationsData(memberData, availableData) {
@@ -1690,7 +1803,15 @@ function loadMemberData(memberOrId) {
     const member = typeof memberOrId === 'object' ? memberOrId : null;
     const memberId = member ? member.member_id : memberOrId;
     currentMemberId = memberId;
-    const memberDetailsSection = document.getElementById('memberDetailsSection');
+    selectedMemberId = memberId;
+
+    // Highlight the selected row
+    document.querySelectorAll('#resultsTableBody tr.selected-row').forEach(r => r.classList.remove('selected-row'));
+    document.querySelectorAll('#resultsTableBody tr').forEach(r => {
+        if (r.cells[0] && r.cells[0].textContent == memberId) {
+            r.classList.add('selected-row');
+        }
+    });
 
     updateMemberHeaderInfo(member);
 
@@ -1710,31 +1831,33 @@ function loadMemberData(memberOrId) {
 
     // Filter tabs based on user permissions
     filterTabsByPermissions();
-    
-    // Show member details section
-    memberDetailsSection.style.display = 'block';
-    
+
+    // Open the sidebar
+    openSidebar();
+
     // Find the first visible tab to activate and load
     const permissions = getUserPermissions();
     const allTabs = ['identity', 'status', 'roles', 'forms', 'connections', 'extras', 'authorizations', 'notes', 'access', 'entry'];
     let firstVisibleTab = null;
-    
+
     for (const tabName of allTabs) {
         if (canViewTab('member.' + tabName, permissions) || canChangeTab('member.' + tabName, permissions)) {
             firstVisibleTab = tabName;
             break;
         }
     }
-    
+
     if (firstVisibleTab) {
         console.log(`Activating first visible tab: ${firstVisibleTab}`);
         // Activate the first visible tab
         const firstTab = new bootstrap.Tab(document.getElementById(`${firstVisibleTab}-tab`));
         firstTab.show();
-        
+
         // Load data for the first visible tab
         fetchTabData(firstVisibleTab, memberId);
     }
+
+    updateURL();
 }
 
 function fetchMembershipLevels() {

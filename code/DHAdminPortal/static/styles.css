@@ -210,6 +210,58 @@ body {
     border-right: 1px solid var(--border-color);
 }
 
+/* Side-by-side layout: results table + details sidebar */
+
+#memberLayout {
+    gap: 0;
+    align-items: flex-start;
+}
+
+#resultsPanel {
+    transition: flex-basis 0.3s ease;
+}
+
+.details-sidebar {
+    width: 0;
+    min-width: 0;
+    overflow: hidden;
+    transition: width 0.3s ease, min-width 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+    flex-shrink: 0;
+}
+
+.details-sidebar.open {
+    width: 55%;
+    min-width: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-left: 1px solid #dee2e6;
+    padding-left: 1rem;
+    opacity: 1;
+}
+
+/* Highlight selected row in results table */
+#resultsTableBody tr.selected-row {
+    background-color: rgba(13, 110, 253, 0.12) !important;
+}
+
+/* Mobile: sidebar stacks below */
+@media (max-width: 991.98px) {
+    #memberLayout {
+        flex-direction: column;
+    }
+
+    .details-sidebar.open {
+        width: 100%;
+        min-width: 0;
+        border-left: none;
+        border-top: 1px solid #dee2e6;
+        padding-left: 0;
+        padding-top: 1rem;
+        margin-top: 1rem;
+    }
+}
+
 /* Tabs + card — visually connected as one block */
 
 #memberTabs {
@@ -789,6 +841,10 @@ body {
     background: linear-gradient(180deg, #ffe0f0 0%, #ffd0e8 100%);
     border-color: #ff69b4;
     color: #1a1a1a;
+}
+
+[data-theme="bubblegum"] .details-sidebar.open {
+    border-left-color: #ff69b4;
 }
 
 [data-theme="bubblegum"] #memberTabs {
@@ -1554,6 +1610,10 @@ body {
     color: var(--text-color);
 }
 
+[data-theme="dark"] .details-sidebar.open {
+    border-left-color: #991b1b;
+}
+
 [data-theme="dark"] #memberTabs {
     background: var(--card-bg);
     border-color: #3f3f46;
@@ -2135,6 +2195,10 @@ body {
     border-color: #243356;
     border-left: 4px solid var(--primary-color);
     color: var(--text-color);
+}
+
+[data-theme="midnight"] .details-sidebar.open {
+    border-left-color: #243356;
 }
 
 [data-theme="midnight"] #memberTabs {
@@ -2819,6 +2883,10 @@ body {
 }
 
 /* Hacker member bar + tabs + card — green terminal accents */
+
+[data-theme="hacker"] .details-sidebar.open {
+    border-left-color: #1a3a1a;
+}
 
 [data-theme="hacker"] .dh-member-bar {
     background: #0a0a0a;
