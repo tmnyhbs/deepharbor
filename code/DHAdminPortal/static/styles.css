@@ -797,6 +797,7 @@ body.sidebar-resizing .details-sidebar {
 
 /* Bubblegum Comic Neue on UI elements */
 
+[data-theme="bubblegum"] .dh-sidebar-header,
 [data-theme="bubblegum"] .dh-tab-strip .nav-link,
 [data-theme="bubblegum"] .card-body h5,
 [data-theme="bubblegum"] .dh-member-bar,
@@ -1531,6 +1532,7 @@ body.sidebar-resizing .details-sidebar {
 
 /* Dark Germania One font on UI elements */
 
+[data-theme="dark"] .dh-sidebar-header,
 [data-theme="dark"] .dh-navbar,
 [data-theme="dark"] .dh-tab-strip .nav-link,
 [data-theme="dark"] .card-body h5,
@@ -2131,6 +2133,7 @@ body.sidebar-resizing .details-sidebar {
 
 /* Midnight Nothing You Could Do font on UI elements */
 
+[data-theme="midnight"] .dh-sidebar-header,
 [data-theme="midnight"] .dh-navbar,
 [data-theme="midnight"] .dh-tab-strip .nav-link,
 [data-theme="midnight"] .card-body h5,
