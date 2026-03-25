@@ -2,63 +2,6 @@
 {% block title %}Pumping Station: One Administration Portal{% endblock %}
 {% block content %}
 
-<style>
-    /* Enhanced hover effect for table rows */
-    #resultsTableBody tr {
-        transition: all 0.2s ease;
-    }
-    
-    #resultsTableBody tr:hover {
-        background-color: #e888e0 !important;
-        transform: scale(1.01);
-        transform-origin: left center;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        cursor: pointer;
-    }
-
-    .cute-signin {
-        background: linear-gradient(135deg, #ff6bb5 0%, #ff4d9d 45%, #ff87c8 100%);
-        border: none;
-        box-shadow: 0 12px 24px rgba(255, 77, 157, 0.28);
-        letter-spacing: 0.01em;
-        position: relative;
-        overflow: hidden;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .cute-signin::after {
-        content: "";
-        position: absolute;
-        top: -60%;
-        left: -40%;
-        width: 45%;
-        height: 220%;
-        background: rgba(255, 255, 255, 0.45);
-        transform: rotate(18deg);
-        transition: left 0.4s ease;
-    }
-
-    .cute-signin::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background-image: radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.75) 0 2px, transparent 3px),
-            radial-gradient(circle at 70% 35%, rgba(255, 255, 255, 0.6) 0 2px, transparent 3px),
-            radial-gradient(circle at 40% 75%, rgba(255, 255, 255, 0.5) 0 2px, transparent 3px);
-        opacity: 0.7;
-        mix-blend-mode: screen;
-    }
-
-    .cute-signin:hover {
-        transform: translateY(-2px) scale(1.01);
-        box-shadow: 0 16px 28px rgba(255, 77, 157, 0.35);
-    }
-
-    .cute-signin:hover::after {
-        left: 120%;
-    }
-</style>
-
 <h1>Pumping Station: One Administration Portal</h1>
 
 {% if user %}
@@ -72,9 +15,9 @@
 <!-- Logging notice -->
 <div class="row justify-content-center">
     <div class="col-md-8">
-        <div class="alert alert-warning text-center" role="alert">
+        <div class="alert alert-warning text-center py-2 mb-4" role="alert">
             <i class="bi bi-exclamation-triangle-fill"></i>
-            <strong>HEY! </strong>Everything is logged, including login and logout, searches, panel views, and any data changes.
+            <strong>HEY!</strong> All changes you make will get logged!
         </div>
     </div>
 </div>
@@ -86,9 +29,9 @@
 <div class="row justify-content-center">
     <div class="col-md-6">
         <div class="mb-3">
-            <div class="input-group input-group-lg">
+            <div class="input-group">
                 <input type="text" class="form-control" id="memberSearch" placeholder="Search for a member...">
-                <button class="btn btn-primary" type="button" id="searchButton" onclick="searchMembers()">Search</button>
+                <button class="btn btn-primary cute-signin" type="button" id="searchButton" onclick="searchMembers()">Search</button>
             </div>
         </div>
     </div>
@@ -96,7 +39,6 @@
 
 <!-- Results table -->
 <div id="resultsSection" style="display: none;">
-    <h3 class="text-center">Search Results</h3>
     <div class="table-responsive" style="max-height: 500px; overflow-y: auto; overflow-x: hidden;">
         <table class="table table-striped table-hover">
             <thead class="sticky-top bg-white">
@@ -126,15 +68,25 @@
 
 <!-- Member Details Panel with Tabs -->
 <div id="memberDetailsSection" style="display: none; margin-top: 30px;">
-    <h3 class="text-center mb-4">Member Details</h3>
-    <div id="memberHeaderInfo" class="text-center text-muted mb-3" style="display: none;">
-        <span id="memberHeaderName"></span>
-        <span class="mx-2">|</span>
+
+    <!-- Member identity bar — sits above tabs as a connected header -->
+    <div id="memberHeaderInfo" class="dh-member-bar" style="display: none;">
+        <span id="memberHeaderName" class="fw-bold"></span>
+        <span class="mx-1">&middot;</span>
         <span id="memberHeaderEmail"></span>
-        <span id="memberHeaderId" class="d-block mt-1"></span>
+        <span class="mx-1">&middot;</span>
+        <span id="memberHeaderId"></span>
     </div>
-    
+
+    <!-- Suspended member warning (shown dynamically by loadMemberData) -->
+    <div id="memberSuspendedWarning" class="alert dh-suspended-warning alert-dismissible fade show mb-0" role="alert" style="display: none;">
+        <i class="fa-solid fa-triangle-exclamation me-2"></i>
+        <strong>This member is not active.</strong> Status: <span id="memberSuspendedStatus"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
     <!-- Tabs Navigation -->
+    <div class="tabs-scroll-wrapper">
     <ul class="nav nav-tabs" id="memberTabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="identity-tab" data-bs-toggle="tab" data-bs-target="#identity" type="button" role="tab" aria-controls="identity" aria-selected="true">Identity</button>
@@ -167,9 +119,10 @@
             <button class="nav-link" id="entry-tab" data-bs-toggle="tab" data-bs-target="#entry" type="button" role="tab" aria-controls="entry" aria-selected="false">Entry</button>
         </li>
     </ul>
-    
+    </div>
+
     <!-- Tabs Content -->
-    <div class="tab-content" id="memberTabsContent" style="margin-top: 20px;">
+    <div class="tab-content" id="memberTabsContent">
         <div class="tab-pane fade show active" id="identity" role="tabpanel" aria-labelledby="identity-tab">
             <div class="card">
                 <div class="card-body">
@@ -503,6 +456,42 @@ const loggedInUserName = {{ (
     or 'Logged in user'
 )|trim|tojson }} + ' via Admin Portal';
 
+// Hint toast when clicking a readonly/disabled field that could be edited
+document.addEventListener('click', function(e) {
+    // Match readonly inputs/textareas, disabled selects, and disabled checkbox wrappers
+    var hit = e.target.closest('.form-control[readonly], textarea.form-control[readonly]');
+    if (!hit) {
+        // Check if clicking on or inside a disabled checkbox/switch wrapper
+        var check = e.target.closest('.form-check');
+        if (check && check.querySelector('.form-check-input:disabled')) {
+            hit = check;
+        }
+    }
+    if (!hit) return;
+
+    // Find which tab pane this field is in
+    var tabPane = hit.closest('.tab-pane');
+    if (!tabPane) return;
+    var tabName = tabPane.id;
+
+    // Only show hint if the user has change permission for this tab
+    if (!canChangeTab('member.' + tabName)) return;
+
+    // Don't show if already in edit mode
+    var editBtn = document.getElementById(tabName + 'EditBtn');
+    if (editBtn && editBtn.textContent === 'Cancel') return;
+
+    // Show the hint toast
+    var toastEl = document.getElementById('dh-validation-toast');
+    if (!toastEl) return;
+    document.getElementById('dh-toast-icon').className = 'fa-solid fa-circle-info text-primary me-2';
+    document.getElementById('dh-toast-title').textContent = 'Read-Only Mode';
+    document.getElementById('dh-toast-body').innerHTML = 'Click the <strong>Edit</strong> button to make changes.';
+    toastEl.classList.remove('toast-success');
+    var bsToast = bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 3000 });
+    bsToast.show();
+});
+
 // Toggle edit mode for a specific tab
 function toggleEditMode(tabName) {
     const editBtn = document.getElementById(`${tabName}EditBtn`);
@@ -554,7 +543,7 @@ function toggleEditMode(tabName) {
         }
         
         // Enable all input fields, selects, and textareas in this tab
-        const inputs = tabPane.querySelectorAll('input[type="text"], textarea, select');
+        const inputs = tabPane.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="date"], input[type="number"], textarea, select');
         inputs.forEach(input => {
             if (input.tagName === 'SELECT') {
                 input.removeAttribute('disabled');
@@ -615,7 +604,7 @@ function enableAccessEditMode() {
             row.setAttribute('data-tag-index', index);
             row.innerHTML = `
                 <span class="input-group-text">Tag ${index + 1}</span>
-                <input type="text" class="form-control access-tag-input" value="" placeholder="Enter tag number">
+                <input type="text" class="form-control access-tag-input" value="" placeholder="Enter 10-digit tag number" inputmode="numeric" maxlength="10" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                 <button class="btn btn-outline-danger btn-sm access-tag-delete" title="Remove tag">&times;</button>
             `;
             tagsList.appendChild(row);
@@ -722,30 +711,39 @@ function saveTabData(tabName) {
     // Collect all field data
     const data = {};
     const validationErrors = [];
-    const inputs = tabPane.querySelectorAll('input[type="text"], textarea, select');
+    const inputs = tabPane.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="date"], input[type="number"], textarea, select');
     inputs.forEach(input => {
         const fieldName = input.getAttribute('data-field');
         if (fieldName) {
             let value = input.value;
-            
+
             // Try to parse JSON for textarea fields that contain JSON
             if (input.tagName === 'TEXTAREA') {
                 const trimmed = value.trim();
-                if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || 
+                if ((trimmed.startsWith('[') && trimmed.endsWith(']')) ||
                     (trimmed.startsWith('{') && trimmed.endsWith('}'))) {
                     try {
                         value = JSON.parse(value);
                     } catch (e) {
                         // JSON is invalid - report error
-                        const fieldLabel = fieldName.split('_').map(word => 
+                        const fieldLabel = fieldName.split('_').map(word =>
                             word.charAt(0).toUpperCase() + word.slice(1)
                         ).join(' ');
                         validationErrors.push(`${fieldLabel}: ${e.message}`);
                         console.error(`Invalid JSON in field ${fieldName}:`, e);
                     }
                 }
+                // For non-JSON textareas, trim and nullify empty values
+                if (typeof value === 'string') {
+                    value = value.trim() || null;
+                }
+            } else {
+                // For non-textarea inputs, trim and nullify empty/whitespace-only values
+                if (typeof value === 'string') {
+                    value = value.trim() || null;
+                }
             }
-            
+
             data[fieldName] = value;
         }
     });
@@ -763,7 +761,12 @@ function saveTabData(tabName) {
         const rfidTags = [];
         tagInputs.forEach(input => {
             const v = input.value.trim();
-            if (v) rfidTags.push(v);
+            if (v) {
+                if (!/^\d{10}$/.test(v)) {
+                    validationErrors.push(`RFID Tag "${v}": must be exactly 10 digits`);
+                }
+                rfidTags.push(v);
+            }
         });
         // Clear generic fields and use rfid_tags array
         Object.keys(data).forEach(k => delete data[k]);
@@ -1017,9 +1020,25 @@ function filterTabsByPermissions() {
             console.log(`${isVisible ? 'Showing' : 'Hiding'} tab "${tabName}"`);
         }
 
-        // Show edit button only if user has change permission for this tab
+        // Show edit button or read-only indicator based on permissions
         if (editBtn) {
-            editBtn.style.display = canChange ? '' : 'none';
+            if (canChange) {
+                editBtn.style.display = '';
+                editBtn.disabled = false;
+                editBtn.style.pointerEvents = '';
+                editBtn.classList.remove('btn-outline-secondary');
+                editBtn.classList.add('btn-primary');
+                editBtn.textContent = tabName === 'notes' ? 'Add note' : 'Edit';
+            } else if (canView) {
+                editBtn.style.display = '';
+                editBtn.disabled = true;
+                editBtn.classList.remove('btn-primary', 'btn-secondary');
+                editBtn.classList.add('btn-outline-secondary');
+                editBtn.textContent = 'Read Only';
+                editBtn.style.pointerEvents = 'none';
+            } else {
+                editBtn.style.display = 'none';
+            }
         }
     });
 
@@ -1371,10 +1390,12 @@ function formatAccessData(data) {
     }
 
     tags.forEach((tag, index) => {
+        // Zero-pad RFID tags to 10 digits for consistent display
+        const padded = String(tag).padStart(10, '0');
         html += `
             <div class="input-group mb-2 access-tag-row" data-tag-index="${index}">
                 <span class="input-group-text">Tag ${index + 1}</span>
-                <input type="text" class="form-control access-tag-input" value="${escapeHtml(String(tag))}" readonly>
+                <input type="text" class="form-control access-tag-input" value="${escapeHtml(padded)}" inputmode="numeric" maxlength="10" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" readonly>
                 <button class="btn btn-outline-danger btn-sm access-tag-delete" style="display:none;" title="Remove tag">&times;</button>
             </div>
         `;
@@ -1555,8 +1576,54 @@ function formatData(data, options = {}) {
             return `<textarea class="form-control" data-field="${key}" rows="${Math.min(lines, 10)}" style="font-family: monospace; font-size: 0.9em;" readonly>${jsonStr}</textarea>`;
         }
         
-        // Handle string/number values - use regular input
-        return `<input type="text" class="form-control" data-field="${key}" value="${value}" readonly>`;
+        // Handle string/number values — apply field-specific constraints
+        const strValue = escapeHtml(String(value));
+
+        // Identity tab field constraints (carry-over from member portal)
+        if (tabName === 'identity') {
+            if (key === 'primary_email_address') {
+                return `<input type="email" class="form-control" data-field="${key}" value="${strValue}" oninput="this.value = this.value.replace(/[^a-zA-Z0-9@._+\\-]/g, '')" readonly>`;
+            }
+            if (key === 'first_name' || key === 'last_name') {
+                return `<input type="text" class="form-control" data-field="${key}" value="${strValue}" maxlength="100" autocapitalize="words" autocorrect="off" readonly>`;
+            }
+            if (key === 'nickname') {
+                return `<input type="text" class="form-control" data-field="${key}" value="${strValue}" maxlength="100" autocapitalize="words" autocorrect="off" readonly>`;
+            }
+            if (key === 'pronouns') {
+                return `<input type="text" class="form-control" data-field="${key}" value="${strValue}" maxlength="50" autocapitalize="none" autocorrect="off" readonly>`;
+            }
+            if (key === 'nametag_subtitle') {
+                return `<input type="text" class="form-control" data-field="${key}" value="${strValue}" maxlength="100" readonly>`;
+            }
+            if (key === 'username' || key === 'active_directory_username') {
+                return `<input type="text" class="form-control" data-field="${key}" value="${strValue}" maxlength="16" pattern="[a-zA-Z0-9_-]+" autocapitalize="none" autocorrect="off" oninput="this.value = this.value.replace(/[^a-zA-Z0-9_\\-]/g, '')" readonly>`;
+            }
+            if (key === 'date_of_birth') {
+                return `<input type="date" class="form-control" data-field="${key}" value="${strValue}" readonly>`;
+            }
+            if (key === 'theme_song_url') {
+                return `<input type="url" class="form-control" data-field="${key}" value="${strValue}" maxlength="500" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="https://example.com/my-theme.mp3" readonly>`;
+            }
+            if (key === 'theme_song_duration') {
+                return `<input type="number" class="form-control" data-field="${key}" value="${strValue}" inputmode="decimal" min="0.1" max="10" step="0.1" readonly>`;
+            }
+        }
+
+        // Connections tab field constraints
+        if (tabName === 'connections') {
+            if (key === 'phone_number' || key === 'emergency_contact_phone') {
+                return `<input type="tel" class="form-control" data-field="${key}" value="${strValue}" inputmode="numeric" maxlength="20" pattern="[0-9() \\-\\.\\+]+" oninput="this.value = this.value.replace(/[^0-9() \\-\\.\\+]/g, '')" readonly>`;
+            }
+            if (key === 'discord_username' || key === 'discord_handle') {
+                return `<input type="text" class="form-control" data-field="${key}" value="${strValue}" maxlength="50" autocapitalize="none" autocorrect="off" readonly>`;
+            }
+            if (key === 'emergency_contact_name') {
+                return `<input type="text" class="form-control" data-field="${key}" value="${strValue}" maxlength="100" autocapitalize="words" autocorrect="off" readonly>`;
+            }
+        }
+
+        return `<input type="text" class="form-control" data-field="${key}" value="${strValue}" readonly>`;
     };
     
     // Iterate through all fields
@@ -1601,10 +1668,10 @@ function updateMemberHeaderInfo(member) {
     const email = member.primary_email_address || '';
     const memberId = member.member_id || '';
 
-    memberIdEl.textContent = `ID: ${memberId}`;
+    memberIdEl.textContent = `Member ID: ${memberId}`;
     nameEl.textContent = fullName || 'Member';
     emailEl.textContent = email || 'No email on file';
-    header.style.display = 'block';
+    header.style.display = '';
 }
 
 function isAnyTabEditing() {
@@ -1626,7 +1693,21 @@ function loadMemberData(memberOrId) {
     const memberDetailsSection = document.getElementById('memberDetailsSection');
 
     updateMemberHeaderInfo(member);
-    
+
+    // Show suspended/inactive member warning
+    const warningEl = document.getElementById('memberSuspendedWarning');
+    const statusEl = document.getElementById('memberSuspendedStatus');
+    if (warningEl && statusEl) {
+        const status = member ? (member.membership_status || '').toLowerCase() : '';
+        if (status && status !== 'active') {
+            statusEl.textContent = member.membership_status;
+            warningEl.style.display = '';
+            warningEl.classList.add('show');
+        } else {
+            warningEl.style.display = 'none';
+        }
+    }
+
     // Filter tabs based on user permissions
     filterTabsByPermissions();
     
@@ -1822,7 +1903,7 @@ function fetchTabData(tabName, memberId) {
             return response.json();
         })
         .then(data => {
-            dataEl.innerHTML = formatData(data);
+            dataEl.innerHTML = formatData(data, { tabName: tabName });
         })
         .catch(error => {
             dataEl.innerHTML = '<div class="alert alert-danger">Error: ' + error.message + '</div>';
@@ -1852,6 +1933,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Apply navbar visibility based on permissions
     filterNavbarByPermissions();
+
+    // Mobile tab scroll indicators
+    const memberTabs = document.getElementById('memberTabs');
+    const scrollWrapper = memberTabs ? memberTabs.closest('.tabs-scroll-wrapper') : null;
+    if (memberTabs && scrollWrapper) {
+        function updateScrollIndicators() {
+            const sl = memberTabs.scrollLeft;
+            const maxScroll = memberTabs.scrollWidth - memberTabs.clientWidth;
+            scrollWrapper.classList.toggle('can-scroll-left', sl > 2);
+            scrollWrapper.classList.toggle('can-scroll-right', sl < maxScroll - 2);
+        }
+        memberTabs.addEventListener('scroll', updateScrollIndicators, { passive: true });
+        window.addEventListener('resize', updateScrollIndicators);
+        updateScrollIndicators();
+    }
 });
 
 // Function to log tab selection
@@ -1873,7 +1969,7 @@ function logTabSelection(tabName, memberId) {
 }
 
 function formatIdentityData(data) {
-    return formatData(data);
+    return formatData(data, { tabName: 'identity' });
 }
 
 function fetchMemberIdentity(memberId) {

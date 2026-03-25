@@ -1,3 +1,4 @@
+import re
 import uuid
 import requests
 import json
@@ -36,6 +37,60 @@ def handle_csrf_error(e):
         return {"error": "CSRF token missing or invalid"}, 400
     flash('Your session has expired or this form submission was invalid. Please try again.', 'error')
     return redirect(request.referrer or url_for('index'))
+
+###############################################################################
+# Field validation rules for member update endpoints
+###############################################################################
+
+# Field-specific validation: field_name -> (regex_pattern, max_length, error_message)
+FIELD_VALIDATORS = {
+    "username": (r'^[a-zA-Z0-9_-]+$', 16, "Username can only contain letters, numbers, underscores, and hyphens (max 16 chars)"),
+    "active_directory_username": (r'^[a-zA-Z0-9_-]+$', 16, "AD username can only contain letters, numbers, underscores, and hyphens (max 16 chars)"),
+    "primary_email_address": (r'^[a-zA-Z0-9@._+\-]+$', None, "Email contains invalid characters"),
+    "pronouns": (None, 50, "Pronouns must be 50 characters or fewer"),
+    "nametag_subtitle": (None, 100, "Nametag subtitle must be 100 characters or fewer"),
+    "first_name": (None, 100, "First name must be 100 characters or fewer"),
+    "last_name": (None, 100, "Last name must be 100 characters or fewer"),
+    "nickname": (None, 100, "Nickname must be 100 characters or fewer"),
+    "phone_number": (r'^[0-9() \-\.+]+$', 20, "Phone number can only contain digits, spaces, and ()-.+"),
+    "emergency_contact_phone": (r'^[0-9() \-\.+]+$', 20, "Emergency contact phone can only contain digits, spaces, and ()-.+"),
+    "emergency_contact_name": (None, 100, "Emergency contact name must be 100 characters or fewer"),
+    "discord_username": (None, 50, "Discord username must be 50 characters or fewer"),
+    "discord_handle": (None, 50, "Discord handle must be 50 characters or fewer"),
+    "theme_song_url": (r'^https://', 500, "Theme song URL must start with https:// and be 500 characters or fewer"),
+}
+
+def validate_update_data(data, tab_name):
+    """Validate and sanitize incoming field data for a member update.
+
+    Strips whitespace from all string values, converts empty strings to None,
+    and validates fields that have rules defined in FIELD_VALIDATORS.
+
+    Returns (sanitized_data, error_message). error_message is None if valid.
+    """
+    sanitized = {}
+    for key, value in data.items():
+        # Pass through non-string values and internal fields unchanged
+        if key == "modified_by":
+            sanitized[key] = value
+            continue
+
+        # Strip whitespace and convert empty strings to None
+        if isinstance(value, str):
+            value = value.strip() or None
+
+        # Apply field-specific validation rules
+        if value is not None and key in FIELD_VALIDATORS:
+            pattern, max_len, error_msg = FIELD_VALIDATORS[key]
+            str_value = str(value)
+            if max_len and len(str_value) > max_len:
+                return None, error_msg
+            if pattern and not re.match(pattern, str_value):
+                return None, error_msg
+
+        sanitized[key] = value
+
+    return sanitized, None
 
 ###############################################################################
 # Health check endpoint
@@ -309,6 +364,14 @@ app.jinja_env.globals.update(git_version=config.get("git", "version", fallback="
 app.jinja_env.globals.update(now=datetime.now)  # Used in footer for dynamic year
 app.jinja_env.globals.update(auth_mode=AUTH_MODE)  # Used in dev login routes
 app.jinja_env.globals.update(dev_banner=DEV_BANNER)  # Used in dev banner
+
+@app.context_processor
+def inject_theme():
+    """Inject admin_theme into all templates."""
+    theme = session.get("admin_theme", "bubblegum")
+    if theme not in ("bubblegum", "light", "dark", "midnight", "hacker"):
+        theme = "bubblegum"
+    return {"admin_theme": theme}
 
 
 ###############################################################################
@@ -819,6 +882,9 @@ def api_update_member_identity():
         logged_in_member_id = member_data.get("member_id")
         
         data = request.get_json()
+        data, error = validate_update_data(data, "identity")
+        if error:
+            return {"error": error}, 400
         data["modified_by"] = logged_in_member_id
         result = dhservices.update_member_identity(access_token, member_id, data)
         
@@ -1089,6 +1155,15 @@ def api_update_member_access():
         logged_in_member_id = member_data.get("member_id")
         
         data = request.get_json()
+
+        # Validate RFID tags
+        rfid_tags = data.get("rfid_tags", [])
+        if not isinstance(rfid_tags, list):
+            return {"error": "rfid_tags must be a list"}, 400
+        for tag in rfid_tags:
+            if not isinstance(tag, str) or not tag.isdigit() or len(tag) != 10:
+                return {"error": f"Each RFID tag must be exactly 10 digits, got: {repr(tag)}"}, 400
+
         data["modified_by"] = logged_in_member_id
         result = dhservices.update_member_access(access_token, member_id, data)
         
@@ -1179,6 +1254,9 @@ def api_update_member_connections():
         logged_in_member_id = member_data.get("member_id")
         
         data = request.get_json()
+        data, error = validate_update_data(data, "connections")
+        if error:
+            return {"error": error}, 400
         data["modified_by"] = logged_in_member_id
         result = dhservices.update_member_connections(access_token, member_id, data)
         
