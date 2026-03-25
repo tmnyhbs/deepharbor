@@ -239,6 +239,81 @@ body {
     border-top-right-radius: 0;
 }
 
+/* Mobile: horizontal-scrolling tab strip with fade indicators */
+
+@media (max-width: 767.98px) {
+    .tabs-scroll-wrapper {
+        --tabs-bg: white;
+        position: relative;
+    }
+
+    #memberTabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        border-bottom: none !important;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    #memberTabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    #memberTabs .nav-link {
+        white-space: nowrap;
+        padding: 0.4rem 0.75rem;
+        font-size: 0.85rem;
+        margin-bottom: 0;
+        border-bottom: none !important;
+    }
+
+    /* Remove card top border — the overlap trick can't work with overflow scroll */
+    .tabs-scroll-wrapper + #memberTabsContent > .tab-pane > .card {
+        border-top: none;
+    }
+
+    /* Scroll fade indicators */
+    .tabs-scroll-wrapper::before,
+    .tabs-scroll-wrapper::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 3rem;
+        z-index: 2;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .tabs-scroll-wrapper::before {
+        left: 0;
+        background: linear-gradient(to right, var(--tabs-bg), transparent);
+    }
+
+    .tabs-scroll-wrapper::after {
+        right: 0;
+        background: linear-gradient(to left, var(--tabs-bg), transparent);
+    }
+
+    .tabs-scroll-wrapper.can-scroll-left::before {
+        opacity: 1;
+    }
+
+    .tabs-scroll-wrapper.can-scroll-right::after {
+        opacity: 1;
+    }
+
+    /* Theme-specific fade colors */
+    [data-theme="bubblegum"] .tabs-scroll-wrapper { --tabs-bg: rgba(255, 255, 255, 0.9); }
+    [data-theme="light"] .tabs-scroll-wrapper { --tabs-bg: var(--card-bg); }
+    [data-theme="dark"] .tabs-scroll-wrapper { --tabs-bg: var(--card-bg); }
+    [data-theme="midnight"] .tabs-scroll-wrapper { --tabs-bg: var(--card-bg); }
+    [data-theme="hacker"] .tabs-scroll-wrapper { --tabs-bg: var(--card-bg); }
+}
+
 /* Card section headers — black text */
 
 #memberTabsContent .card-body h5 {
@@ -2351,13 +2426,14 @@ body {
     background: rgba(0, 255, 65, 0.02);
     pointer-events: none;
     z-index: 9998;
-    animation: hacker-crt-flicker 0.1s infinite;
+    animation: hacker-crt-flicker 3s ease-in-out infinite;
 }
 
 @keyframes hacker-crt-flicker {
-    0% { opacity: 0.97; }
-    50% { opacity: 1; }
-    100% { opacity: 0.98; }
+    0%, 100% { opacity: 0.97; }
+    25% { opacity: 1; }
+    50% { opacity: 0.98; }
+    75% { opacity: 0.99; }
 }
 
 [data-theme="hacker"] body {
