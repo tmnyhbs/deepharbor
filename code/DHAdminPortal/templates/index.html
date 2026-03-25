@@ -90,19 +90,16 @@
         <div class="sidebar-resize-handle" id="sidebarResizeHandle"></div>
         <div id="memberDetailsSection">
 
-            <!-- Sidebar header with close button -->
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="fw-bold small text-muted">Member Details</span>
-                <button class="btn btn-outline-secondary border-0 sidebar-close-btn" onclick="closeSidebar()" title="Close">&times;</button>
-            </div>
-
-            <!-- Member identity bar — sits above tabs as a connected header -->
-            <div id="memberHeaderInfo" class="dh-member-bar" style="display: none;">
-                <span id="memberHeaderName" class="fw-bold"></span>
-                <span class="mx-1">&middot;</span>
-                <span id="memberHeaderEmail"></span>
-                <span class="mx-1">&middot;</span>
-                <span id="memberHeaderId"></span>
+            <!-- Member identity bar with close button -->
+            <div id="memberHeaderInfo" class="dh-sidebar-header" style="display: none;">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div id="memberHeaderName" class="fw-bold"></div>
+                        <div id="memberHeaderEmail" class="text-muted small"></div>
+                        <div id="memberHeaderId" class="text-muted small"></div>
+                    </div>
+                    <button class="btn btn-outline-secondary border-0 sidebar-close-btn" onclick="closeSidebar()" title="Close">&times;</button>
+                </div>
             </div>
 
             <!-- Suspended member warning (shown dynamically by loadMemberData) -->
@@ -112,50 +109,32 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
 
-            <!-- Tabs Navigation -->
-            <div class="tabs-scroll-wrapper">
-            <ul class="nav nav-tabs" id="memberTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="identity-tab" data-bs-toggle="tab" data-bs-target="#identity" type="button" role="tab" aria-controls="identity" aria-selected="true">Identity</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="status-tab" data-bs-toggle="tab" data-bs-target="#status" type="button" role="tab" aria-controls="status" aria-selected="false">Status</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="roles-tab" data-bs-toggle="tab" data-bs-target="#roles" type="button" role="tab" aria-controls="roles" aria-selected="false">Roles</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="forms-tab" data-bs-toggle="tab" data-bs-target="#forms" type="button" role="tab" aria-controls="forms" aria-selected="false">Forms</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="connections-tab" data-bs-toggle="tab" data-bs-target="#connections" type="button" role="tab" aria-controls="connections" aria-selected="false">Connections</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="extras-tab" data-bs-toggle="tab" data-bs-target="#extras" type="button" role="tab" aria-controls="extras" aria-selected="false">Extras</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="authorizations-tab" data-bs-toggle="tab" data-bs-target="#authorizations" type="button" role="tab" aria-controls="authorizations" aria-selected="false">Authorizations</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes" type="button" role="tab" aria-controls="notes" aria-selected="false">Notes</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="access-tab" data-bs-toggle="tab" data-bs-target="#access" type="button" role="tab" aria-controls="access" aria-selected="false">Access</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="entry-tab" data-bs-toggle="tab" data-bs-target="#entry" type="button" role="tab" aria-controls="entry" aria-selected="false">Entry</button>
-                </li>
-            </ul>
+            <!-- Horizontal icon tabs with scroll arrows -->
+            <div class="dh-tab-scroll-wrapper" id="tabScrollWrapper">
+                <div class="dh-tab-strip" id="memberTabs">
+                    <ul class="nav" role="tablist">
+                        <li class="nav-item"><button class="nav-link active" id="identity-tab" data-bs-toggle="pill" data-bs-target="#identity" type="button" role="tab" aria-controls="identity" aria-selected="true"><i class="fa-solid fa-user"></i>Identity</button></li>
+                        <li class="nav-item"><button class="nav-link" id="status-tab" data-bs-toggle="pill" data-bs-target="#status" type="button" role="tab" aria-controls="status" aria-selected="false"><i class="fa-solid fa-circle-info"></i>Status</button></li>
+                        <li class="nav-item"><button class="nav-link" id="roles-tab" data-bs-toggle="pill" data-bs-target="#roles" type="button" role="tab" aria-controls="roles" aria-selected="false"><i class="fa-solid fa-user-shield"></i>Roles</button></li>
+                        <li class="nav-item"><button class="nav-link" id="forms-tab" data-bs-toggle="pill" data-bs-target="#forms" type="button" role="tab" aria-controls="forms" aria-selected="false"><i class="fa-solid fa-file-lines"></i>Forms</button></li>
+                        <li class="nav-item"><button class="nav-link" id="connections-tab" data-bs-toggle="pill" data-bs-target="#connections" type="button" role="tab" aria-controls="connections" aria-selected="false"><i class="fa-solid fa-link"></i>Connections</button></li>
+                        <li class="nav-item"><button class="nav-link" id="extras-tab" data-bs-toggle="pill" data-bs-target="#extras" type="button" role="tab" aria-controls="extras" aria-selected="false"><i class="fa-solid fa-puzzle-piece"></i>Extras</button></li>
+                        <li class="nav-item"><button class="nav-link" id="authorizations-tab" data-bs-toggle="pill" data-bs-target="#authorizations" type="button" role="tab" aria-controls="authorizations" aria-selected="false"><i class="fa-solid fa-clipboard-check"></i>Auths</button></li>
+                        <li class="nav-item"><button class="nav-link" id="notes-tab" data-bs-toggle="pill" data-bs-target="#notes" type="button" role="tab" aria-controls="notes" aria-selected="false"><i class="fa-solid fa-note-sticky"></i>Notes</button></li>
+                        <li class="nav-item"><button class="nav-link" id="access-tab" data-bs-toggle="pill" data-bs-target="#access" type="button" role="tab" aria-controls="access" aria-selected="false"><i class="fa-solid fa-key"></i>Access</button></li>
+                        <li class="nav-item"><button class="nav-link" id="entry-tab" data-bs-toggle="pill" data-bs-target="#entry" type="button" role="tab" aria-controls="entry" aria-selected="false"><i class="fa-solid fa-door-open"></i>Entry</button></li>
+                    </ul>
+                </div>
             </div>
 
-            <!-- Tabs Content -->
-            <div class="tab-content" id="memberTabsContent">
+            <!-- Tab content -->
+            <div class="tab-content dh-sidebar-content" id="memberTabsContent">
                 <div class="tab-pane fade show active" id="identity" role="tabpanel" aria-labelledby="identity-tab">
                     <div class="card">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="mb-0">Identity Information</h5>
-                                <button class="btn btn-primary btn-sm" id="identityEditBtn" onclick="toggleEditMode('identity')">Edit</button>
+                                <span class="dh-btn-group"><button class="btn btn-primary btn-sm" id="identityEditBtn" onclick="toggleEditMode('identity')">Edit</button></span>
                             </div>
                             <div id="identityLoading" class="text-center" style="display: none;">
                                 <div class="spinner-border" role="status">
@@ -172,7 +151,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="mb-0">Status Information</h5>
-                                <button class="btn btn-primary btn-sm" id="statusEditBtn" onclick="toggleEditMode('status')">Edit</button>
+                                <span class="dh-btn-group"><button class="btn btn-primary btn-sm" id="statusEditBtn" onclick="toggleEditMode('status')">Edit</button></span>
                             </div>
                             <div id="statusLoading" class="text-center" style="display: none;">
                                 <div class="spinner-border" role="status">
@@ -189,7 +168,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="mb-0">Roles Information</h5>
-                                <button class="btn btn-primary btn-sm" id="rolesEditBtn" onclick="toggleEditMode('roles')">Edit</button>
+                                <span class="dh-btn-group"><button class="btn btn-primary btn-sm" id="rolesEditBtn" onclick="toggleEditMode('roles')">Edit</button></span>
                             </div>
                             <div id="rolesLoading" class="text-center" style="display: none;">
                                 <div class="spinner-border" role="status">
@@ -206,7 +185,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="mb-0">Forms Information</h5>
-                                <button class="btn btn-primary btn-sm" id="formsEditBtn" onclick="toggleEditMode('forms')">Edit</button>
+                                <span class="dh-btn-group"><button class="btn btn-primary btn-sm" id="formsEditBtn" onclick="toggleEditMode('forms')">Edit</button></span>
                             </div>
                             <div id="formsLoading" class="text-center" style="display: none;">
                                 <div class="spinner-border" role="status">
@@ -223,7 +202,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="mb-0">Connections Information</h5>
-                                <button class="btn btn-primary btn-sm" id="connectionsEditBtn" onclick="toggleEditMode('connections')">Edit</button>
+                                <span class="dh-btn-group"><button class="btn btn-primary btn-sm" id="connectionsEditBtn" onclick="toggleEditMode('connections')">Edit</button></span>
                             </div>
                             <div id="connectionsLoading" class="text-center" style="display: none;">
                                 <div class="spinner-border" role="status">
@@ -240,7 +219,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="mb-0">Extras Information</h5>
-                                <button class="btn btn-primary btn-sm" id="extrasEditBtn" onclick="toggleEditMode('extras')">Edit</button>
+                                <span class="dh-btn-group"><button class="btn btn-primary btn-sm" id="extrasEditBtn" onclick="toggleEditMode('extras')">Edit</button></span>
                             </div>
                             <div id="extrasLoading" class="text-center" style="display: none;">
                                 <div class="spinner-border" role="status">
@@ -257,7 +236,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="mb-0">Authorizations Information</h5>
-                                <button class="btn btn-primary btn-sm" id="authorizationsEditBtn" onclick="toggleEditMode('authorizations')">Edit</button>
+                                <span class="dh-btn-group"><button class="btn btn-primary btn-sm" id="authorizationsEditBtn" onclick="toggleEditMode('authorizations')">Edit</button></span>
                             </div>
                             <div id="authorizationsLoading" class="text-center" style="display: none;">
                                 <div class="spinner-border" role="status">
@@ -274,7 +253,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="mb-0">Notes Information</h5>
-                                <button class="btn btn-primary btn-sm" id="notesEditBtn" onclick="toggleEditMode('notes')">Add note</button>
+                                <span class="dh-btn-group"><button class="btn btn-primary btn-sm" id="notesEditBtn" onclick="toggleEditMode('notes')">Add note</button></span>
                             </div>
                             <div id="notesLoading" class="text-center" style="display: none;">
                                 <div class="spinner-border" role="status">
@@ -291,7 +270,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="mb-0">Access Information (Tags)</h5>
-                                <button class="btn btn-primary btn-sm" id="accessEditBtn" onclick="toggleEditMode('access')">Edit</button>
+                                <span class="dh-btn-group"><button class="btn btn-primary btn-sm" id="accessEditBtn" onclick="toggleEditMode('access')">Edit</button></span>
                             </div>
                             <div id="accessLoading" class="text-center" style="display: none;">
                                 <div class="spinner-border" role="status">
@@ -317,9 +296,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
+            </div><!-- end memberTabsContent -->
+        </div><!-- end memberDetailsSection -->
+    </div><!-- end detailsSidebar -->
 
 </div><!-- end memberLayout -->
 
@@ -713,11 +692,11 @@ function handleFieldChange(tabName) {
         return;
     }
     
-    // Add Save button if it doesn't exist
+    // Add Save button right next to Cancel if it doesn't exist
     if (!document.getElementById(`${tabName}SaveBtn`)) {
         const saveBtn = document.createElement('button');
         saveBtn.id = `${tabName}SaveBtn`;
-        saveBtn.className = 'btn btn-success btn-sm ms-2';
+        saveBtn.className = 'btn btn-success btn-sm ms-1';
         saveBtn.textContent = 'Save';
         saveBtn.onclick = () => saveTabData(tabName);
         editBtn.parentElement.appendChild(saveBtn);
@@ -1465,7 +1444,7 @@ function formatAuthorizationsData(memberData, availableData) {
     html += '<div class="col-md-6">';
     html += `<h6 class="mb-3">${firstName}'s Current Authorizations</h6>`;
     html += '<div class="card">';
-    html += '<div class="card-body" style="max-height: 500px; overflow-y: auto;">';
+    html += '<div class="card-body">';
     
     if (memberHas.length === 0) {
         html += '<p class="text-muted">Member has no authorizations</p>';
@@ -1501,7 +1480,7 @@ function formatAuthorizationsData(memberData, availableData) {
     html += '<div class="col-md-6">';
     html += '<h6 class="mb-3">Available Authorizations</h6>';
     html += '<div class="card">';
-    html += '<div class="card-body" style="max-height: 500px; overflow-y: auto;">';
+    html += '<div class="card-body">';
     
     if (memberDoesNotHave.length === 0) {
         html += '<p class="text-muted">Member has all available authorizations</p>';
@@ -2151,19 +2130,32 @@ document.addEventListener('DOMContentLoaded', function() {
     // Apply navbar visibility based on permissions
     filterNavbarByPermissions();
 
-    // Mobile tab scroll indicators
-    const memberTabs = document.getElementById('memberTabs');
-    const scrollWrapper = memberTabs ? memberTabs.closest('.tabs-scroll-wrapper') : null;
-    if (memberTabs && scrollWrapper) {
-        function updateScrollIndicators() {
-            const sl = memberTabs.scrollLeft;
-            const maxScroll = memberTabs.scrollWidth - memberTabs.clientWidth;
-            scrollWrapper.classList.toggle('can-scroll-left', sl > 2);
-            scrollWrapper.classList.toggle('can-scroll-right', sl < maxScroll - 2);
+    // Tab scroll indicators
+    const tabStrip = document.getElementById('memberTabs');
+    const tabWrapper = document.getElementById('tabScrollWrapper');
+    if (tabStrip && tabWrapper) {
+        function updateTabScroll() {
+            const sl = tabStrip.scrollLeft;
+            const max = tabStrip.scrollWidth - tabStrip.clientWidth;
+            tabWrapper.classList.toggle('can-scroll-left', sl > 2);
+            tabWrapper.classList.toggle('can-scroll-right', sl < max - 2);
         }
-        memberTabs.addEventListener('scroll', updateScrollIndicators, { passive: true });
-        window.addEventListener('resize', updateScrollIndicators);
-        updateScrollIndicators();
+        tabStrip.addEventListener('scroll', updateTabScroll, { passive: true });
+        window.addEventListener('resize', updateTabScroll);
+        // Re-check when sidebar opens (width changes)
+        new MutationObserver(updateTabScroll).observe(
+            document.getElementById('detailsSidebar'),
+            { attributes: true, attributeFilter: ['class'] }
+        );
+        // Convert vertical scroll wheel to horizontal scroll on the tab strip
+        tabStrip.addEventListener('wheel', function(e) {
+            if (e.deltaY !== 0) {
+                e.preventDefault();
+                tabStrip.scrollLeft += e.deltaY;
+            }
+        }, { passive: false });
+
+        updateTabScroll();
     }
 });
 
