@@ -1098,7 +1098,7 @@ let currentPage = 1;
 let totalPages = 1;
 let totalResults = 0;
 let currentQuery = '';
-let currentSort = 'date_added';
+let currentSort = 'id';
 let currentOrder = 'desc';
 let perPage = parseInt(localStorage.getItem('dh-per-page'), 10) || 20;
 let selectedMemberId = null;
@@ -1359,7 +1359,7 @@ function restoreFromURL() {
     const params = new URLSearchParams(window.location.search);
     currentQuery = params.get('query') || '';
     currentPage = parseInt(params.get('page')) || 1;
-    currentSort = params.get('sort') || (currentQuery ? 'rank' : 'date_added');
+    currentSort = params.get('sort') || (currentQuery ? 'rank' : 'id');
     currentOrder = params.get('order') || 'desc';
     const memberId = params.get('member');
 
