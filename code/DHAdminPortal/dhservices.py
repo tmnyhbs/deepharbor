@@ -48,6 +48,18 @@ def search_members(access_token: str, query: str):
     response.raise_for_status()
     return response.json()
 
+# List members with pagination — supports optional search query
+def list_members(access_token: str, query: str = None, page: int = 1,
+                 per_page: int = 25, sort: str = "date_added", order: str = "desc"):
+    url = f"{DH_API_BASE_URL}/v1/member/list/"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    params = {"page": page, "per_page": per_page, "sort": sort, "order": order}
+    if query:
+        params["query"] = query
+    response = requests.get(url, headers=headers, params=params, timeout=10)
+    response.raise_for_status()
+    return response.json()
+
 # This call is to determine if there is already a member with a given
 # username. It returns true if the username is taken, false otherwise.
 def is_username_taken(access_token: str, username: str) -> bool:

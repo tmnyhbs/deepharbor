@@ -1,3 +1,4 @@
+import math
 import psycopg2
 from contextlib import contextmanager
 import json
@@ -184,6 +185,123 @@ def search_members_by_identity_and_access(query: str) -> list[dict]:
         })
     logger.debug(f"Found {len(members)} members matching query: {query}")
     return members
+
+###############################################################################
+# Paginated Member Listing
+###############################################################################
+
+# Allowlist for ORDER BY columns — maps API param names to SQL expressions.
+# Direct column interpolation into SQL is safe ONLY through this allowlist.
+_MEMBER_SORT_COLUMNS = {
+    "date_added": "m.date_added",
+    "id": "m.id",
+    "first_name": "m.identity ->> 'first_name'",
+    "last_name": "m.identity ->> 'last_name'",
+    "membership_status": "m.status ->> 'membership_status'",
+}
+
+# Search CTE uses plain column names (no table prefix, no date_added)
+_SEARCH_SORT_COLUMNS = {
+    "rank": "rank",
+    "id": "id",
+    "first_name": "first_name",
+    "last_name": "last_name",
+    "membership_status": "membership_status",
+}
+
+def _validate_sort(sort: str, order: str, allowlist: dict, default_sort: str) -> tuple[str, str]:
+    col = allowlist.get(sort, allowlist[default_sort])
+    direction = "ASC" if order.lower() == "asc" else "DESC"
+    return col, direction
+
+def _paginated_response(members: list[dict], total: int, page: int, per_page: int) -> dict:
+    return {
+        "members": members,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "total_pages": max(1, math.ceil(total / per_page)),
+    }
+
+def list_members(page: int = 1, per_page: int = 25,
+                 sort: str = "date_added", order: str = "desc") -> dict:
+    logger.debug(f"Listing members page={page} per_page={per_page} sort={sort} order={order}")
+    sort_col, direction = _validate_sort(sort, order, _MEMBER_SORT_COLUMNS, "date_added")
+    offset = (page - 1) * per_page
+
+    members = []
+    total = 0
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                f"""SELECT m.id,
+                           m.identity ->> 'first_name' AS first_name,
+                           m.identity ->> 'last_name' AS last_name,
+                           m.identity -> 'emails' -> 0 ->> 'email_address' AS primary_email_address,
+                           m.status ->> 'membership_status' AS membership_status,
+                           COUNT(*) OVER() AS total_count
+                    FROM   member m
+                    ORDER BY {sort_col} {direction}
+                    LIMIT  %s OFFSET %s
+                """,
+                (per_page, offset),
+            )
+            results = cur.fetchall()
+
+    for result in results:
+        total = result[5]
+        members.append({
+            "member_id": result[0],
+            "first_name": result[1],
+            "last_name": result[2],
+            "primary_email_address": result[3],
+            "membership_status": result[4],
+        })
+
+    logger.debug(f"Listed {len(members)} members (total={total})")
+    return _paginated_response(members, total, page, per_page)
+
+def search_members_paginated(query: str, page: int = 1, per_page: int = 25,
+                             sort: str = "rank", order: str = "desc") -> dict:
+    logger.debug(f"Paginated search query={query} page={page} per_page={per_page} sort={sort} order={order}")
+    sort_col, direction = _validate_sort(sort, order, _SEARCH_SORT_COLUMNS, "rank")
+    offset = (page - 1) * per_page
+
+    members = []
+    total = 0
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                f"""WITH results AS (
+                        SELECT id,
+                               identity ->> 'first_name' AS first_name,
+                               identity ->> 'last_name' AS last_name,
+                               identity -> 'emails' -> 0 ->> 'email_address' AS primary_email_address,
+                               status ->> 'membership_status' AS membership_status,
+                               rank
+                        FROM   search_members_by_identity_and_access(%s)
+                    )
+                    SELECT *, COUNT(*) OVER() AS total_count
+                    FROM   results
+                    ORDER BY {sort_col} {direction}
+                    LIMIT  %s OFFSET %s
+                """,
+                (query, per_page, offset),
+            )
+            results = cur.fetchall()
+
+    for result in results:
+        total = result[6]
+        members.append({
+            "member_id": result[0],
+            "first_name": result[1],
+            "last_name": result[2],
+            "primary_email_address": result[3],
+            "membership_status": result[4],
+        })
+
+    logger.debug(f"Paginated search found {len(members)} members (total={total})")
+    return _paginated_response(members, total, page, per_page)
 
 def add_update_identity(identity_dict):
     logger.debug(f"Adding/updating member identity: {identity_dict}")

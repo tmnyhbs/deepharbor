@@ -548,10 +548,52 @@ def api_log_activity():
         logger.error(f"Error logging user activity: {e}")
         return {"error": str(e)}, 500
 
+@app.route("/api/members")
+@requires_view_permission("member.identity")
+def api_members():
+
+    query = request.args.get("query", "") or None
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 25, type=int)
+    sort = request.args.get("sort", "date_added")
+    order = request.args.get("order", "desc")
+
+    try:
+        access_token = dhservices.get_access_token(
+            dhservices.DH_CLIENT_ID,
+            dhservices.DH_CLIENT_SECRET
+        )
+
+        result = dhservices.list_members(access_token, query, page, per_page, sort, order)
+
+        # Log search activity only when an explicit search query is present
+        if query:
+            try:
+                user_email = session["user"].get("email") or session["user"].get("preferred_username")
+                member_data = dhservices.get_member_id(access_token, user_email)
+                logged_in_member_id = member_data.get("member_id")
+                dhservices.log_user_activity(
+                    access_token,
+                    str(logged_in_member_id),
+                    {
+                        "activity_details": {
+                            "action": "search",
+                            "query": query,
+                            "results_count": result.get("total", 0)
+                        }
+                    }
+                )
+            except Exception as log_error:
+                logger.error(f"Failed to log search activity: {log_error}")
+
+        return result
+    except Exception as e:
+        logger.error(f"Error listing members: {e}")
+        return {"error": str(e)}, 500
+
 @app.route("/api/search")
+@requires_view_permission("member.identity")
 def api_search():
-    if not session.get("user"):
-        return {"error": "Not authenticated"}, 401
     
     query = request.args.get("query", "")
     if not query:

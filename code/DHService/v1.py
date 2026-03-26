@@ -66,6 +66,17 @@ async def search_members(current_user: AuthenticatedClient, query: str):
     """
     return db.search_members_by_identity_and_access(query)
 
+@app.get("/v1/member/list/")
+async def list_members(current_user: AuthenticatedClient,
+                       query: str = None, page: int = 1, per_page: int = 25,
+                       sort: str = "date_added", order: str = "desc"):
+    """List members with pagination. Optionally filter by search query."""
+    page = max(1, page)
+    per_page = max(1, min(per_page, 100))
+    if query:
+        return db.search_members_paginated(query, page, per_page, sort, order)
+    return db.list_members(page, per_page, sort, order)
+
 @app.get("/v1/member/username_check/")
 async def check_member_username(current_user: AuthenticatedClient, username: str):
     """Check if a username is available."""
