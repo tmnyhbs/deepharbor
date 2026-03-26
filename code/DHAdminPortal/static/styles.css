@@ -352,6 +352,16 @@ body.sidebar-open .body-content {
 
 
 
+/* Search bar border matches theme color */
+#memberSearch {
+    border-color: #86b7fe;
+}
+[data-theme="bubblegum"] #memberSearch { border-color: #ff69b4; }
+[data-theme="light"] #memberSearch { border-color: var(--primary-color); }
+[data-theme="dark"] #memberSearch { border-color: var(--primary-color); }
+[data-theme="midnight"] #memberSearch { border-color: var(--primary-color); }
+[data-theme="hacker"] #memberSearch { border-color: var(--primary-color); }
+
 /* Search input + button highlight together as one unit on focus */
 #memberSearch:focus {
     box-shadow: none;
@@ -379,18 +389,26 @@ body.sidebar-open .body-content {
 
 /* Refresh icon next to search bar */
 .dh-refresh-btn {
-    font-size: 1.8rem;
+    font-size: 1.4rem;
     cursor: pointer;
-    opacity: 0.5;
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    opacity: 0.75;
+    transition: opacity 0.15s ease, filter 0.15s ease;
     flex-shrink: 0;
     user-select: none;
+    margin-left: 0.25rem;
 }
 
 .dh-refresh-btn:hover {
     opacity: 1;
-    transform: rotate(45deg);
+    filter: drop-shadow(0 0 4px currentColor);
 }
+
+/* Theme-specific refresh button hover glow */
+[data-theme="bubblegum"] .dh-refresh-btn { color: #d63384; }
+[data-theme="light"] .dh-refresh-btn { color: var(--primary-color); }
+[data-theme="dark"] .dh-refresh-btn { color: var(--primary-color); }
+[data-theme="midnight"] .dh-refresh-btn { color: var(--primary-color); }
+[data-theme="hacker"] .dh-refresh-btn { color: var(--primary-color); }
 
 /* Sidebar close button */
 .sidebar-close-btn {
