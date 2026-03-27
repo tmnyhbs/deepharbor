@@ -224,6 +224,57 @@ def set_user_enabled(username, enabled=True):
             "error": str(e)
         }
 
+def get_is_user_enabled(username):
+    try:
+        # Default to False if we can't get the enabled state from B2C 
+        # for any reason, since AD is the source of truth for the user's 
+        # enabled state, but we want to log the B2C enabled state if 
+        # we can get it for informational purposes and to help with 
+        # debugging if there are issues with enabled state not syncing 
+        # properly between AD and B2C.
+        b2c_enabled_state = False  
+        
+        ad_session = ad.create_ad_session()
+        is_enabled = ad.get_is_user_enabled(ad_session, username)
+        if is_enabled is None:
+            logger.error(f"Failed to get user enabled state from Active Directory for user {username} - Does the user exist?")
+            return {
+                "status": "failure",
+                "error": f"Failed to get user enabled state from Active Directory for user {username} - Does the user exist?"
+            }
+        logger.info(f"User {username} enabled state in Active Directory: {is_enabled}")
+        
+        # Now let's also get the user's enabled state in B2C to compare
+        email_address = ad.get_email_by_username(ad_session, username)
+        if email_address:
+            access_token = b2c.get_access_token()
+            if access_token:
+                b2c_user_id = b2c.get_b2c_user_id_by_email(access_token, email_address)
+                if b2c_user_id:
+                    b2c_enabled_state = b2c.get_user_enabled_status(access_token, b2c_user_id)
+                    logger.info(f"User {username} enabled state in B2C: {b2c_enabled_state}")
+                else:
+                    logger.warning(f"Could not find B2C user for email address {email_address} to compare enabled state")
+            else:
+                logger.warning("Could not acquire access token for Azure B2C to compare enabled state")
+        else:
+            logger.warning(f"Could not retrieve email address for user {username} to compare enabled state in B2C")
+        
+        return {
+            "status": "success",
+            "data": {
+                "username": username,
+                "ad_enabled": is_enabled,
+                "b2c_enabled": b2c_enabled_state if email_address else None
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error getting user enabled state: {e}")
+        return {
+            "status": "failure",
+            "error": str(e)
+        }
+
 def add_user_to_group(username, group_name):
     ad_session = ad.create_ad_session()
     try:
@@ -382,6 +433,8 @@ def handle_message(msg_id, payload):
                                      group_name=payload.get("group_dn"))        
     elif operation == "sync_account_info":
         return sync_account_info(payload)
+    elif operation == "get_is_user_enabled":
+        return get_is_user_enabled(username=payload.get("username"))
     else:
         result_data = {
             "original_id": msg_id,
