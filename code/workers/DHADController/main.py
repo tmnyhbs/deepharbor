@@ -235,14 +235,14 @@ def get_is_user_enabled(username):
         b2c_enabled_state = False  
         
         ad_session = ad.create_ad_session()
-        is_enabled = ad.get_is_user_enabled(ad_session, username)
-        if is_enabled is None:
+        is_ad_enabled = ad.get_is_user_enabled(ad_session, username)
+        if is_ad_enabled is None:
             logger.error(f"Failed to get user enabled state from Active Directory for user {username} - Does the user exist?")
             return {
                 "status": "failure",
                 "error": f"Failed to get user enabled state from Active Directory for user {username} - Does the user exist?"
             }
-        logger.info(f"User {username} enabled state in Active Directory: {is_enabled}")
+        logger.info(f"User {username} enabled state in Active Directory: {is_ad_enabled}")
         
         # Now let's also get the user's enabled state in B2C to compare
         email_address = ad.get_email_by_username(ad_session, username)
@@ -264,7 +264,7 @@ def get_is_user_enabled(username):
             "status": "success",
             "data": {
                 "username": username,
-                "ad_enabled": is_enabled,
+                "ad_enabled": is_ad_enabled,
                 "b2c_enabled": b2c_enabled_state if email_address else None
             }
         }

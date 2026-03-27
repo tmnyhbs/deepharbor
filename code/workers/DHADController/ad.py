@@ -235,7 +235,4 @@ def get_is_user_enabled(session, username):
     is_disabled = bool(int(uac) & 0x2)
     logger.info(f"Account status for user {username}: {'disabled' if is_disabled else 'enabled'}")
     
-    return {
-        "username": username,
-        "disabled": is_disabled
-    }
+    return is_disabled == False  # If the disabled bit is not set, then the account is enabled     
