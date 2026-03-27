@@ -261,3 +261,24 @@ def set_user_enabled(access_token, b2c_user_id, enabled=True):
         return False
     
     return True
+
+def get_user_enabled_status(access_token, b2c_user_id):
+    logger.info(f"Retrieving enabled status for user with B2C ID {b2c_user_id}")
+    
+    graph_endpoint = f'https://graph.microsoft.com/v1.0/users/{b2c_user_id}?$select=accountEnabled'
+    
+    headers = {
+        'Authorization': f'Bearer {access_token}'
+    }
+    
+    response = requests.get(graph_endpoint, headers=headers)
+    
+    if response.status_code == 200:
+        user_data = response.json()
+        enabled_status = user_data.get('accountEnabled', False)
+        logger.info(f"User enabled status: {enabled_status}")
+        return enabled_status
+    else:
+        logger.error(f"Error retrieving user enabled status: {response.status_code}")
+        logger.error(response.json())
+        return None

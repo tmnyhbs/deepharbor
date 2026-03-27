@@ -218,3 +218,24 @@ def get_current_datetime():
     
     logger.info(f"Current date and time from active directory: {current_time}")
     return current_time
+
+def get_is_user_enabled(session, username):
+    logger.info(f"Checking account status for user: {username}")
+    
+    users = session.find_users_by_attribute('sAMAccountName', username, 
+                                         attributes_to_lookup=['userAccountControl'])
+    if not users:
+        logger.error(f"User {username} not found in Active Directory")
+        return None
+    
+    user = users[0]
+    uac = user.all_attributes.get('userAccountControl')
+    logger.debug(f'userAccountControl for {username}: {uac}')
+    
+    is_disabled = bool(int(uac) & 0x2)
+    logger.info(f"Account status for user {username}: {'disabled' if is_disabled else 'enabled'}")
+    
+    return {
+        "username": username,
+        "disabled": is_disabled
+    }
