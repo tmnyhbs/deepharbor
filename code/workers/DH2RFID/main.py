@@ -207,3 +207,25 @@ async def remove_entry(entry: dict):
         "status": "success",
         "message": f"Tag {tag} removed successfully for {entry.get('first_name', 'unknown')} {entry.get('last_name', 'unknown')} (id {entry.get('member_id', 'unknown')})",
     }
+
+# Endpoint to check the status of a tag on the RFID board
+# Note: you gotta pass in the converted tag number and *only*
+# that (we don't do any conversion and we don't want to have to 
+# worry about it in this service, we just pass it through to 
+# the reader service)
+@app.get("/check_tag/{tag_id}")
+async def check_tag(tag_id: str):
+    logger.info(f"Checking status of tag {tag_id} on the board")
+    
+    success, data = perform_board_operation("get_status", tag_id=tag_id)
+
+    if not success:
+        raise HTTPException(status_code=500, detail=f"Failed to check tag {tag_id} on the board")
+    if data is None:
+        raise HTTPException(status_code=500, detail=f"Invalid response from the board when checking tag {tag_id}")
+    
+    return {
+        "status": "success",
+        "tag_id": tag_id,
+        "door_status": data["data"]["door_status"]
+    }
