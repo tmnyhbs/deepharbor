@@ -135,6 +135,33 @@ def get_datetime():
     logger.info(f"Current date and time from board: {current_time.datetime.strftime('%Y-%m-%d %H:%M:%S')}")    
     return {"status": "success", "current_time": current_time.datetime.strftime('%Y-%m-%d %H:%M:%S')}
 
+def get_status_for_tag(tag_id: str):
+    logger.info(f"Getting status for tag_id: {tag_id}")
+
+    # Initialize the uhppote board instance
+    board = uhppote.Uhppote(bind=bind, 
+                            broadcast=broadcast, 
+                            listen=listen, 
+                            debug=board_debug)
+    
+    # Try to get the card info, but if we time out, try again until we get a response
+    while True:
+        try:
+            card_info = board.get_card(board_tuple, int(tag_id))
+            break
+        except Exception as e:
+            logger.warning(f"Timeout getting card info for tag_id {tag_id}, retrying... Error: {e}")
+    
+    logger.info(f"Card info for tag_id {tag_id}: {card_info}")
+
+    # We're going to return 0 or one for each door to indicate 
+    # whether the card has access or not. We don't have different
+    # statuses for the doors, so theoretically they should all be the same, 
+    # but we'll return them separately just in case
+    door_status = f"{card_info.door_1}{card_info.door_2}{card_info.door_3}{card_info.door_4}"
+    
+    return {"status": "success", "door_status": door_status}
+
 
 ###############################################################################
 # Message Queue Interaction Functions
@@ -159,6 +186,9 @@ def handle_message(msg_id, payload):
         result_data["original_id"] = msg_id
     elif operation == "get_datetime":
         result_data = get_datetime()
+        result_data["original_id"] = msg_id
+    elif operation == "get_status":
+        result_data = get_status_for_tag(tag_id)
         result_data["original_id"] = msg_id
     else:
         result_data = {
