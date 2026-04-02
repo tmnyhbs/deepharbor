@@ -471,6 +471,13 @@ body.sidebar-resizing .details-sidebar {
     }
 }
 
+/* Mobile: title subtitle on its own line */
+@media (max-width: 768px) {
+    .body-content h1 .title-sub {
+        display: block;
+    }
+}
+
 /* Horizontal icon tabs with scroll arrows */
 
 .dh-tab-scroll-wrapper {

@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Pumping Station: One Administration Portal{% endblock %}
+{% block title %}Pumping Station: One Admin Portal{% endblock %}
 {% block content %}
 
-<h1><span class="title-org">Pumping Station: One</span> <span class="title-sub">Administration Portal</span></h1>
+<h1><span class="title-org">Pumping Station: One</span> <span class="title-sub">Admin Portal</span></h1>
 
 {% if user %}
 <!-- We're logged in -->
@@ -11,6 +11,7 @@
     // Permissions injected from server session — not from a cookie
     const USER_PERMISSIONS = {{ user_permissions | tojson }};
 </script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
 <!-- Logging notice -->
 <div class="row justify-content-center">
@@ -109,10 +110,17 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
 
+            <div id="memberActivatedNotice" class="alert alert-success alert-dismissible fade show mb-0" role="alert" style="display: none;">
+                <i class="fa-solid fa-circle-check me-2"></i>
+                <strong>Member activated!</strong> Tell the member to check their email for instructions on how to set their password and to test their key at the door.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
             <!-- Horizontal icon tabs with scroll arrows -->
             <div class="dh-tab-scroll-wrapper" id="tabScrollWrapper">
                 <div class="dh-tab-strip" id="memberTabs">
                     <ul class="nav" role="tablist">
+                        <li class="nav-item" id="onboard-nav" style="display:none;"><button class="nav-link" id="onboard-tab" data-bs-toggle="pill" data-bs-target="#onboard" type="button" role="tab" aria-controls="onboard" aria-selected="false"><i class="fa-solid fa-id-card"></i>Onboard</button></li>
                         <li class="nav-item"><button class="nav-link active" id="identity-tab" data-bs-toggle="pill" data-bs-target="#identity" type="button" role="tab" aria-controls="identity" aria-selected="true"><i class="fa-solid fa-user"></i>Identity</button></li>
                         <li class="nav-item"><button class="nav-link" id="status-tab" data-bs-toggle="pill" data-bs-target="#status" type="button" role="tab" aria-controls="status" aria-selected="false"><i class="fa-solid fa-circle-info"></i>Status</button></li>
                         <li class="nav-item"><button class="nav-link" id="roles-tab" data-bs-toggle="pill" data-bs-target="#roles" type="button" role="tab" aria-controls="roles" aria-selected="false"><i class="fa-solid fa-user-shield"></i>Roles</button></li>
@@ -129,6 +137,68 @@
 
             <!-- Tab content -->
             <div class="tab-content dh-sidebar-content" id="memberTabsContent">
+                <div class="tab-pane fade" id="onboard" role="tabpanel" aria-labelledby="onboard-tab">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="mb-3">Member Onboarding</h5>
+                            <div id="onboardLoading" class="text-center" style="display: none;">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <div id="onboardContent" style="display: none;">
+
+                            <!-- Stripe payment warning -->
+                            <div id="memberStripeWarning" class="alert alert-warning text-start mb-4" style="display: none;">
+                                <i class="fa-solid fa-credit-card me-2"></i>
+                                <strong>No credit card payment on file.</strong>
+                                <p class="mb-1 mt-1" style="text-align: left;">Ask the member if they have completed a credit card payment and if they used the same email address for Stripe as they did for their membership signup. If they have not completed payment, have them scan the QR code or go to ps1.link/stripe to complete payment.</p>
+                                <div class="text-center my-2">
+                                    <div id="stripeQrCode" class="d-inline-block" style="padding: 10px; background: #fff;"></div>
+                                </div>
+                            </div>
+
+                            <!-- Step 1: Verify ID -->
+                            <div class="mb-4">
+                                <h6><i class="fa-solid fa-id-card me-2"></i>Step 1: Verify ID</h6>
+                                <label class="form-label fw-semibold" for="onboardingDob">Member Provided DOB <span class="badge bg-danger required-badge">Required</span></label>
+                                <div class="d-flex gap-2 mb-2">
+                                    <input type="date" class="form-control" id="onboardingDob" inputmode="numeric" disabled>
+                                    <button class="btn btn-sm btn-outline-secondary" id="onboardingDobEditBtn" disabled title="Edit DOB" onclick="enableOnboardingDobEdit()">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                </div>
+                                <div id="onboardingDobError" class="alert alert-danger py-1 px-2 small mb-2" style="display: none;">
+                                    <i class="fa-solid fa-triangle-exclamation me-1"></i>Member must be 18 years or older.
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="onboardingDobMatch" onchange="updateActivateButton()">
+                                    <label class="form-check-label" for="onboardingDobMatch">DOB matches ID <span class="badge bg-danger required-badge">Required</span></label>
+                                </div>
+                            </div>
+
+                            <!-- Step 2: Add RFID Key -->
+                            <div class="mb-4">
+                                <h6><i class="fa-solid fa-key me-2"></i>Step 2: Add RFID Key</h6>
+                                <label class="form-label fw-semibold" for="onboardingRfid">Key Number</label>
+                                <input type="text" class="form-control" id="onboardingRfid" autocomplete="off" maxlength="10" inputmode="numeric" pattern="[0-9]*" placeholder="10 digit number">
+                                <small class="text-muted">First 10 digits only</small>
+                                <div id="onboardingRfidError" class="alert alert-danger py-1 px-2 small mt-2" style="display: none;"></div>
+                            </div>
+
+                            <!-- Step 3: Activate -->
+                            <div class="mb-2">
+                                <h6><i class="fa-solid fa-user-check me-2"></i>Step 3: Activate</h6>
+                                <button class="btn btn-success w-100" id="onboardingActivateBtn" disabled onclick="activateMember()">
+                                    <i class="fa-solid fa-check me-1"></i>Activate Member
+                                </button>
+                                <div id="onboardingActivateError" class="alert alert-danger py-2 small mt-2" style="display: none;"></div>
+                            </div>
+                            </div><!-- end onboardContent -->
+                        </div>
+                    </div>
+                </div>
+
                 <div class="tab-pane fade show active" id="identity" role="tabpanel" aria-labelledby="identity-tab">
                     <div class="card">
                         <div class="card-body">
@@ -1888,6 +1958,10 @@ function loadMemberData(memberOrId) {
 
     updateMemberHeaderInfo(member);
 
+    // Hide activated notice from previous member
+    const activatedNotice = document.getElementById('memberActivatedNotice');
+    if (activatedNotice) activatedNotice.style.display = 'none';
+
     // Show suspended/inactive member warning
     const warningEl = document.getElementById('memberSuspendedWarning');
     const statusEl = document.getElementById('memberSuspendedStatus');
@@ -1902,8 +1976,50 @@ function loadMemberData(memberOrId) {
         }
     }
 
+    // Show/hide Stripe payment warning for pending members without Stripe payment
+    const stripeWarningEl = document.getElementById('memberStripeWarning');
+    if (stripeWarningEl) {
+        const isPending = member ? (member.membership_status || '').toLowerCase() === 'pending' : false;
+        const hasStripePayment = member && member.stripe_product_id;
+
+        if (isPending && !hasStripePayment) {
+            // Generate QR code (clear previous one first)
+            const qrContainer = document.getElementById('stripeQrCode');
+            qrContainer.innerHTML = '';
+            new QRCode(qrContainer, {
+                text: 'https://ps1.link/stripe',
+                width: 160,
+                height: 160,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M
+            });
+
+            stripeWarningEl.style.display = '';
+        } else {
+            stripeWarningEl.style.display = 'none';
+        }
+    }
+
     // Filter tabs based on user permissions
     filterTabsByPermissions();
+
+    // Deactivate all tabs (including onboard) before activating the correct one
+    const allTabNames = ['onboard', 'identity', 'status', 'roles', 'forms', 'connections', 'extras', 'authorizations', 'notes', 'access', 'entry'];
+    allTabNames.forEach(tabName => {
+        const btn = document.getElementById(`${tabName}-tab`);
+        const pane = document.getElementById(tabName);
+        if (btn) { btn.classList.remove('active'); btn.setAttribute('aria-selected', 'false'); }
+        if (pane) { pane.classList.remove('show', 'active'); }
+    });
+
+    // Show/hide onboard tab based on member status
+    const onboardNav = document.getElementById('onboard-nav');
+    const memberStatus = member ? (member.membership_status || '').toLowerCase() : '';
+    const showOnboard = memberStatus === 'pending';
+    if (onboardNav) {
+        onboardNav.style.display = showOnboard ? 'block' : 'none';
+    }
 
     // Open the sidebar
     openSidebar();
@@ -1913,10 +2029,15 @@ function loadMemberData(memberOrId) {
     const allTabs = ['identity', 'status', 'roles', 'forms', 'connections', 'extras', 'authorizations', 'notes', 'access', 'entry'];
     let firstVisibleTab = null;
 
-    for (const tabName of allTabs) {
-        if (canViewTab('member.' + tabName, permissions) || canChangeTab('member.' + tabName, permissions)) {
-            firstVisibleTab = tabName;
-            break;
+    // If member is pending, activate onboard tab first
+    if (showOnboard) {
+        firstVisibleTab = 'onboard';
+    } else {
+        for (const tabName of allTabs) {
+            if (canViewTab('member.' + tabName, permissions) || canChangeTab('member.' + tabName, permissions)) {
+                firstVisibleTab = tabName;
+                break;
+            }
         }
     }
 
@@ -1927,10 +2048,278 @@ function loadMemberData(memberOrId) {
         firstTab.show();
 
         // Load data for the first visible tab
-        fetchTabData(firstVisibleTab, memberId);
+        if (firstVisibleTab === 'onboard') {
+            loadOnboardTab(memberId);
+        } else {
+            fetchTabData(firstVisibleTab, memberId);
+        }
     }
 
     if (!_restoringFromHistory) pushURL();
+}
+
+// ============================================================================
+// Onboard Tab
+// ============================================================================
+
+function loadOnboardTab(memberId) {
+    const loadingEl = document.getElementById('onboardLoading');
+    const contentEl = document.getElementById('onboardContent');
+
+    // Show spinner, hide content
+    if (loadingEl) loadingEl.style.display = '';
+    if (contentEl) contentEl.style.display = 'none';
+
+    // Fetch identity data to populate DOB
+    fetch(`/api/member/identity?member_id=${encodeURIComponent(memberId)}`)
+        .then(r => {
+            if (!r.ok) throw new Error('Failed to fetch identity');
+            return r.json();
+        })
+        .then(data => {
+            const dobInput = document.getElementById('onboardingDob');
+            const dobEditBtn = document.getElementById('onboardingDobEditBtn');
+            const dobError = document.getElementById('onboardingDobError');
+            if (dobInput) {
+                dobInput.value = data.birthday || '';
+                dobInput.disabled = true;
+                dobInput.classList.remove('is-invalid');
+            }
+            if (dobError) dobError.style.display = 'none';
+            if (dobEditBtn) {
+                dobEditBtn.disabled = false;
+                dobEditBtn.style.display = '';
+                dobEditBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
+            }
+            // Reset RFID field
+            const rfidInput = document.getElementById('onboardingRfid');
+            const rfidError = document.getElementById('onboardingRfidError');
+            if (rfidInput) { rfidInput.value = ''; rfidInput.classList.remove('is-invalid'); }
+            if (rfidError) rfidError.style.display = 'none';
+
+            // Reset checkbox, activate button, and error
+            const dobMatch = document.getElementById('onboardingDobMatch');
+            if (dobMatch) dobMatch.checked = false;
+            const activateBtn = document.getElementById('onboardingActivateBtn');
+            if (activateBtn) activateBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i>Activate Member';
+            const activateError = document.getElementById('onboardingActivateError');
+            if (activateError) activateError.style.display = 'none';
+            updateActivateButton();
+
+            // Validate age on load
+            if (data.birthday) {
+                validateOnboardingAge();
+            }
+        })
+        .catch(err => {
+            console.error('Error loading onboard data:', err);
+        })
+        .finally(() => {
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (contentEl) contentEl.style.display = '';
+        });
+}
+
+function enableOnboardingDobEdit() {
+    const dobInput = document.getElementById('onboardingDob');
+    const dobEditBtn = document.getElementById('onboardingDobEditBtn');
+    if (!dobInput || !dobEditBtn) return;
+
+    dobInput.disabled = false;
+    dobEditBtn.style.display = 'none';
+    dobInput.focus();
+    dobInput.addEventListener('change', validateOnboardingAge);
+}
+
+function activateMember() {
+    const dobInput = document.getElementById('onboardingDob');
+    const dobMatch = document.getElementById('onboardingDobMatch');
+    const rfidInput = document.getElementById('onboardingRfid');
+    const activateBtn = document.getElementById('onboardingActivateBtn');
+    const activateError = document.getElementById('onboardingActivateError');
+
+    // Validate
+    const errors = [];
+
+    if (!dobInput || !dobInput.value) {
+        errors.push('Date of birth is required.');
+    } else if (!validateOnboardingAge()) {
+        errors.push('Member must be 18 years or older.');
+    }
+
+    if (!dobMatch || !dobMatch.checked) {
+        errors.push('You must confirm that the DOB matches the member\'s ID.');
+    }
+
+    if (!validateOnboardingRfid(true)) {
+        errors.push('Key number must be exactly 10 digits.');
+    }
+
+    if (errors.length > 0) {
+        activateError.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i>' + errors.join('<br>');
+        activateError.style.display = '';
+        return;
+    }
+
+    activateError.style.display = 'none';
+    activateBtn.disabled = true;
+    activateBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Activating...';
+
+    const memberId = currentMemberId;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const headers = { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken };
+
+    // Build update promises
+    const promises = [];
+
+    // 1. Always update DOB (saves current value whether edited or not)
+    promises.push(
+        fetch(`/api/member/identity?member_id=${encodeURIComponent(memberId)}`, {
+            method: 'POST', headers, body: JSON.stringify({ birthday: dobInput.value })
+        }).then(r => { if (!r.ok) throw new Error('Failed to update DOB'); return r.json(); })
+    );
+
+    // 2. Add RFID key
+    const rfidVal = rfidInput.value.trim();
+    if (rfidVal) {
+        promises.push(
+            fetch(`/api/member/access?member_id=${encodeURIComponent(memberId)}`, {
+                method: 'POST', headers, body: JSON.stringify({ rfid_tags: [rfidVal] })
+            }).then(r => { if (!r.ok) throw new Error('Failed to add RFID key'); return r.json(); })
+        );
+    }
+
+    // 3. Set status to active
+    promises.push(
+        fetch(`/api/member/status?member_id=${encodeURIComponent(memberId)}`, {
+            method: 'POST', headers, body: JSON.stringify({ membership_status: 'active' })
+        }).then(r => { if (!r.ok) throw new Error('Failed to activate member'); return r.json(); })
+    );
+
+    Promise.all(promises)
+        .then(() => {
+            // Hide onboard tab
+            const onboardNav = document.getElementById('onboard-nav');
+            const onboardPane = document.getElementById('onboard');
+            const onboardTabBtn = document.getElementById('onboard-tab');
+            if (onboardNav) onboardNav.style.display = 'none';
+            if (onboardPane) { onboardPane.classList.remove('show', 'active'); }
+            if (onboardTabBtn) { onboardTabBtn.classList.remove('active'); onboardTabBtn.setAttribute('aria-selected', 'false'); }
+
+            // Hide "not active" warning
+            const warningEl = document.getElementById('memberSuspendedWarning');
+            if (warningEl) warningEl.style.display = 'none';
+
+            // Activate identity tab
+            const identityTab = document.getElementById('identity-tab');
+            if (identityTab) {
+                const tab = new bootstrap.Tab(identityTab);
+                tab.show();
+                fetchTabData('identity', memberId);
+            }
+
+            // Show activated notice banner
+            const activatedNotice = document.getElementById('memberActivatedNotice');
+            if (activatedNotice) {
+                activatedNotice.style.display = '';
+                activatedNotice.classList.add('show');
+            }
+
+            // Refresh the member list to reflect the updated status
+            if (typeof loadMembers === 'function') loadMembers(1);
+        })
+        .catch(err => {
+            activateError.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i>' + err.message;
+            activateError.style.display = '';
+            activateBtn.disabled = false;
+            activateBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i>Activate Member';
+        });
+}
+
+function initOnboardingRfid() {
+    const rfidInput = document.getElementById('onboardingRfid');
+    if (!rfidInput) return;
+    rfidInput.addEventListener('input', () => {
+        rfidInput.value = rfidInput.value.replace(/[^0-9]/g, '');
+        validateOnboardingRfid(false);
+    });
+    rfidInput.addEventListener('blur', () => {
+        validateOnboardingRfid(true);
+    });
+}
+
+function validateOnboardingRfid(checkLength) {
+    const rfidInput = document.getElementById('onboardingRfid');
+    const rfidError = document.getElementById('onboardingRfidError');
+    if (!rfidInput || !rfidError) return true;
+
+    const val = rfidInput.value.trim();
+    if (val === '') {
+        rfidError.style.display = 'none';
+        rfidInput.classList.remove('is-invalid');
+        return true;
+    }
+    if (!/^[0-9]+$/.test(val)) {
+        rfidError.textContent = 'Key number must contain only digits.';
+        rfidError.style.display = '';
+        rfidInput.classList.add('is-invalid');
+        return false;
+    }
+    if (checkLength && val.length < 10) {
+        rfidError.textContent = 'Key number must be exactly 10 digits.';
+        rfidError.style.display = '';
+        rfidInput.classList.add('is-invalid');
+        return false;
+    }
+    if (val.length === 10) {
+        rfidError.style.display = 'none';
+        rfidInput.classList.remove('is-invalid');
+    }
+    return val.length === 10;
+}
+
+function updateActivateButton() {
+    const dobMatch = document.getElementById('onboardingDobMatch');
+    const activateBtn = document.getElementById('onboardingActivateBtn');
+    if (activateBtn) {
+        activateBtn.disabled = !(dobMatch && dobMatch.checked);
+    }
+}
+
+function validateOnboardingAge() {
+    const dobInput = document.getElementById('onboardingDob');
+    const dobError = document.getElementById('onboardingDobError');
+    if (!dobInput || !dobInput.value) {
+        if (dobError) dobError.style.display = 'none';
+        return false;
+    }
+
+    const dob = new Date(dobInput.value + 'T00:00:00');
+    const today = new Date();
+
+    if (dob.getFullYear() < 1900 || dob > today) {
+        dobError.textContent = 'Please enter a valid date of birth.';
+        dobError.style.display = '';
+        dobInput.classList.add('is-invalid');
+        return false;
+    }
+
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+        age--;
+    }
+
+    if (age < 18) {
+        dobError.textContent = 'Member must be 18 years or older.';
+        dobError.style.display = '';
+        dobInput.classList.add('is-invalid');
+        return false;
+    } else {
+        dobError.style.display = 'none';
+        dobInput.classList.remove('is-invalid');
+        return true;
+    }
 }
 
 function fetchMembershipLevels() {
@@ -2112,15 +2501,18 @@ function fetchTabData(tabName, memberId) {
 
 // Add event listeners to tabs to load data when clicked
 document.addEventListener('DOMContentLoaded', function() {
-    const tabs = ['identity', 'status', 'roles', 'forms', 'connections', 'extras', 'authorizations', 'notes', 'access', 'entry'];
-    
+    const tabs = ['onboard', 'identity', 'status', 'roles', 'forms', 'connections', 'extras', 'authorizations', 'notes', 'access', 'entry'];
+
     tabs.forEach(tabName => {
         const tabEl = document.getElementById(`${tabName}-tab`);
         if (tabEl) {
             tabEl.addEventListener('shown.bs.tab', function() {
                 if (currentMemberId) {
-                    fetchTabData(tabName, currentMemberId);
-                    // Log tab selection
+                    if (tabName === 'onboard') {
+                        loadOnboardTab(currentMemberId);
+                    } else {
+                        fetchTabData(tabName, currentMemberId);
+                    }
                     logTabSelection(tabName, currentMemberId);
                 }
             });
@@ -2129,6 +2521,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Apply navbar visibility based on permissions
     filterNavbarByPermissions();
+
+    // Initialize onboarding RFID input
+    initOnboardingRfid();
 
     // Tab scroll indicators
     const tabStrip = document.getElementById('memberTabs');

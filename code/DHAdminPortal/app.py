@@ -18,6 +18,7 @@ from config import config
 ### Dev mode flag — read from app_config so we only check the env var once
 AUTH_MODE = app_config.AUTH_MODE
 DEV_BANNER = app_config.DEV_BANNER
+
 if AUTH_MODE == "dev":
     logger.info("AUTH_MODE=dev — B2C authentication bypassed, dev login enabled")
 
@@ -58,7 +59,23 @@ FIELD_VALIDATORS = {
     "discord_username": (None, 50, "Discord username must be 50 characters or fewer"),
     "discord_handle": (None, 50, "Discord handle must be 50 characters or fewer"),
     "theme_song_url": (r'^https://', 500, "Theme song URL must start with https:// and be 500 characters or fewer"),
+    "birthday": (r'^\d{4}-\d{2}-\d{2}$', 10, "Birthday must be in YYYY-MM-DD format"),
 }
+
+def validate_age_18_or_older(birthday_str):
+    """Validate that a birthday string represents someone 18 years or older.
+    Returns (is_valid, error_message)."""
+    try:
+        dob = datetime.strptime(birthday_str, "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return False, "Birthday must be a valid date in YYYY-MM-DD format"
+    today = datetime.now().date()
+    if dob.year < 1900 or dob > today:
+        return False, "Please enter a valid date of birth"
+    age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+    if age < 18:
+        return False, "Member must be 18 years or older"
+    return True, None
 
 def validate_update_data(data, tab_name):
     """Validate and sanitize incoming field data for a member update.
@@ -89,6 +106,12 @@ def validate_update_data(data, tab_name):
                 return None, error_msg
 
         sanitized[key] = value
+
+    # Age validation: birthday must represent someone 18+
+    if "birthday" in sanitized and sanitized["birthday"] is not None:
+        is_valid, age_error = validate_age_18_or_older(sanitized["birthday"])
+        if not is_valid:
+            return None, age_error
 
     return sanitized, None
 

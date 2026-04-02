@@ -239,6 +239,7 @@ def list_members(page: int = 1, per_page: int = 25,
                            m.identity ->> 'last_name' AS last_name,
                            m.identity -> 'emails' -> 0 ->> 'email_address' AS primary_email_address,
                            m.status ->> 'membership_status' AS membership_status,
+                           m.status ->> 'stripe_product_id' AS stripe_product_id,
                            COUNT(*) OVER() AS total_count
                     FROM   member m
                     ORDER BY {sort_col} {direction}
@@ -249,13 +250,14 @@ def list_members(page: int = 1, per_page: int = 25,
             results = cur.fetchall()
 
     for result in results:
-        total = result[5]
+        total = result[6]
         members.append({
             "member_id": result[0],
             "first_name": result[1],
             "last_name": result[2],
             "primary_email_address": result[3],
             "membership_status": result[4],
+            "stripe_product_id": result[5],
         })
 
     logger.debug(f"Listed {len(members)} members (total={total})")
@@ -278,6 +280,7 @@ def search_members_paginated(query: str, page: int = 1, per_page: int = 25,
                                identity ->> 'last_name' AS last_name,
                                identity -> 'emails' -> 0 ->> 'email_address' AS primary_email_address,
                                status ->> 'membership_status' AS membership_status,
+                               status ->> 'stripe_product_id' AS stripe_product_id,
                                rank
                         FROM   search_members_by_identity_and_access(%s)
                     )
@@ -291,13 +294,14 @@ def search_members_paginated(query: str, page: int = 1, per_page: int = 25,
             results = cur.fetchall()
 
     for result in results:
-        total = result[6]
+        total = result[7]
         members.append({
             "member_id": result[0],
             "first_name": result[1],
             "last_name": result[2],
             "primary_email_address": result[3],
             "membership_status": result[4],
+            "stripe_product_id": result[5],
         })
 
     logger.debug(f"Paginated search found {len(members)} members (total={total})")
