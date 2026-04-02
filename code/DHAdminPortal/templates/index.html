@@ -525,6 +525,9 @@
     </div>
 </div>
 
+<!-- Hidden file input for mobile camera capture -->
+<input type="file" id="rfidFileInput" accept="image/*" capture="environment" style="display: none;">
+
 <!-- RFID Camera OCR Modal -->
 <div class="modal fade" id="rfidCameraModal" tabindex="-1" aria-labelledby="rfidCameraModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -540,10 +543,13 @@
                 </div>
                 <!-- Canvas for frame capture / preview -->
                 <canvas id="rfidCameraCanvas" style="display: none; width: 100%; border-radius: 0.375rem;"></canvas>
-                <!-- Capture button -->
+                <!-- Capture / retry-from-error controls -->
                 <div id="rfidCameraControls" class="mt-3">
                     <button class="btn btn-primary" id="rfidCaptureBtn" onclick="captureRfidFrame()">
                         <i class="fa-solid fa-circle me-1"></i>Capture
+                    </button>
+                    <button class="btn btn-outline-secondary" id="rfidRetryBtn" onclick="retryRfidCapture()" style="display: none;">
+                        <i class="fa-solid fa-rotate-right me-1"></i>Try Again
                     </button>
                 </div>
                 <!-- OCR processing spinner -->
@@ -2339,9 +2345,169 @@ function validateOnboardingRfid(checkLength) {
 
 let rfidCameraStream = null;
 let rfidCameraModalObj = null;
+let rfidIsMobile = window.matchMedia('(pointer: coarse)').matches;
+
+// -- Shared OCR logic --
+
+function tryRfidOcr(sourceCanvas) {
+    return Tesseract.recognize(sourceCanvas, 'eng', {
+        tessedit_char_whitelist: '0123456789'
+    }).then(function(result) {
+        const text = result.data.text || '';
+        const match = text.replace(/\s/g, '').match(/\d{10}/);
+        return match ? match[0] : null;
+    });
+}
+
+function rotateRfidCanvas(srcCanvas, degrees) {
+    var radians = degrees * Math.PI / 180;
+    var isPortrait = degrees === 90 || degrees === 270;
+    var rotCanvas = document.createElement('canvas');
+    rotCanvas.width = isPortrait ? srcCanvas.height : srcCanvas.width;
+    rotCanvas.height = isPortrait ? srcCanvas.width : srcCanvas.height;
+    var rotCtx = rotCanvas.getContext('2d');
+    rotCtx.translate(rotCanvas.width / 2, rotCanvas.height / 2);
+    rotCtx.rotate(radians);
+    rotCtx.drawImage(srcCanvas, -srcCanvas.width / 2, -srcCanvas.height / 2);
+    return rotCanvas;
+}
+
+function processRfidOcr(canvas) {
+    var errorDiv = document.getElementById('rfidCameraError');
+
+    document.getElementById('rfidCameraControls').style.display = 'none';
+    document.getElementById('rfidOcrProcessing').style.display = '';
+    document.getElementById('rfidOcrResult').style.display = 'none';
+    errorDiv.style.display = 'none';
+
+    // Desktop: try 0°, 180°, 90°, 270°. Mobile: 0° only (native camera handles orientation)
+    var rotations = rfidIsMobile ? [0] : [0, 180, 90, 270];
+    var chain = Promise.resolve(null);
+    rotations.forEach(function(deg) {
+        chain = chain.then(function(result) {
+            if (result) return result;
+            var src = deg === 0 ? canvas : rotateRfidCanvas(canvas, deg);
+            return tryRfidOcr(src).then(function(v) {
+                return v ? { value: v, degrees: deg } : null;
+            });
+        });
+    });
+
+    chain
+    .then(function(result) {
+        document.getElementById('rfidOcrProcessing').style.display = 'none';
+
+        if (result && result.value) {
+            // Redraw canvas at the matched orientation
+            if (result.degrees !== 0) {
+                var img = new Image();
+                img.onload = function() {
+                    var isPortrait = result.degrees === 90 || result.degrees === 270;
+                    canvas.width = isPortrait ? img.height : img.width;
+                    canvas.height = isPortrait ? img.width : img.height;
+                    var rotCtx = canvas.getContext('2d');
+                    rotCtx.translate(canvas.width / 2, canvas.height / 2);
+                    rotCtx.rotate(result.degrees * Math.PI / 180);
+                    rotCtx.drawImage(img, -img.width / 2, -img.height / 2);
+                    rotCtx.setTransform(1, 0, 0, 1, 0, 0);
+                };
+                img.src = canvas.toDataURL();
+            }
+            document.getElementById('rfidOcrValue').value = result.value;
+            document.getElementById('rfidOcrResult').style.display = '';
+        } else {
+            errorDiv.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i>Could not find a 10-digit number. Try again.';
+            errorDiv.style.display = '';
+            if (rfidIsMobile) {
+                // On mobile, show retry button so user can re-launch camera
+                document.getElementById('rfidCameraControls').style.display = '';
+                document.getElementById('rfidCaptureBtn').style.display = 'none';
+                document.getElementById('rfidRetryBtn').style.display = '';
+            } else {
+                // On desktop, restore live camera view
+                canvas.style.display = 'none';
+                document.getElementById('rfidCameraVideo').style.display = '';
+                document.getElementById('rfidCameraControls').style.display = '';
+            }
+        }
+    })
+    .catch(function(err) {
+        document.getElementById('rfidOcrProcessing').style.display = 'none';
+        errorDiv.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i>OCR failed: ' + err.message;
+        errorDiv.style.display = '';
+        if (!rfidIsMobile) {
+            canvas.style.display = 'none';
+            document.getElementById('rfidCameraVideo').style.display = '';
+        }
+        document.getElementById('rfidCameraControls').style.display = '';
+    });
+}
+
+// -- Entry point --
 
 function openRfidCameraModal() {
+    if (rfidIsMobile) {
+        // Mobile: launch native camera via file input
+        var fileInput = document.getElementById('rfidFileInput');
+        fileInput.value = '';
+        fileInput.click();
+    } else {
+        // Desktop: open modal with live camera preview
+        openRfidDesktopModal();
+    }
+}
+
+// -- Mobile: file input flow --
+
+document.getElementById('rfidFileInput').addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+
+    var canvas = document.getElementById('rfidCameraCanvas');
+    var img = new Image();
+    img.onload = function() {
+        // Scale down large images — 1280px max on longest side
+        var maxDim = 1280;
+        var w = img.width;
+        var h = img.height;
+        if (w > maxDim || h > maxDim) {
+            var scale = maxDim / Math.max(w, h);
+            w = Math.round(w * scale);
+            h = Math.round(h * scale);
+        }
+        canvas.width = w;
+        canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(img.src);
+
+        // Show modal with preview + processing (no video/capture controls)
+        document.getElementById('rfidCameraContainer').style.display = 'none';
+        document.getElementById('rfidCameraControls').style.display = 'none';
+        document.getElementById('rfidCaptureBtn').style.display = '';
+        document.getElementById('rfidRetryBtn').style.display = 'none';
+        document.getElementById('rfidOcrProcessing').style.display = 'none';
+        document.getElementById('rfidOcrResult').style.display = 'none';
+        document.getElementById('rfidCameraError').style.display = 'none';
+        canvas.style.display = '';
+
+        if (!rfidCameraModalObj) {
+            rfidCameraModalObj = new bootstrap.Modal(document.getElementById('rfidCameraModal'));
+        }
+        rfidCameraModalObj.show();
+
+        processRfidOcr(canvas);
+    };
+    img.src = URL.createObjectURL(file);
+});
+
+// -- Desktop: live camera flow --
+
+function openRfidDesktopModal() {
+    document.getElementById('rfidCameraContainer').style.display = '';
     document.getElementById('rfidCameraControls').style.display = '';
+    document.getElementById('rfidCaptureBtn').style.display = '';
+    document.getElementById('rfidRetryBtn').style.display = 'none';
     document.getElementById('rfidOcrProcessing').style.display = 'none';
     document.getElementById('rfidOcrResult').style.display = 'none';
     document.getElementById('rfidCameraError').style.display = 'none';
@@ -2375,20 +2541,6 @@ function startRfidCamera() {
     .then(function(stream) {
         rfidCameraStream = stream;
         video.srcObject = stream;
-        video.addEventListener('loadedmetadata', function() {
-            var isPortraitScreen = window.innerHeight > window.innerWidth;
-            var isLandscapeVideo = video.videoWidth > video.videoHeight;
-            if (isPortraitScreen && isLandscapeVideo) {
-                // Mobile — rotate 90° left, no mirror
-                var container = document.getElementById('rfidCameraContainer');
-                var containerWidth = container.clientWidth;
-                var scaleFactor = video.videoWidth / video.videoHeight;
-                container.style.height = (containerWidth * scaleFactor) + 'px';
-                container.style.overflow = 'hidden';
-                video.style.transformOrigin = 'center center';
-                video.style.transform = 'rotate(-90deg) scale(' + scaleFactor + ')';
-            }
-        }, { once: true });
     })
     .catch(function(err) {
         errorDiv.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i>Could not access camera: ' + err.message;
@@ -2407,11 +2559,6 @@ function stopRfidCamera() {
         video.srcObject = null;
         video.style.transform = 'scaleX(-1)';
     }
-    var container = document.getElementById('rfidCameraContainer');
-    if (container) {
-        container.style.height = '';
-        container.style.overflow = '';
-    }
 }
 
 function captureRfidFrame() {
@@ -2425,115 +2572,19 @@ function captureRfidFrame() {
         return;
     }
 
-    var isMobileRotated = window.innerHeight > window.innerWidth && video.videoWidth > video.videoHeight;
-
-    if (isMobileRotated) {
-        // Draw rotated -90° so canvas is already portrait
-        canvas.width = video.videoHeight;
-        canvas.height = video.videoWidth;
-        const ctx = canvas.getContext('2d');
-        ctx.translate(0, canvas.height);
-        ctx.rotate(-Math.PI / 2);
-        ctx.drawImage(video, 0, 0);
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-    } else {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0);
-    }
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
 
     // Hide video, show canvas as un-mirrored preview
     video.style.display = 'none';
     canvas.style.display = '';
-    // Reset container height so canvas fits naturally
-    var container = document.getElementById('rfidCameraContainer');
-    if (container) {
-        container.style.height = '';
-        container.style.overflow = '';
-    }
 
-    document.getElementById('rfidCameraControls').style.display = 'none';
-    document.getElementById('rfidOcrProcessing').style.display = '';
-    document.getElementById('rfidOcrResult').style.display = 'none';
-    errorDiv.style.display = 'none';
-
-    function tryOcr(sourceCanvas) {
-        return Tesseract.recognize(sourceCanvas, 'eng', {
-            tessedit_char_whitelist: '0123456789'
-        }).then(function(result) {
-            const text = result.data.text || '';
-            const match = text.replace(/\s/g, '').match(/\d{10}/);
-            return match ? match[0] : null;
-        });
-    }
-
-    function rotateCanvas(srcCanvas, degrees) {
-        var radians = degrees * Math.PI / 180;
-        var isPortrait = degrees === 90 || degrees === 270;
-        var rotCanvas = document.createElement('canvas');
-        rotCanvas.width = isPortrait ? srcCanvas.height : srcCanvas.width;
-        rotCanvas.height = isPortrait ? srcCanvas.width : srcCanvas.height;
-        var rotCtx = rotCanvas.getContext('2d');
-        rotCtx.translate(rotCanvas.width / 2, rotCanvas.height / 2);
-        rotCtx.rotate(radians);
-        rotCtx.drawImage(srcCanvas, -srcCanvas.width / 2, -srcCanvas.height / 2);
-        return rotCanvas;
-    }
-
-    // Try 0°, 180°, 90°, 270° — short-circuit on first match
-    var rotations = [0, 180, 90, 270];
-    var chain = Promise.resolve(null);
-    rotations.forEach(function(deg) {
-        chain = chain.then(function(result) {
-            if (result) return result;
-            var src = deg === 0 ? canvas : rotateCanvas(canvas, deg);
-            return tryOcr(src).then(function(v) {
-                return v ? { value: v, degrees: deg } : null;
-            });
-        });
-    });
-
-    chain
-    .then(function(result) {
-        document.getElementById('rfidOcrProcessing').style.display = 'none';
-
-        if (result && result.value) {
-            // Redraw canvas at the matched orientation
-            if (result.degrees !== 0) {
-                var img = new Image();
-                img.onload = function() {
-                    var isPortrait = result.degrees === 90 || result.degrees === 270;
-                    canvas.width = isPortrait ? img.height : img.width;
-                    canvas.height = isPortrait ? img.width : img.height;
-                    var rotCtx = canvas.getContext('2d');
-                    rotCtx.translate(canvas.width / 2, canvas.height / 2);
-                    rotCtx.rotate(result.degrees * Math.PI / 180);
-                    rotCtx.drawImage(img, -img.width / 2, -img.height / 2);
-                    rotCtx.setTransform(1, 0, 0, 1, 0, 0);
-                };
-                img.src = canvas.toDataURL();
-            }
-            document.getElementById('rfidOcrValue').value = result.value;
-            document.getElementById('rfidOcrResult').style.display = '';
-        } else {
-            // No match — restore camera view
-            canvas.style.display = 'none';
-            video.style.display = '';
-            errorDiv.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i>Could not find a 10-digit number. Try repositioning the card and capturing again.';
-            errorDiv.style.display = '';
-            document.getElementById('rfidCameraControls').style.display = '';
-        }
-    })
-    .catch(function(err) {
-        document.getElementById('rfidOcrProcessing').style.display = 'none';
-        canvas.style.display = 'none';
-        video.style.display = '';
-        errorDiv.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i>OCR failed: ' + err.message;
-        errorDiv.style.display = '';
-        document.getElementById('rfidCameraControls').style.display = '';
-    });
+    processRfidOcr(canvas);
 }
+
+// -- Shared confirm/retry --
 
 function confirmRfidOcr() {
     const value = document.getElementById('rfidOcrValue').value.trim();
@@ -2546,24 +2597,25 @@ function confirmRfidOcr() {
 }
 
 function retryRfidCapture() {
-    var canvas = document.getElementById('rfidCameraCanvas');
-    var video = document.getElementById('rfidCameraVideo');
-    canvas.style.display = 'none';
-    video.style.display = '';
-    // Restore mobile container sizing for rotated video
-    var isPortraitScreen = window.innerHeight > window.innerWidth;
-    var isLandscapeVideo = video.videoWidth > video.videoHeight;
-    if (isPortraitScreen && isLandscapeVideo) {
-        var container = document.getElementById('rfidCameraContainer');
-        var containerWidth = container.clientWidth;
-        var scaleFactor = video.videoWidth / video.videoHeight;
-        container.style.height = (containerWidth * scaleFactor) + 'px';
-        container.style.overflow = 'hidden';
+    if (rfidIsMobile) {
+        // Close modal and re-launch native camera
+        if (rfidCameraModalObj) rfidCameraModalObj.hide();
+        setTimeout(function() {
+            var fileInput = document.getElementById('rfidFileInput');
+            fileInput.value = '';
+            fileInput.click();
+        }, 300);
+    } else {
+        // Desktop: restore live camera view
+        var canvas = document.getElementById('rfidCameraCanvas');
+        var video = document.getElementById('rfidCameraVideo');
+        canvas.style.display = 'none';
+        video.style.display = '';
+        document.getElementById('rfidOcrResult').style.display = 'none';
+        document.getElementById('rfidOcrProcessing').style.display = 'none';
+        document.getElementById('rfidCameraError').style.display = 'none';
+        document.getElementById('rfidCameraControls').style.display = '';
     }
-    document.getElementById('rfidOcrResult').style.display = 'none';
-    document.getElementById('rfidOcrProcessing').style.display = 'none';
-    document.getElementById('rfidCameraError').style.display = 'none';
-    document.getElementById('rfidCameraControls').style.display = '';
 }
 
 function updateActivateButton() {
