@@ -522,6 +522,7 @@ def search_members_by_rfid_tag(rfid_tag: str) -> list[dict]:
                 SELECT DISTINCT m.id,
                        m.identity ->> 'first_name' AS first_name,
                        m.identity ->> 'last_name' AS last_name,
+                       m.identity ->> 'nickname' AS nickname,
                        m.identity ->> 'pronouns' AS pronouns,
                        m.identity ->> 'nametag_subtitle' as nametag_subtitle,
                        m.identity ->> 'theme_song_url' as theme_song_url,
@@ -541,11 +542,12 @@ def search_members_by_rfid_tag(rfid_tag: str) -> list[dict]:
             "member_id": result[0],
             "first_name": result[1],
             "last_name": result[2],
-            "pronouns": result[3],
-            "nametag_subtitle": result[4],
-            "theme_song_url": result[5],
-            "theme_song_duration": result[6],
-            "primary_email_address": result[7]
+            "nickname": result[3],
+            "pronouns": result[4],
+            "nametag_subtitle": result[5],
+            "theme_song_url": result[6],
+            "theme_song_duration": result[7],
+            "primary_email_address": result[8]
         })
     logger.debug(f"Found {len(members)} members with RFID tag: {rfid_tag}")
     return members
