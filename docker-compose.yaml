@@ -631,6 +631,30 @@ services:
     networks:
       - dh_network
 
+  #########################################################
+  # Discord Bot (optional — requires DISCORD_BOT_TOKEN)
+  #########################################################
+
+  dhdiscordbot:
+    build: ./code/external/DHDiscordBot
+    restart: unless-stopped
+    depends_on:
+      dhequipment:
+        condition: service_healthy
+    environment:
+      TZ: "America/Chicago"
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
+      DISCORD_GUILD_IDS: ${DISCORD_GUILD_IDS:-}
+      DH_EQUIP_API_URL: http://gateway/dh/equipment
+      DH_BOT_CLIENT_NAME: ${DH_BOT_CLIENT_NAME:-dev-discord-bot}
+      DH_BOT_CLIENT_SECRET: ${DH_BOT_CLIENT_SECRET:-}
+      DH_BOT_MEMBER_ID: ${DH_BOT_MEMBER_ID:-0}
+    volumes:
+      - ${BOT_DATA_DIR:-./data/discord-bot}:/data
+    container_name: dh_discord_bot
+    networks:
+      - dh_network
+
 ##########################################################
 # Volumes and Networks
 ##########################################################
