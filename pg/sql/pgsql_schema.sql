@@ -1793,6 +1793,14 @@ VALUES (
     'Equipment management portal application'
 );
 
+/* OAuth2 client for the Discord Bot (optional) */
+INSERT INTO oauth2_users (client_name, client_secret, client_description)
+VALUES (
+    'dev-discord-bot',
+    '$2b$12$PLACEHOLDER_REPLACE_BEFORE_DEPLOY',
+    'Discord bot for equipment ticket management'
+);
+
 
 /* =====================================================================
  * Equipment Audit Log
