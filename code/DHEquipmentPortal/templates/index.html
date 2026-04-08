@@ -209,8 +209,55 @@
         <div id="ticketsSection" style="display:none;">
             <h3 class="page-title"><i class="bi bi-ticket-detailed me-2"></i>Repair Tickets</h3>
             <div id="ticketsContent">
-                <!-- TODO: Port PA1 ticket list, filters, create/edit modals, work log -->
-                <p class="text-muted">Repair tickets — to be ported from PA1 index.html</p>
+                <div class="content-card">
+                    <div class="content-card-header">
+                        <div class="d-flex justify-content-between align-items-center w-100">
+                            <span>Tickets</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary btn-sm" type="button"
+                                        data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                                        <i class="bi bi-funnel me-1"></i><span id="ticket-status-label">All Statuses</span><i class="bi bi-chevron-down ms-1"></i>
+                                    </button>
+                                    <ul class="dropdown-menu p-2" style="min-width:170px">
+                                        <li class="px-1 pb-1"><small class="text-muted fw-semibold">Status</small></li>
+                                        <li><label class="dropdown-item d-flex align-items-center gap-2 py-1">
+                                            <input type="checkbox" class="ticket-status-chk" value="open" onchange="loadTickets()"> Open</label></li>
+                                        <li><label class="dropdown-item d-flex align-items-center gap-2 py-1">
+                                            <input type="checkbox" class="ticket-status-chk" value="in_progress" onchange="loadTickets()"> In Progress</label></li>
+                                        <li><label class="dropdown-item d-flex align-items-center gap-2 py-1">
+                                            <input type="checkbox" class="ticket-status-chk" value="on_hold" onchange="loadTickets()"> On Hold</label></li>
+                                        <li><label class="dropdown-item d-flex align-items-center gap-2 py-1">
+                                            <input type="checkbox" class="ticket-status-chk" value="closed" onchange="loadTickets()"> Closed</label></li>
+                                    </ul>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary btn-sm" type="button"
+                                        data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                                        <i class="bi bi-bar-chart me-1"></i><span id="ticket-priority-label">All Priorities</span><i class="bi bi-chevron-down ms-1"></i>
+                                    </button>
+                                    <ul class="dropdown-menu p-2" style="min-width:160px">
+                                        <li class="px-1 pb-1"><small class="text-muted fw-semibold">Priority</small></li>
+                                        <li><label class="dropdown-item d-flex align-items-center gap-2 py-1">
+                                            <input type="checkbox" class="ticket-priority-chk" value="critical" onchange="loadTickets()"> Critical</label></li>
+                                        <li><label class="dropdown-item d-flex align-items-center gap-2 py-1">
+                                            <input type="checkbox" class="ticket-priority-chk" value="high" onchange="loadTickets()"> High</label></li>
+                                        <li><label class="dropdown-item d-flex align-items-center gap-2 py-1">
+                                            <input type="checkbox" class="ticket-priority-chk" value="normal" onchange="loadTickets()"> Normal</label></li>
+                                        <li><label class="dropdown-item d-flex align-items-center gap-2 py-1">
+                                            <input type="checkbox" class="ticket-priority-chk" value="low" onchange="loadTickets()"> Low</label></li>
+                                    </ul>
+                                </div>
+                                <button class="btn btn-primary btn-sm" id="btn-add-ticket" style="display:none" onclick="openTicketModal()">
+                                    <i class="bi bi-plus-lg me-1"></i>New Ticket
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tickets-body">
+                        <div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading&hellip;</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -218,8 +265,13 @@
         <div id="groupsSection" style="display:none;">
             <h3 class="page-title"><i class="bi bi-collection me-2"></i>Equipment Groups</h3>
             <div id="groupsContent">
-                <!-- TODO: Port PA1 groups management -->
-                <p class="text-muted">Equipment groups — to be ported from PA1 index.html</p>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <p class="text-muted small mb-0">Group related equipment together for scheduling and authorizations.</p>
+                    <button class="btn btn-primary btn-sm" id="btn-add-group" style="display:none" onclick="openGroupModal()">
+                        <i class="bi bi-plus me-1"></i>New Group
+                    </button>
+                </div>
+                <div id="equip-groups-container"></div>
             </div>
         </div>
 
@@ -310,6 +362,121 @@
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
     </div>
     <div class="offcanvas-body" id="panel-area-body"></div>
+</div>
+
+{# ── Equipment Group Modal ── #}
+<div class="modal fade" id="equipGroupModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="egm-title">New Equipment Group</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="egm-id">
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Group Name <span class="text-danger">*</span></label>
+                    <input class="form-control" id="egm-name" placeholder="e.g. Woodshop Tier 1">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Description</label>
+                    <input class="form-control" id="egm-desc">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Equipment Members</label>
+                    <div class="text-muted small mb-1">Hold Ctrl / Cmd to select multiple</div>
+                    <select class="form-select" id="egm-equip" multiple size="6" style="min-height:120px"></select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary fw-semibold" onclick="saveEquipGroup()">Save Group</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── Ticket Add / Edit Modal ── #}
+<div class="modal fade" id="ticketModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="ticketModalTitle">New Repair Ticket</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="tm-id">
+                <input type="hidden" id="tm-version">
+                <div class="row g-3 mb-3">
+                    <div class="col-8" id="tm-equip-group">
+                        <label class="form-label small fw-semibold">Equipment <span class="text-danger">*</span></label>
+                        <select class="form-select" id="tm-equipment"></select>
+                    </div>
+                    <div class="col-8" id="tm-equip-display" style="display:none">
+                        <label class="form-label small fw-semibold">Equipment</label>
+                        <div class="form-control bg-light" id="tm-equip-name" style="cursor:default"></div>
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label small fw-semibold">Priority</label>
+                        <select class="form-select" id="tm-priority">
+                            <option value="low">Low</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Title <span class="text-danger">*</span></label>
+                        <input class="form-control" id="tm-title" placeholder="Brief description of the issue">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Description</label>
+                        <textarea class="form-control" id="tm-description" rows="3"></textarea>
+                    </div>
+                    <div class="col-6" id="tm-status-group" style="display:none">
+                        <label class="form-label small fw-semibold">Status</label>
+                        <select class="form-select" id="tm-status">
+                            <option value="open">Open</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="on_hold">On Hold</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                    </div>
+                </div>
+
+                {# ── Work Log (edit mode only) ── #}
+                <div id="tm-worklog-section" style="display:none">
+                    <div class="small fw-semibold text-muted text-uppercase mb-2" style="letter-spacing:.08em">Work Log</div>
+                    <div id="tm-log-entries" class="mb-3"></div>
+                    <div class="card bg-light border-0 p-3">
+                        <div class="small fw-semibold text-muted text-uppercase mb-2" style="letter-spacing:.08em">Add Entry</div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Action Performed <span class="text-danger">*</span></label>
+                            <input class="form-control form-control-sm" id="wl-action" placeholder="What was done?">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Notes</label>
+                            <textarea class="form-control form-control-sm" id="wl-notes" rows="2"></textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Parts Used <span class="text-muted fw-normal">(comma separated)</span></label>
+                            <input class="form-control form-control-sm" id="wl-parts">
+                        </div>
+                        <button class="btn btn-success btn-sm" onclick="addWorkLog()">
+                            <i class="bi bi-plus-circle me-1"></i>Log Work Entry
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-danger me-auto" id="tm-delete-btn" onclick="deleteTicket()" style="display:none">
+                    <i class="bi bi-trash me-1"></i>Delete Ticket
+                </button>
+                <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary fw-semibold" id="tm-save-btn" onclick="saveTicket()">Create Ticket</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 {# ── Area Add / Edit Modal ── #}
@@ -507,6 +674,8 @@ function showSection(name) {
     if (name === 'dashboard') loadDashboard();
     if (name === 'equipment') loadEquipment();
     if (name === 'areas') loadAreasSection();
+    if (name === 'tickets') loadTickets();
+    if (name === 'groups') loadGroupsSection();
 }
 
 function filterSidebarByPermissions() {
@@ -1112,10 +1281,288 @@ async function deleteArea(id, name) {
     } catch(e) { toast(e.message, 'error'); }
 }
 
-// ── Stubs for cross-section actions (to be implemented with their sections) ──
-function newTicketFor(equipId) { showSection('tickets'); }
-function openTicketDetail(id) { showSection('tickets'); }
-function renderAttachments() {}
+// ── Equipment Groups ──
+let allEquipGroups = [];
+
+async function loadGroupsSection() {
+    const container = document.getElementById('equip-groups-container');
+    if (!container) return;
+    container.innerHTML = '<div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading&hellip;</div>';
+    try {
+        allEquipGroups = await api('GET', '/api/equipment-groups') || [];
+        renderEquipGroups(container);
+    } catch(e) {
+        container.innerHTML = `<div class="alert alert-danger">Failed to load: ${escHtml(e.message)}</div>`;
+    }
+}
+
+function renderEquipGroups(container) {
+    const canEdit = canChange('equipment.groups');
+    if (!allEquipGroups.length) {
+        container.innerHTML = '<div class="text-muted small py-3">No equipment groups defined.</div>';
+        return;
+    }
+    container.innerHTML = allEquipGroups.map(g => {
+        const members = g.equipment || [];
+        return `<div class="group-card">
+            <div class="group-card-header" onclick="this.nextElementSibling.classList.toggle('d-none')">
+                <span class="fw-semibold"><i class="bi bi-collection me-2" style="color:var(--primary-color)"></i>${escHtml(g.name)}</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-secondary">${members.length} item${members.length !== 1 ? 's' : ''}</span>
+                    ${canEdit ? `
+                        <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation();openGroupModal(${g.id})"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation();deleteEquipGroup(${g.id})"><i class="bi bi-trash"></i></button>
+                    ` : ''}
+                </div>
+            </div>
+            <div class="group-card-body">
+                ${members.length
+                    ? members.map(e => `<span class="badge bg-light text-dark border">${escHtml(e.common_name || e.make + ' ' + e.model)}</span>`).join('')
+                    : '<span class="text-muted small">No members</span>'}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+async function openGroupModal(existingId) {
+    const isEdit = existingId != null;
+    const g = isEdit ? allEquipGroups.find(x => x.id === existingId) : null;
+    document.getElementById('egm-id').value   = g?.id ?? '';
+    document.getElementById('egm-name').value = g?.name ?? '';
+    document.getElementById('egm-desc').value = g?.description ?? '';
+    document.getElementById('egm-title').textContent = isEdit ? 'Edit Group' : 'New Equipment Group';
+
+    // Ensure equipment list is loaded even if Equipment section hasn't been visited
+    if (!allEquipment.length) {
+        try { allEquipment = await api('GET', '/api/equipment'); } catch(e) { allEquipment = []; }
+    }
+
+    document.getElementById('egm-equip').innerHTML = allEquipment.map(e =>
+        `<option value="${e.id}">${escHtml(e.common_name || e.make + ' ' + e.model)}</option>`
+    ).join('');
+    if (g?.equipment) {
+        const memberIds = g.equipment.map(e => e.id);
+        Array.from(document.getElementById('egm-equip').options)
+            .forEach(o => o.selected = memberIds.includes(parseInt(o.value, 10)));
+    }
+    bsModal('equipGroupModal').show();
+}
+
+async function saveEquipGroup() {
+    const id   = document.getElementById('egm-id').value;
+    const name = document.getElementById('egm-name').value.trim();
+    if (!name) { toast('Name is required', 'error'); return; }
+    const equipIds = Array.from(document.getElementById('egm-equip').selectedOptions)
+        .map(o => parseInt(o.value, 10));
+    const payload = {
+        name,
+        description:  document.getElementById('egm-desc').value.trim() || null,
+        equipment_ids: equipIds,
+    };
+    try {
+        if (id) await api('PATCH', `/api/equipment-groups/${id}`, payload);
+        else    await api('POST',  '/api/equipment-groups', payload);
+        toast('Group saved', 'success');
+        bsModal('equipGroupModal').hide();
+        await loadGroupsSection();
+    } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteEquipGroup(id) {
+    if (!confirm('Delete this group?')) return;
+    try {
+        await api('DELETE', `/api/equipment-groups/${id}`);
+        toast('Group deleted', 'success');
+        allEquipGroups = allEquipGroups.filter(g => g.id !== id);
+        renderEquipGroups(document.getElementById('equip-groups-container'));
+    } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Tickets ──
+async function loadTickets() {
+    const body = document.getElementById('tickets-body');
+    if (!body) return;
+    body.innerHTML = '<div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading&hellip;</div>';
+    const statuses  = [...document.querySelectorAll('.ticket-status-chk:checked')].map(c => c.value);
+    const priorities = [...document.querySelectorAll('.ticket-priority-chk:checked')].map(c => c.value);
+    const slbl = document.getElementById('ticket-status-label');
+    if (slbl) slbl.textContent = statuses.length === 0 ? 'All Statuses'
+        : statuses.length === 1 ? statuses[0].replace('_', ' ') : `${statuses.length} statuses`;
+    const plbl = document.getElementById('ticket-priority-label');
+    if (plbl) plbl.textContent = priorities.length === 0 ? 'All Priorities'
+        : priorities.length === 1 ? priorities[0] : `${priorities.length} priorities`;
+    let q = '?';
+    statuses.forEach(s => q += `&status=${s}`);
+    priorities.forEach(p => q += `&priority=${p}`);
+    try {
+        const tickets = await api('GET', `/api/tickets${q}`);
+        const canEdit = can('tickets.edit');
+        if (!tickets.length) {
+            body.innerHTML = '<div class="text-center py-4 text-muted">No tickets found.</div>';
+            return;
+        }
+        body.innerHTML = `
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead><tr>
+                        <th>Ticket #</th>
+                        <th>Equipment</th>
+                        <th>Title</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Opened</th>
+                    </tr></thead>
+                    <tbody>${tickets.map(t => {
+                        const catBadge = t.category === 'maintenance'
+                            ? ' <span class="cat-badge cat-maintenance">maint</span>' : '';
+                        return `<tr onclick="openTicketDetail(${t.id})" style="cursor:pointer">
+                            <td class="text-muted small fw-semibold">${escHtml(t.ticket_number)}${catBadge}</td>
+                            <td class="small">${escHtml(t.equipment_name || '—')}</td>
+                            <td class="small" style="max-width:200px">${escHtml(t.title)}</td>
+                            <td><span class="priority-badge p-${t.priority}">${t.priority}</span></td>
+                            <td><span class="status-badge s-${t.status}">${t.status.replace('_', ' ')}</span></td>
+                            <td class="small text-muted">${new Date(t.opened_at).toLocaleDateString()}</td>
+                        </tr>`;
+                    }).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+    } catch(e) { body.innerHTML = `<div class="alert alert-danger m-3">Failed to load: ${escHtml(e.message)}</div>`; }
+}
+
+async function openTicketModal(equipId) {
+    document.getElementById('tm-id').value = '';
+    document.getElementById('tm-version').value = '';
+    document.getElementById('tm-title').value = '';
+    document.getElementById('tm-description').value = '';
+    document.getElementById('tm-priority').value = 'normal';
+    document.getElementById('tm-worklog-section').style.display = 'none';
+    document.getElementById('tm-status-group').style.display = 'none';
+    document.getElementById('tm-equip-group').style.display = '';
+    document.getElementById('tm-equip-display').style.display = 'none';
+    document.getElementById('tm-save-btn').textContent = 'Create Ticket';
+    document.getElementById('tm-delete-btn').style.display = 'none';
+    document.getElementById('ticketModalTitle').textContent = 'New Repair Ticket';
+
+    // Ensure equipment list is loaded even if Equipment section hasn't been visited
+    if (!allEquipment.length) {
+        try { allEquipment = await api('GET', '/api/equipment'); } catch(e) { allEquipment = []; }
+    }
+
+    document.getElementById('tm-equipment').innerHTML = allEquipment.map(e =>
+        `<option value="${e.id}" ${e.id === equipId ? 'selected' : ''}>${escHtml(e.common_name || e.make + ' ' + e.model)}</option>`
+    ).join('');
+    bsModal('ticketModal').show();
+}
+
+function newTicketFor(equipId) { openTicketModal(equipId); }
+
+async function openTicketDetail(id) {
+    try {
+        const t = await api('GET', `/api/tickets/${id}`);
+        document.getElementById('tm-id').value = t.id;
+        document.getElementById('tm-version').value = t.version;
+        document.getElementById('tm-title').value = t.title;
+        document.getElementById('tm-description').value = t.description || '';
+        document.getElementById('tm-priority').value = t.priority;
+        document.getElementById('tm-status').value = t.status;
+        document.getElementById('tm-worklog-section').style.display = '';
+        document.getElementById('tm-status-group').style.display = '';
+        document.getElementById('tm-equip-group').style.display = 'none';
+        document.getElementById('tm-equip-display').style.display = '';
+        document.getElementById('tm-equip-name').textContent =
+            (t.equipment_name || '—') + (t.area_name ? ' · ' + t.area_name : '');
+        document.getElementById('tm-save-btn').textContent = 'Save Changes';
+        document.getElementById('tm-delete-btn').style.display = can('tickets.delete') ? '' : 'none';
+        document.getElementById('ticketModalTitle').innerHTML =
+            escHtml(t.ticket_number) +
+            (t.category === 'maintenance' ? ' <span class="cat-badge cat-maintenance ms-2">maintenance</span>' : '');
+
+        // Render work log
+        const wl = Array.isArray(t.work_log) ? t.work_log : [];
+        document.getElementById('tm-log-entries').innerHTML = wl.length
+            ? wl.map(l => `
+                <div class="worklog-entry">
+                    <div style="flex-shrink:0;min-width:70px">
+                        <div class="wl-date">${new Date(l.timestamp).toLocaleDateString()}</div>
+                        <div class="wl-user">${escHtml(l.user_name || '—')}</div>
+                    </div>
+                    <div class="wl-text">
+                        ${escHtml(l.action)}
+                        ${l.notes ? `<div class="text-muted" style="font-size:.78rem">${escHtml(l.notes)}</div>` : ''}
+                        ${l.parts_used?.length ? `<div class="text-muted" style="font-size:.75rem"><i class="bi bi-tools me-1"></i>${l.parts_used.map(escHtml).join(', ')}</div>` : ''}
+                    </div>
+                </div>`).join('')
+            : '<div class="text-muted small mb-2">No entries yet</div>';
+
+        // Clear add-entry fields
+        document.getElementById('wl-action').value = '';
+        document.getElementById('wl-notes').value = '';
+        document.getElementById('wl-parts').value = '';
+
+        bsModal('ticketModal').show();
+    } catch(e) { toast('Failed to load ticket: ' + e.message, 'error'); }
+}
+
+async function saveTicket() {
+    const id = document.getElementById('tm-id').value;
+    try {
+        if (id) {
+            const payload = {
+                title:       document.getElementById('tm-title').value.trim(),
+                description: document.getElementById('tm-description').value.trim(),
+                priority:    document.getElementById('tm-priority').value,
+                status:      document.getElementById('tm-status').value,
+                version:     parseInt(document.getElementById('tm-version').value, 10),
+            };
+            await api('PATCH', `/api/tickets/${id}`, payload);
+            toast('Ticket updated', 'success');
+        } else {
+            const equipId = document.getElementById('tm-equipment').value;
+            const title   = document.getElementById('tm-title').value.trim();
+            if (!equipId || !title) { toast('Equipment and title are required', 'error'); return; }
+            await api('POST', '/api/tickets', {
+                equipment_id: parseInt(equipId, 10),
+                title,
+                description: document.getElementById('tm-description').value.trim(),
+                priority:    document.getElementById('tm-priority').value,
+            });
+            toast('Ticket created', 'success');
+        }
+        bsModal('ticketModal').hide();
+        loadTickets();
+    } catch(e) { toast(e.message, 'error'); }
+}
+
+async function addWorkLog() {
+    const id = document.getElementById('tm-id').value;
+    const action = document.getElementById('wl-action').value.trim();
+    if (!action) { toast('Action is required', 'error'); return; }
+    const partsRaw = document.getElementById('wl-parts').value.trim();
+    try {
+        await api('POST', `/api/tickets/${id}/worklog`, {
+            action,
+            notes:      document.getElementById('wl-notes').value.trim(),
+            parts_used: partsRaw ? partsRaw.split(',').map(p => p.trim()).filter(Boolean) : [],
+        });
+        toast('Work entry logged', 'success');
+        await openTicketDetail(id);
+    } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteTicket() {
+    const id = document.getElementById('tm-id').value;
+    if (!id) return;
+    if (!confirm('Permanently delete this ticket? This cannot be undone.')) return;
+    try {
+        await api('DELETE', `/api/tickets/${id}`);
+        toast('Ticket deleted', 'success');
+        bsModal('ticketModal').hide();
+        loadTickets();
+    } catch(e) { toast(e.message, 'error'); }
+}
+
+function renderAttachments() {} // placeholder — file uploads not yet implemented
 function openMaintScheduleForEquip() {}
 
 // ── Init ──
@@ -1129,6 +1576,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (canChange('equipment.areas')) {
         const btn = document.getElementById('btn-add-area');
+        if (btn) btn.style.display = '';
+    }
+    if (canChange('equipment.tickets')) {
+        const btn = document.getElementById('btn-add-ticket');
+        if (btn) btn.style.display = '';
+    }
+    if (canChange('equipment.groups')) {
+        const btn = document.getElementById('btn-add-group');
         if (btn) btn.style.display = '';
     }
 });

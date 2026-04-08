@@ -16,6 +16,43 @@
 .area-info-val { color: var(--text-color, #212529); }
 .detail-section-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--text-muted, #6c757d); padding-bottom: .4rem; border-bottom: 1px solid var(--border-color, #dee2e6); margin-bottom: .875rem; }
 
+/* ── Ticket list items ── */
+.ticket-item { border: 1px solid #dee2e6; border-radius: 6px; border-left: 4px solid #dee2e6; padding: .875rem; margin-bottom: .75rem; background: #fff; }
+.ticket-item.priority-critical { border-left-color: #dc3545; }
+.ticket-item.priority-high     { border-left-color: #ffc107; }
+.ticket-item.priority-normal   { border-left-color: #0d6efd; }
+.ticket-item.priority-low      { border-left-color: #adb5bd; }
+.ticket-num   { font-size: .72rem; color: #6c757d; font-weight: 600; margin-bottom: 2px; }
+.ticket-title { font-weight: 600; font-size: .9rem; color: #212529; }
+.ticket-desc  { font-size: .8rem; color: #6c757d; margin-top: .25rem; }
+
+/* ── Status and priority badges ── */
+.status-badge { font-size: .7rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+.s-open        { background: #cfe2ff; color: #052c65; }
+.s-in_progress { background: #fff3cd; color: #664d03; }
+.s-on_hold     { background: #e9ecef; color: #495057; }
+.s-closed      { background: #d1e7dd; color: #0a3622; }
+.priority-badge { font-size: .68rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: .05em; }
+.p-critical { background: #f8d7da; color: #58151c; }
+.p-high     { background: #fff3cd; color: #664d03; }
+.p-normal   { background: #cfe2ff; color: #052c65; }
+.p-low      { background: #e9ecef; color: #495057; }
+.cat-badge { font-size: .6rem; font-weight: 700; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; letter-spacing: .04em; vertical-align: middle; }
+.cat-maintenance { background: #f3e8ff; color: #6f42c1; }
+
+/* ── Work log timeline ── */
+.worklog-entry { display: flex; gap: .75rem; padding: .5rem 0; border-top: 1px solid #f0f2f5; font-size: .8rem; }
+.worklog-entry:first-child { border-top: none; }
+.wl-date { font-size: .72rem; color: #adb5bd; white-space: nowrap; }
+.wl-user { font-size: .72rem; font-weight: 600; color: var(--primary-color, #6f42c1); white-space: nowrap; }
+.wl-text { color: #495057; }
+
+/* ── Equipment group cards ── */
+.group-card { background: var(--surface-color, #fff); border: 1px solid var(--border-color, #dee2e6); border-radius: 8px; margin-bottom: .75rem; overflow: hidden; }
+.group-card-header { padding: .75rem 1rem; background: #f8f9fa; border-bottom: 1px solid var(--border-color, #dee2e6); display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+.group-card-header:hover { background: #f0f2f5; }
+.group-card-body { padding: .75rem 1rem; display: flex; flex-wrap: wrap; gap: .5rem; }
+
 * {
     margin: 0;
     padding: 0;
