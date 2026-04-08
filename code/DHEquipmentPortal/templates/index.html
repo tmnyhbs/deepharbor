@@ -227,8 +227,16 @@
         <div id="areasSection" style="display:none;">
             <h3 class="page-title"><i class="bi bi-map me-2"></i>Areas</h3>
             <div id="areasContent">
-                <!-- TODO: Port PA1 areas management -->
-                <p class="text-muted">Areas management — to be ported from PA1 index.html</p>
+                <div class="d-flex justify-content-end mb-3">
+                    <button class="btn btn-primary btn-sm" id="btn-add-area" style="display:none" onclick="openAreaModal()">
+                        <i class="bi bi-plus-lg me-1"></i>Add Area
+                    </button>
+                </div>
+                <div class="content-card">
+                    <div id="areas-body">
+                        <div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading&hellip;</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -290,6 +298,69 @@
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
     </div>
     <div class="offcanvas-body" id="panel-equip-body"></div>
+</div>
+
+{# ── Area Detail Panel ── #}
+<div class="offcanvas offcanvas-end" tabindex="-1" id="areaDetailPanel">
+    <div class="offcanvas-header">
+        <div>
+            <div class="offcanvas-title" id="panel-area-title">&#x2014;</div>
+            <div class="text-muted small" id="panel-area-sub">&#x2014;</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body" id="panel-area-body"></div>
+</div>
+
+{# ── Area Add / Edit Modal ── #}
+<div class="modal fade" id="areaModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width:520px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="areaModalTitle">Add Area</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="am-id">
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Area Name <span class="text-danger">*</span></label>
+                    <input class="form-control" id="am-name">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Description</label>
+                    <textarea class="form-control" id="am-description" rows="2"></textarea>
+                </div>
+                <hr class="my-3">
+                <div class="small fw-semibold text-muted text-uppercase mb-3" style="letter-spacing:.08em">Contact Info</div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold"><i class="bi bi-globe me-1"></i>Website</label>
+                        <input class="form-control" id="am-website" placeholder="https://&hellip;">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold"><i class="bi bi-person me-1"></i>Area Host</label>
+                        <input class="form-control" id="am-host-name">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold"><i class="bi bi-telephone me-1"></i>Host Contact</label>
+                        <input class="form-control" id="am-host-contact">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold"><i class="bi bi-envelope me-1"></i>Email</label>
+                        <input class="form-control" id="am-email">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold"><i class="bi bi-discord me-1"></i>Discord Channel</label>
+                        <input class="form-control" id="am-discord">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary fw-semibold" onclick="saveArea()">Save Area</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 {# ── Equipment Add / Edit Modal ── #}
@@ -435,6 +506,7 @@ function showSection(name) {
     // Load data for the section
     if (name === 'dashboard') loadDashboard();
     if (name === 'equipment') loadEquipment();
+    if (name === 'areas') loadAreasSection();
 }
 
 function filterSidebarByPermissions() {
@@ -512,6 +584,9 @@ function can(perm) {
         'equipment.edit':       () => canChange('equipment.items'),
         'equipment.create':     () => canChange('equipment.items'),
         'equipment.delete':     () => canChange('equipment.items'),
+        'areas.edit':           () => canChange('equipment.areas'),
+        'areas.create':         () => canChange('equipment.areas'),
+        'areas.delete':         () => canChange('equipment.areas'),
         'maintenance.view':     () => canView('equipment.maintenance'),
         'maintenance.create':   () => canChange('equipment.maintenance'),
         'maintenance.complete': () => canChange('equipment.maintenance'),
@@ -878,6 +953,165 @@ function getAttrsWithLocation() {
     return attrs;
 }
 
+// ── Areas section ──
+async function loadAreasSection() {
+    const body = document.getElementById('areas-body');
+    if (!body) return;
+    body.innerHTML = '<div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading&hellip;</div>';
+    try {
+        allAreas = await api('GET', '/api/areas');
+        renderAreaNav();
+        const canEdit = can('areas.edit');
+        if (!allAreas.length) {
+            body.innerHTML = '<div class="text-center py-4 text-muted">No areas configured yet.</div>';
+            return;
+        }
+        body.innerHTML = `
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead><tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Host</th>
+                        <th class="text-center">Equipment</th>
+                        ${canEdit ? '<th></th>' : ''}
+                    </tr></thead>
+                    <tbody>${allAreas.map(a => {
+                        const m = a.metadata || {};
+                        return `<tr style="cursor:pointer" onclick="openAreaDetail(${a.id})">
+                            <td class="fw-semibold">${escHtml(a.name)}</td>
+                            <td class="text-muted small">${escHtml(a.description || '—')}</td>
+                            <td class="small">${escHtml(m.host_name || '—')}</td>
+                            <td class="text-center">${a.equipment_count ?? 0}</td>
+                            ${canEdit ? `<td class="text-end" onclick="event.stopPropagation()">
+                                <button class="btn btn-outline-secondary btn-sm me-1" onclick="editAreaById(${a.id})"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="deleteArea(${a.id},'${escHtml(a.name).replace(/'/g,"\\'")}')"><i class="bi bi-trash"></i></button>
+                            </td>` : ''}
+                        </tr>`;
+                    }).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+    } catch(e) { body.innerHTML = `<div class="alert alert-danger m-3">Failed to load: ${escHtml(e.message)}</div>`; }
+}
+
+async function openAreaDetail(id) {
+    document.getElementById('panel-area-title').textContent = '…';
+    document.getElementById('panel-area-sub').textContent = '';
+    document.getElementById('panel-area-body').innerHTML = '<div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading&hellip;</div>';
+    bsCanvas('areaDetailPanel').show();
+    try {
+        const [area, equipment] = await Promise.all([
+            api('GET', `/api/areas/${id}`),
+            api('GET', `/api/equipment?area_id=${id}`),
+        ]);
+        document.getElementById('panel-area-title').textContent = area.name;
+        const cnt = area.equipment_count ?? equipment.length;
+        document.getElementById('panel-area-sub').textContent = `${cnt} piece${cnt !== 1 ? 's' : ''} of equipment`;
+        const m = area.metadata || {};
+        const isAdmin = can('areas.edit');
+
+        const contactFields = [
+            { key: 'website',      icon: 'bi-globe',          label: 'Website',
+              val: m.website ? `<a href="${escHtml(m.website)}" target="_blank" rel="noopener">${escHtml(m.website)}</a>` : '&#x2014;' },
+            { key: 'host_name',    icon: 'bi-person-fill',    label: 'Area Host',    val: escHtml(m.host_name) || '&#x2014;' },
+            { key: 'host_contact', icon: 'bi-telephone-fill', label: 'Contact',      val: escHtml(m.host_contact) || '&#x2014;' },
+            { key: 'email',        icon: 'bi-envelope-fill',  label: 'Email',
+              val: m.email ? `<a href="mailto:${escHtml(m.email)}">${escHtml(m.email)}</a>` : '&#x2014;' },
+            { key: 'discord',      icon: 'bi-discord',        label: 'Discord',      val: escHtml(m.discord) || '&#x2014;' },
+        ].filter(r => r.val !== '&#x2014;');
+
+        const infoHtml = contactFields.map(r => `
+            <div class="area-info-row">
+                <i class="bi ${r.icon} area-info-icon"></i>
+                <div><div class="area-info-label">${escHtml(r.label)}</div><div class="area-info-val">${r.val}</div></div>
+            </div>`).join('');
+
+        const equipRows = equipment.length
+            ? equipment.map(e => `
+                <div class="d-flex align-items-center justify-content-between py-2 border-bottom"
+                    style="font-size:.875rem;cursor:pointer"
+                    onclick="bsCanvas('areaDetailPanel').hide();openEquipDetail(${e.id})">
+                    <div>
+                        <div class="fw-semibold">${escHtml(e.common_name || e.make + ' ' + e.model)}</div>
+                        ${e.common_name ? `<div class="text-muted small">${escHtml(e.make)} ${escHtml(e.model)}</div>` : ''}
+                    </div>
+                    <span class="status-badge s-${e.status}">${e.status.replace('_', ' ')}</span>
+                </div>`).join('')
+            : '<div class="text-center text-muted py-3 small">No equipment in this area</div>';
+
+        document.getElementById('panel-area-body').innerHTML = `
+            ${area.description ? `<div class="detail-section-label">Description</div><p class="mb-3 small">${escHtml(area.description)}</p>` : ''}
+            ${isAdmin ? `<button class="btn btn-outline-secondary btn-sm mb-3" onclick="editAreaById(${area.id})"><i class="bi bi-pencil me-1"></i>Edit Area Info</button>` : ''}
+            ${contactFields.length ? `<div class="detail-section-label">Contact Info</div><div class="mb-3">${infoHtml}</div>` : ''}
+            <div class="detail-section-label">Equipment (${equipment.length})</div>
+            ${equipRows}`;
+    } catch(e) {
+        document.getElementById('panel-area-body').innerHTML = `<div class="alert alert-danger">Failed to load: ${escHtml(e.message)}</div>`;
+    }
+}
+
+function openAreaModal() {
+    document.getElementById('am-id').value = '';
+    ['am-name', 'am-description', 'am-website', 'am-host-name', 'am-host-contact', 'am-email', 'am-discord']
+        .forEach(id => document.getElementById(id).value = '');
+    document.getElementById('areaModalTitle').textContent = 'Add Area';
+    bsModal('areaModal').show();
+}
+
+async function editAreaById(id) {
+    try {
+        const area = await api('GET', `/api/areas/${id}`);
+        const m = area.metadata || {};
+        document.getElementById('am-id').value = area.id;
+        document.getElementById('am-name').value = area.name;
+        document.getElementById('am-description').value = area.description || '';
+        document.getElementById('am-website').value = m.website || '';
+        document.getElementById('am-host-name').value = m.host_name || '';
+        document.getElementById('am-host-contact').value = m.host_contact || '';
+        document.getElementById('am-email').value = m.email || '';
+        document.getElementById('am-discord').value = m.discord || '';
+        document.getElementById('areaModalTitle').textContent = 'Edit Area';
+        bsModal('areaModal').show();
+    } catch(e) { toast('Failed to load area: ' + e.message, 'error'); }
+}
+
+async function saveArea() {
+    const id = document.getElementById('am-id').value;
+    const payload = {
+        name: document.getElementById('am-name').value.trim(),
+        description: document.getElementById('am-description').value.trim(),
+        metadata: {
+            website:      document.getElementById('am-website').value.trim(),
+            host_name:    document.getElementById('am-host-name').value.trim(),
+            host_contact: document.getElementById('am-host-contact').value.trim(),
+            email:        document.getElementById('am-email').value.trim(),
+            discord:      document.getElementById('am-discord').value.trim(),
+        },
+    };
+    if (!payload.name) { toast('Area name is required', 'error'); return; }
+    try {
+        if (id) {
+            await api('PATCH', `/api/areas/${id}`, payload);
+            toast('Area updated', 'success');
+        } else {
+            await api('POST', '/api/areas', payload);
+            toast('Area created', 'success');
+        }
+        bsModal('areaModal').hide();
+        await loadAreasSection();
+    } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteArea(id, name) {
+    if (!confirm(`Delete area "${name}"?`)) return;
+    try {
+        await api('DELETE', `/api/areas/${id}`);
+        toast('Area deleted', 'success');
+        await loadAreasSection();
+    } catch(e) { toast(e.message, 'error'); }
+}
+
 // ── Stubs for cross-section actions (to be implemented with their sections) ──
 function newTicketFor(equipId) { showSection('tickets'); }
 function openTicketDetail(id) { showSection('tickets'); }
@@ -891,6 +1125,10 @@ document.addEventListener('DOMContentLoaded', function() {
     loadAreas();
     if (canChange('equipment.items')) {
         const btn = document.getElementById('btn-add-equip');
+        if (btn) btn.style.display = '';
+    }
+    if (canChange('equipment.areas')) {
+        const btn = document.getElementById('btn-add-area');
         if (btn) btn.style.display = '';
     }
 });

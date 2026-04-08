@@ -615,6 +615,7 @@ services:
       DH_SECRET_KEY: "${DH_SECRET_KEY}"
       DH_API_BASE_URL: "http://gateway/dh/service"
       DH_EQUIP_API_BASE_URL: "http://gateway/dh/equipment"
+      AUTH_MODE: "${AUTH_MODE:-}"
     networks:
       - dh_network
 
