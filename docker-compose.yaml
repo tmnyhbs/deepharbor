@@ -61,12 +61,11 @@ services:
   
   # Member Portal Service
   dhmemberportal:
-    build: 
+    build:
       context: ./code/DHMemberPortal
       args:
         GIT_VERSION: "${GIT_VERSION}"
     restart: unless-stopped
-    network_mode: host
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
       interval: 30s
@@ -75,21 +74,23 @@ services:
     environment:
       TZ: "America/Chicago"
       DH_SECRET_KEY: "${DH_SECRET_KEY}"
+      DH_API_BASE_URL: "http://gateway/dh/service"
     ports:
       - "5002:5002"
     depends_on:
       dhservice:
         condition: service_healthy
     container_name: dh_member_portal
+    networks:
+      - dh_network
 
   # The admin portal service
   dhadminportal:
-    build: 
+    build:
       context: ./code/DHAdminPortal
       args:
         GIT_VERSION: "${GIT_VERSION}"
     restart: unless-stopped
-    network_mode: host
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
       interval: 30s
@@ -104,6 +105,9 @@ services:
     environment:
       TZ: "America/Chicago"
       DH_SECRET_KEY: "${DH_SECRET_KEY}"
+      DH_API_BASE_URL: "http://gateway/dh/service"
+    networks:
+      - dh_network
     
 
   #########################################################
@@ -593,7 +597,6 @@ services:
       args:
         GIT_VERSION: "${GIT_VERSION}"
     restart: unless-stopped
-    network_mode: host
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5003/health"]
       interval: 30s
@@ -610,6 +613,10 @@ services:
     environment:
       TZ: "America/Chicago"
       DH_SECRET_KEY: "${DH_SECRET_KEY}"
+      DH_API_BASE_URL: "http://gateway/dh/service"
+      DH_EQUIP_API_BASE_URL: "http://gateway/dh/equipment"
+    networks:
+      - dh_network
 
   #########################################################
   # S3-Compatible Object Storage (RustFS)
@@ -661,10 +668,10 @@ services:
 
 # Persistent volume for PostgreSQL data
 volumes:
-  dhpgdata:
-  rfid_shared:
+  dhpgdata: 
+  rfid_shared: 
   ad_shared:
-  rustfs_data:
+  rustfs_data: 
 
 # Custom network for DeepHarbor services to communicate
 # internally. All services are attached to this network.

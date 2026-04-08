@@ -36,6 +36,74 @@
     .equip-layout { flex-direction: column; }
     #sidebar { width: 100%; }
 }
+
+/* ── Equipment Cards ── */
+.equip-card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; cursor: pointer; transition: box-shadow .15s, transform .15s; }
+.equip-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); transform: translateY(-1px); }
+.equip-card-header { padding: .875rem 1rem; border-bottom: 1px solid #f0f2f5; display: flex; justify-content: space-between; align-items: flex-start; }
+.equip-common-name { font-weight: 800; font-size: 1rem; color: #212529; }
+.equip-make-model { font-size: .78rem; color: #6c757d; margin-top: 1px; }
+.equip-card-body { padding: .75rem 1rem; }
+.equip-meta-row { display: flex; justify-content: space-between; gap: .5rem; font-size: .8rem; }
+.equip-meta-label { font-size: .68rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: #adb5bd; margin-bottom: 1px; }
+.equip-meta-val { color: #495057; font-weight: 500; }
+.equip-card-footer { padding: .5rem 1rem; background: #f8f9fa; border-top: 1px solid #f0f2f5; display: flex; justify-content: space-between; align-items: center; font-size: .78rem; color: #6c757d; }
+
+/* ── Status / Priority Badges ── */
+.status-badge { font-size: .7rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+.s-active         { background: #d1e7dd; color: #0a3622; }
+.s-under_repair   { background: #fff3cd; color: #664d03; }
+.s-inactive       { background: #e9ecef; color: #495057; }
+.s-decommissioned { background: #f8d7da; color: #58151c; }
+.s-open           { background: #cfe2ff; color: #052c65; }
+.s-in_progress    { background: #fff3cd; color: #664d03; }
+.s-on_hold        { background: #e9ecef; color: #495057; }
+.s-closed         { background: #d1e7dd; color: #0a3622; }
+.priority-badge { font-size: .68rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: .05em; }
+.p-critical { background: #f8d7da; color: #58151c; }
+.p-high     { background: #fff3cd; color: #664d03; }
+.p-normal   { background: #cfe2ff; color: #052c65; }
+.p-low      { background: #e9ecef; color: #495057; }
+
+/* ── Toolbar ── */
+.toolbar { display: flex; gap: .5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.toolbar .form-control, .toolbar .form-select { font-size: .875rem; }
+
+/* ── Offcanvas / Detail Panel ── */
+.offcanvas-end { width: 580px !important; }
+.offcanvas-header { border-bottom: 1px solid #dee2e6; background: #f8f9fa; }
+.offcanvas-title { font-weight: 700; font-size: 1rem; }
+.detail-section-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: #6c757d; padding-bottom: .4rem; border-bottom: 1px solid #dee2e6; margin-bottom: .875rem; }
+.attrs-table { font-size: .85rem; }
+.attrs-table td:first-child { color: #6c757d; font-weight: 600; width: 40%; }
+
+/* ── Tickets in detail panel ── */
+.ticket-item { border: 1px solid #dee2e6; border-radius: 6px; border-left: 4px solid #dee2e6; padding: .875rem; margin-bottom: .75rem; background: #fff; }
+.ticket-item.priority-critical { border-left-color: #dc3545; }
+.ticket-item.priority-high     { border-left-color: #ffc107; }
+.ticket-item.priority-normal   { border-left-color: #0d6efd; }
+.ticket-item.priority-low      { border-left-color: #adb5bd; }
+.ticket-num   { font-size: .72rem; color: #6c757d; font-weight: 600; margin-bottom: 2px; }
+.ticket-title { font-weight: 600; font-size: .9rem; color: #212529; }
+.ticket-desc  { font-size: .8rem; color: #6c757d; margin-top: .25rem; }
+.cat-badge { font-size: .6rem; font-weight: 700; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; letter-spacing: .04em; vertical-align: middle; }
+.cat-maintenance { background: #ffe5cc; color: #7a3e00; }
+.worklog-entry { display: flex; gap: .75rem; padding: .5rem 0; border-top: 1px solid #f0f2f5; font-size: .8rem; }
+.wl-date { color: #adb5bd; font-size: .72rem; white-space: nowrap; padding-top: 1px; }
+.wl-user { color: var(--primary-color, #6f42c1); font-weight: 600; white-space: nowrap; }
+.wl-text { color: #495057; }
+
+/* ── Upload zone / Attachments ── */
+.upload-zone { border: 2px dashed #dee2e6; border-radius: 8px; padding: 1rem; text-align: center; cursor: pointer; color: #6c757d; font-size: .85rem; transition: border-color .15s, background .15s; }
+.upload-zone:hover, .upload-zone.dragover { border-color: var(--primary-color, #6f42c1); background: #f8f5ff; }
+.upload-zone input[type=file] { display: none; }
+
+/* ── Attr editor ── */
+.attr-row { display: flex; gap: .4rem; margin-bottom: .4rem; }
+.attr-row input { flex: 1; }
+
+/* ── Toast ── */
+.toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; }
 </style>
 
 <div class="equip-layout">
@@ -93,8 +161,47 @@
         <div id="equipmentSection" style="display:none;">
             <h3 class="page-title"><i class="bi bi-cpu me-2"></i>Equipment</h3>
             <div id="equipmentContent">
-                <!-- TODO: Port PA1 equipment list/grid view, filters, add/edit modals -->
-                <p class="text-muted">Equipment management — to be ported from PA1 index.html</p>
+                <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+                    <div class="toolbar mb-0">
+                        <div class="input-group" style="max-width:320px">
+                            <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" class="form-control" id="equipSearch" placeholder="Search name, make, model, serial&hellip;" oninput="filterEquip()">
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" id="equip-area-btn" type="button"
+                                data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                                <i class="bi bi-geo-alt me-1"></i>All Areas
+                            </button>
+                            <ul class="dropdown-menu" id="equip-area-menu" style="min-width:200px;max-height:280px;overflow-y:auto">
+                                <li><button class="dropdown-item" onclick="selectArea('')"><i class="bi bi-grid-3x3-gap me-2"></i>All Areas</button></li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                            </ul>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary btn-sm" type="button"
+                                data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                                <i class="bi bi-funnel me-1"></i><span id="equip-status-label">All Statuses</span>
+                            </button>
+                            <ul class="dropdown-menu p-2" style="min-width:180px">
+                                <li class="px-1 pb-1"><small class="text-muted fw-semibold">Status</small></li>
+                                <li><label class="dropdown-item d-flex align-items-center gap-2 py-1">
+                                    <input type="checkbox" class="equip-status-chk" value="active" onchange="filterEquip()"> Active</label></li>
+                                <li><label class="dropdown-item d-flex align-items-center gap-2 py-1">
+                                    <input type="checkbox" class="equip-status-chk" value="under_repair" onchange="filterEquip()"> Under Repair</label></li>
+                                <li><label class="dropdown-item d-flex align-items-center gap-2 py-1">
+                                    <input type="checkbox" class="equip-status-chk" value="inactive" onchange="filterEquip()"> Inactive</label></li>
+                                <li><label class="dropdown-item d-flex align-items-center gap-2 py-1">
+                                    <input type="checkbox" class="equip-status-chk" value="decommissioned" onchange="filterEquip()"> Decommissioned</label></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm" id="btn-add-equip" style="display:none" onclick="openEquipModal()">
+                        <i class="bi bi-plus-lg me-1"></i>Add Equipment
+                    </button>
+                </div>
+                <div id="equip-grid" class="row g-3">
+                    <div class="col-12 text-center py-5 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading&hellip;</div>
+                </div>
             </div>
         </div>
 
@@ -163,6 +270,122 @@
     </div>
 </div>
 
+{# ── Toast ── #}
+<div class="toast-container">
+    <div id="appToast" class="toast align-items-center border-0 text-bg-dark" role="alert" aria-live="assertive">
+        <div class="d-flex">
+            <div class="toast-body" id="toastMsg"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+{# ── Equipment Detail Panel ── #}
+<div class="offcanvas offcanvas-end" tabindex="-1" id="equipDetailPanel">
+    <div class="offcanvas-header">
+        <div>
+            <div class="offcanvas-title" id="panel-equip-title">&#x2014;</div>
+            <div class="text-muted small" id="panel-equip-sub">&#x2014;</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body" id="panel-equip-body"></div>
+</div>
+
+{# ── Equipment Add / Edit Modal ── #}
+<div class="modal fade" id="equipModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="equipModalTitle">Add Equipment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="em-id">
+                <input type="hidden" id="em-version">
+                <div class="row g-3 mb-3">
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Common Name</label>
+                        <input class="form-control" id="em-common-name" placeholder="The name everyone calls it">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Make <span class="text-danger">*</span></label>
+                        <input class="form-control" id="em-make">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Model <span class="text-danger">*</span></label>
+                        <input class="form-control" id="em-model">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Serial Number <span class="text-danger">*</span></label>
+                        <input class="form-control" id="em-serial">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Build Date</label>
+                        <input class="form-control" type="date" id="em-builddate">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Area</label>
+                        <select class="form-select" id="em-area"></select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Scheduling</label>
+                        <div class="form-check form-switch mt-1">
+                            <input class="form-check-input" type="checkbox" id="em-schedulable">
+                            <label class="form-check-label small">Enable scheduling</label>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Status</label>
+                        <select class="form-select" id="em-status">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="under_repair">Under Repair</option>
+                            <option value="decommissioned">Decommissioned</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-2 small fw-semibold text-muted text-uppercase" style="letter-spacing:.08em">Additional Attributes</div>
+                <div id="attrEditor" class="mb-2 border rounded p-2 bg-light"></div>
+                <button class="btn btn-outline-secondary btn-sm" onclick="addAttrRow()"><i class="bi bi-plus me-1"></i>Add Attribute</button>
+                <hr class="my-3">
+                <div class="mb-2 small fw-semibold text-muted text-uppercase" style="letter-spacing:.08em">
+                    <i class="bi bi-geo-alt me-1"></i>Location
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Location Description</label>
+                    <textarea class="form-control" id="em-location-desc" rows="2"
+                        placeholder="e.g. Back wall of the north workshop, second shelf from the top"></textarea>
+                </div>
+                <div>
+                    <label class="form-label small fw-semibold">Location Photo</label>
+                    <div id="em-location-img-preview" class="mb-2" style="display:none">
+                        <div class="position-relative d-inline-block">
+                            <img id="em-location-img-el" src="" style="max-width:100%;max-height:200px;border-radius:6px;border:1px solid #dee2e6;display:block">
+                            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 px-1 py-0"
+                                onclick="clearLocationImage()" title="Remove photo"><i class="bi bi-x"></i></button>
+                        </div>
+                    </div>
+                    <div id="em-location-upload-zone" class="upload-zone"
+                        onclick="document.getElementById('em-location-file').click()"
+                        ondragover="event.preventDefault();this.classList.add('dragover')"
+                        ondragleave="this.classList.remove('dragover')"
+                        ondrop="handleLocationFileDrop(event)">
+                        <input type="file" id="em-location-file" accept="image/*"
+                            onchange="handleLocationFileSelect(event)">
+                        <i class="bi bi-camera me-1"></i> Upload location photo
+                    </div>
+                    <input type="hidden" id="em-location-img-url" value="">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary fw-semibold" onclick="saveEquipment()">Save Equipment</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // ── Permission & Section Management ──
 const USER_PERMISSIONS = {{ user_permissions | tojson }};
@@ -211,6 +434,7 @@ function showSection(name) {
 
     // Load data for the section
     if (name === 'dashboard') loadDashboard();
+    if (name === 'equipment') loadEquipment();
 }
 
 function filterSidebarByPermissions() {
@@ -270,10 +494,405 @@ function escHtml(s) {
     return d.innerHTML;
 }
 
+// ── Bootstrap helpers ──
+const bsModal  = id => bootstrap.Modal.getOrCreateInstance(document.getElementById(id));
+const bsCanvas = id => bootstrap.Offcanvas.getOrCreateInstance(document.getElementById(id));
+const bsToast  = ()  => bootstrap.Toast.getOrCreateInstance(document.getElementById('appToast'), {delay: 3000});
+
+function toast(msg, type='info') {
+    const el = document.getElementById('appToast');
+    el.className = `toast align-items-center border-0 text-bg-${type==='success'?'success':type==='error'?'danger':'dark'}`;
+    document.getElementById('toastMsg').textContent = msg;
+    bsToast().show();
+}
+
+// ── Permission helper (maps PA1-style perm strings to DH model) ──
+function can(perm) {
+    const m = {
+        'equipment.edit':       () => canChange('equipment.items'),
+        'equipment.create':     () => canChange('equipment.items'),
+        'equipment.delete':     () => canChange('equipment.items'),
+        'maintenance.view':     () => canView('equipment.maintenance'),
+        'maintenance.create':   () => canChange('equipment.maintenance'),
+        'maintenance.complete': () => canChange('equipment.maintenance'),
+        'tickets.view':         () => canView('equipment.tickets'),
+        'tickets.edit':         () => canChange('equipment.tickets'),
+    };
+    return m[perm] ? m[perm]() : false;
+}
+
+// ── Equipment state ──
+let allEquipment = [];
+let allAreas = [];
+let selectedArea = '';
+
+// ── Areas ──
+async function loadAreas() {
+    try {
+        allAreas = await api('GET', '/api/areas');
+        renderAreaNav();
+    } catch(e) {
+        console.error('Failed to load areas:', e);
+    }
+}
+
+function renderAreaNav() {
+    const menu = document.getElementById('equip-area-menu');
+    if (!menu) return;
+    const fixed = menu.innerHTML.split('<li><hr')[0];
+    menu.innerHTML = fixed + '<li><hr class="dropdown-divider my-1"></li>'
+        + allAreas.map(a => `<li><button class="dropdown-item d-flex justify-content-between align-items-center" onclick="selectArea(${a.id})">
+            <span><i class="bi bi-geo-alt me-2 text-muted"></i>${escHtml(a.name)}</span>
+            <span class="badge bg-secondary rounded-pill">${a.equipment_count ?? ''}</span>
+        </button></li>`).join('');
+}
+
+function selectArea(areaId) {
+    selectedArea = areaId;
+    const btn = document.getElementById('equip-area-btn');
+    if (btn) {
+        const area = allAreas.find(a => a.id === areaId);
+        btn.innerHTML = `<i class="bi bi-geo-alt me-1"></i>${area ? escHtml(area.name) : 'All Areas'}`;
+    }
+    filterEquip();
+}
+
+// ── Equipment list ──
+async function loadEquipment() {
+    document.getElementById('equip-grid').innerHTML = '<div class="col-12 text-center py-5 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading&hellip;</div>';
+    try {
+        allEquipment = await api('GET', '/api/equipment');
+        filterEquip();
+    } catch(e) {
+        document.getElementById('equip-grid').innerHTML = `<div class="col-12"><div class="alert alert-danger">Failed to load: ${escHtml(e.message)}</div></div>`;
+    }
+}
+
+function filterEquip() {
+    const search = document.getElementById('equipSearch')?.value.toLowerCase() || '';
+    const checkedStatuses = [...document.querySelectorAll('.equip-status-chk:checked')].map(c => c.value);
+    const lbl = document.getElementById('equip-status-label');
+    if (lbl) lbl.textContent = checkedStatuses.length === 0 ? 'All Statuses'
+        : checkedStatuses.length === 1 ? checkedStatuses[0].replace('_', ' ')
+        : `${checkedStatuses.length} statuses`;
+    const f = allEquipment.filter(e => {
+        if (selectedArea && e.area_id !== selectedArea) return false;
+        if (checkedStatuses.length && !checkedStatuses.includes(e.status)) return false;
+        if (search) {
+            const hay = `${e.common_name||''} ${e.make} ${e.model} ${e.serial_number}`.toLowerCase();
+            if (!hay.includes(search)) return false;
+        }
+        return true;
+    });
+    renderEquipGrid(f);
+}
+
+function renderEquipGrid(items) {
+    const grid = document.getElementById('equip-grid');
+    if (!items.length) { grid.innerHTML = '<div class="col-12"><div class="text-center py-5 text-muted">No equipment found.</div></div>'; return; }
+    grid.innerHTML = items.map(e => `
+        <div class="col-sm-6 col-xl-4">
+            <div class="equip-card" onclick="openEquipDetail(${e.id})">
+                <div class="equip-card-header">
+                    <div>
+                        <div class="equip-common-name">${escHtml(e.common_name || e.make + ' ' + e.model)}</div>
+                        ${e.common_name ? `<div class="equip-make-model">${escHtml(e.make)} ${escHtml(e.model)}</div>` : ''}
+                    </div>
+                    <span class="status-badge s-${e.status}">${e.status.replace('_', ' ')}</span>
+                </div>
+                <div class="equip-card-body">
+                    <div class="equip-meta-row">
+                        <div><div class="equip-meta-label">Serial No.</div><div class="equip-meta-val">${escHtml(e.serial_number)}</div></div>
+                        <div><div class="equip-meta-label">Build Date</div><div class="equip-meta-val">${e.build_date ? e.build_date.split('T')[0] : '&#x2014;'}</div></div>
+                    </div>
+                </div>
+                <div class="equip-card-footer">
+                    <span><i class="bi bi-geo-alt me-1"></i>${escHtml(e.area_name || '—')}</span>
+                    ${e.open_tickets > 0
+                        ? `<span class="text-warning fw-semibold"><i class="bi bi-exclamation-circle me-1"></i>${e.open_tickets} open ticket${e.open_tickets > 1 ? 's' : ''}</span>`
+                        : `<span class="text-success"><i class="bi bi-check-circle me-1"></i>No open tickets</span>`}
+                </div>
+            </div>
+        </div>`).join('');
+}
+
+// ── Equipment detail panel ──
+async function openEquipDetail(id) {
+    document.getElementById('panel-equip-title').textContent = '…';
+    document.getElementById('panel-equip-sub').textContent = '';
+    document.getElementById('panel-equip-body').innerHTML = '<div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading&hellip;</div>';
+    bsCanvas('equipDetailPanel').show();
+    try {
+        const [equip, tickets, maintEvts] = await Promise.all([
+            api('GET', `/api/equipment/${id}`),
+            api('GET', `/api/tickets?equipment_id=${id}`),
+            can('maintenance.view') ? api('GET', `/api/maintenance/events?equipment_id=${id}`).catch(() => []) : Promise.resolve([]),
+        ]);
+        document.getElementById('panel-equip-title').textContent = equip.common_name || `${equip.make} ${equip.model}`;
+        document.getElementById('panel-equip-sub').textContent = `${equip.make} ${equip.model} · ${equip.serial_number}`;
+        const canEdit = can('equipment.edit');
+        const isAdmin = can('equipment.delete');
+        const attrs = equip.attributes || {};
+        const visAttrs = Object.fromEntries(Object.entries(attrs).filter(([k]) => !k.startsWith('__')));
+
+        const coreRows = [
+            {label: 'Common Name',   val: equip.common_name},
+            {label: 'Make',          val: equip.make},
+            {label: 'Model',         val: equip.model},
+            {label: 'Serial Number', val: equip.serial_number},
+            {label: 'Build Date',    val: equip.build_date ? equip.build_date.split('T')[0] : null},
+            {label: 'Area',          val: equip.area_name},
+            {label: 'Status',        val: `<span class="status-badge s-${equip.status}">${equip.status.replace('_', ' ')}</span>`},
+            {label: 'Scheduling',    val: equip.schedulable ? '<span class="badge bg-success">Enabled</span>' : '<span class="badge bg-secondary">Disabled</span>'},
+        ].filter(r => r.val !== null && r.val !== undefined);
+
+        const detailRows = coreRows.map(r =>
+            `<div class="col-6"><div class="small text-muted fw-semibold">${escHtml(r.label)}</div><div>${r.val}</div></div>`
+        ).join('');
+
+        const attrHtml = Object.entries(visAttrs).length
+            ? `<table class="table table-sm attrs-table mb-0">${Object.entries(visAttrs).map(([k,v]) => `<tr><td>${escHtml(k)}</td><td>${escHtml(v)}</td></tr>`).join('')}</table>`
+            : '<span class="text-muted small">No additional attributes</span>';
+
+        const ticketsHtml = tickets.length ? tickets.map(t => {
+            const wl = Array.isArray(t.work_log) ? t.work_log : [];
+            const logHtml = wl.length
+                ? wl.map(l => `<div class="worklog-entry">
+                    <span class="wl-date">${new Date(l.timestamp).toLocaleDateString()}</span>
+                    <span class="wl-user">${escHtml(l.user_name)}</span>
+                    <span class="wl-text">${escHtml(l.action)}${l.notes ? ' — ' + escHtml(l.notes) : ''}</span>
+                </div>`).join('')
+                : '';
+            return `<div class="ticket-item priority-${t.priority}">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <div>
+                        <div class="ticket-num">${escHtml(t.ticket_number)}${t.category === 'maintenance' ? ' <span class="cat-badge cat-maintenance">maint</span>' : ''}</div>
+                        <div class="ticket-title">${escHtml(t.title)}</div>
+                    </div>
+                    <div class="d-flex flex-column gap-1 align-items-end">
+                        <span class="status-badge s-${t.status}">${t.status.replace('_', ' ')}</span>
+                        <span class="priority-badge p-${t.priority}">${t.priority}</span>
+                    </div>
+                </div>
+                ${t.description ? `<div class="ticket-desc">${escHtml(t.description)}</div>` : ''}
+                <div class="text-muted small mt-1">Opened ${new Date(t.opened_at).toLocaleDateString()} · ${t.assigned_to_name || 'Unassigned'}</div>
+                ${logHtml ? `<div class="mt-2">${logHtml}</div>` : ''}
+            </div>`;
+        }).join('') : '<div class="text-center text-muted py-3 small">No repair tickets</div>';
+
+        const locDesc = attrs.__location_desc;
+        const locImg  = attrs.__location_img;
+        const locationHtml = (locDesc || locImg) ? `
+            <div class="detail-section-label"><i class="bi bi-geo-alt me-1"></i>Where Is It Located</div>
+            <div class="mb-3">
+                ${locImg ? `<img src="${escHtml(locImg)}" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;border:1px solid #dee2e6;margin-bottom:.75rem;display:block">` : ''}
+                ${locDesc ? `<p class="small mb-0" style="white-space:pre-line">${escHtml(locDesc)}</p>` : ''}
+            </div>` : '';
+
+        document.getElementById('panel-equip-body').innerHTML = `
+            <div class="detail-section-label">Equipment Details</div>
+            <div class="row g-2 mb-3">${detailRows}</div>
+            ${canEdit ? `<div class="d-flex gap-2 mb-3 flex-wrap">
+                <button class="btn btn-outline-secondary btn-sm" onclick="editEquipment(${equip.id})"><i class="bi bi-pencil me-1"></i>Edit</button>
+                <button class="btn btn-primary btn-sm" onclick="newTicketFor(${equip.id})"><i class="bi bi-plus me-1"></i>New Ticket</button>
+                ${isAdmin ? `<button class="btn btn-outline-danger btn-sm ms-auto" onclick="deleteEquipment(${equip.id})"><i class="bi bi-trash me-1"></i>Delete</button>` : ''}
+            </div>` : ''}
+            <div class="detail-section-label">Additional Attributes</div>
+            <div class="mb-3">${attrHtml}</div>
+            ${locationHtml}
+            <div class="detail-section-label">Repair History (${tickets.length})</div>
+            ${ticketsHtml}`;
+    } catch(e) {
+        document.getElementById('panel-equip-body').innerHTML = `<div class="alert alert-danger">Failed to load: ${escHtml(e.message)}</div>`;
+    }
+}
+
+// ── Equipment CRUD ──
+function openEquipModal() {
+    document.getElementById('em-id').value = '';
+    document.getElementById('em-version').value = '';
+    document.getElementById('em-common-name').value = '';
+    document.getElementById('em-schedulable').checked = false;
+    document.getElementById('em-make').value = '';
+    document.getElementById('em-model').value = '';
+    document.getElementById('em-serial').value = '';
+    document.getElementById('em-builddate').value = '';
+    document.getElementById('em-status').value = 'active';
+    document.getElementById('equipModalTitle').textContent = 'Add Equipment';
+    document.getElementById('em-area').innerHTML = '<option value="">No Area</option>'
+        + allAreas.map(a => `<option value="${a.id}">${escHtml(a.name)}</option>`).join('');
+    renderAttrEditor({});
+    setLocationFields('', '');
+    bsModal('equipModal').show();
+}
+
+async function editEquipment(id) {
+    const eq = await api('GET', `/api/equipment/${id}`);
+    document.getElementById('em-id').value = eq.id;
+    document.getElementById('em-version').value = eq.version;
+    document.getElementById('em-common-name').value = eq.common_name || '';
+    document.getElementById('em-schedulable').checked = !!eq.schedulable;
+    document.getElementById('em-make').value = eq.make;
+    document.getElementById('em-model').value = eq.model;
+    document.getElementById('em-serial').value = eq.serial_number;
+    document.getElementById('em-builddate').value = eq.build_date ? eq.build_date.split('T')[0] : '';
+    document.getElementById('em-status').value = eq.status;
+    document.getElementById('equipModalTitle').textContent = 'Edit Equipment';
+    document.getElementById('em-area').innerHTML = '<option value="">No Area</option>'
+        + allAreas.map(a => `<option value="${a.id}" ${a.id === eq.area_id ? 'selected' : ''}>${escHtml(a.name)}</option>`).join('');
+    renderAttrEditor(eq.attributes || {});
+    const locAttrs = eq.attributes || {};
+    setLocationFields(locAttrs.__location_desc || '', locAttrs.__location_img || '');
+    bsModal('equipModal').show();
+}
+
+function renderAttrEditor(attrs) {
+    const visAttrs = Object.fromEntries(Object.entries(attrs).filter(([k]) => !k.startsWith('__')));
+    document.getElementById('attrEditor').innerHTML = Object.entries(visAttrs).map(([k, v]) => `
+        <div class="attr-row">
+            <input class="form-control form-control-sm" placeholder="key" value="${escHtml(k)}">
+            <input class="form-control form-control-sm" placeholder="value" value="${escHtml(v)}">
+            <button class="btn btn-outline-danger btn-sm px-2" onclick="this.closest('.attr-row').remove()"><i class="bi bi-x"></i></button>
+        </div>`).join('')
+        || '<div class="text-muted small">No attributes. Click below to add.</div>';
+}
+
+function addAttrRow() {
+    const ed = document.getElementById('attrEditor');
+    const msg = ed.querySelector('.text-muted');
+    if (msg) msg.remove();
+    const row = document.createElement('div');
+    row.className = 'attr-row';
+    row.innerHTML = `<input class="form-control form-control-sm" placeholder="key"><input class="form-control form-control-sm" placeholder="value"><button class="btn btn-outline-danger btn-sm px-2" onclick="this.closest('.attr-row').remove()"><i class="bi bi-x"></i></button>`;
+    ed.appendChild(row);
+}
+
+function getAttrs() {
+    const attrs = {};
+    document.querySelectorAll('#attrEditor .attr-row').forEach(row => {
+        const [k, v] = row.querySelectorAll('input');
+        if (k.value.trim()) attrs[k.value.trim()] = v.value.trim();
+    });
+    return attrs;
+}
+
+async function saveEquipment() {
+    const id = document.getElementById('em-id').value;
+    const payload = {
+        common_name: document.getElementById('em-common-name').value.trim() || null,
+        schedulable: document.getElementById('em-schedulable').checked,
+        make: document.getElementById('em-make').value.trim(),
+        model: document.getElementById('em-model').value.trim(),
+        serial_number: document.getElementById('em-serial').value.trim(),
+        build_date: document.getElementById('em-builddate').value || null,
+        area_id: document.getElementById('em-area').value ? parseInt(document.getElementById('em-area').value) : null,
+        status: document.getElementById('em-status').value,
+        attributes: getAttrsWithLocation(),
+    };
+    if (!payload.make || !payload.model || !payload.serial_number) { toast('Make, model and serial number are required', 'error'); return; }
+    try {
+        if (id) {
+            payload.version = parseInt(document.getElementById('em-version').value);
+            await api('PATCH', `/api/equipment/${id}`, payload);
+            toast('Equipment updated', 'success');
+        } else {
+            await api('POST', '/api/equipment', payload);
+            toast('Equipment created', 'success');
+        }
+        bsModal('equipModal').hide();
+        bsCanvas('equipDetailPanel').hide();
+        await loadEquipment();
+    } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteEquipment(id) {
+    if (!confirm('Delete this equipment? All repair tickets will also be deleted.')) return;
+    try {
+        await api('DELETE', `/api/equipment/${id}`);
+        toast('Equipment deleted', 'success');
+        bsCanvas('equipDetailPanel').hide();
+        await loadEquipment();
+    } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Location image helpers ──
+function setLocationFields(desc, imgUrl) {
+    const descEl   = document.getElementById('em-location-desc');
+    const imgEl    = document.getElementById('em-location-img-el');
+    const urlEl    = document.getElementById('em-location-img-url');
+    const preview  = document.getElementById('em-location-img-preview');
+    const zone     = document.getElementById('em-location-upload-zone');
+    if (descEl) descEl.value = desc || '';
+    if (urlEl)  urlEl.value  = imgUrl || '';
+    if (imgEl && preview && zone) {
+        if (imgUrl) { imgEl.src = imgUrl; preview.style.display = ''; zone.style.display = 'none'; }
+        else        { preview.style.display = 'none'; zone.style.display = ''; }
+    }
+}
+
+function clearLocationImage() {
+    setLocationFields(document.getElementById('em-location-desc')?.value || '', '');
+}
+
+async function handleLocationFileSelect(event) {
+    const file = event.target.files[0];
+    if (file) await uploadLocationImage(file);
+    event.target.value = '';
+}
+
+async function handleLocationFileDrop(event) {
+    event.preventDefault();
+    event.currentTarget.classList.remove('dragover');
+    const file = event.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) await uploadLocationImage(file);
+}
+
+async function uploadLocationImage(file) {
+    const zone = document.getElementById('em-location-upload-zone');
+    if (zone) zone.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Uploading…';
+    try {
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('entity_type', 'equipment_location');
+        fd.append('entity_id', document.getElementById('em-id').value || 'new');
+        const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '' },
+            body: fd,
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        setLocationFields(document.getElementById('em-location-desc')?.value || '', data.url);
+    } catch(e) {
+        toast('Location photo upload failed: ' + e.message, 'error');
+        if (zone) zone.innerHTML = '<i class="bi bi-camera me-1"></i> Upload location photo';
+    }
+}
+
+function getAttrsWithLocation() {
+    const attrs = getAttrs();
+    const desc = (document.getElementById('em-location-desc')?.value || '').trim();
+    const img  = (document.getElementById('em-location-img-url')?.value || '').trim();
+    if (desc) attrs.__location_desc = desc; else delete attrs.__location_desc;
+    if (img)  attrs.__location_img  = img;  else delete attrs.__location_img;
+    return attrs;
+}
+
+// ── Stubs for cross-section actions (to be implemented with their sections) ──
+function newTicketFor(equipId) { showSection('tickets'); }
+function openTicketDetail(id) { showSection('tickets'); }
+function renderAttachments() {}
+function openMaintScheduleForEquip() {}
+
 // ── Init ──
 document.addEventListener('DOMContentLoaded', function() {
     filterSidebarByPermissions();
     loadDashboard();
+    loadAreas();
+    if (canChange('equipment.items')) {
+        const btn = document.getElementById('btn-add-equip');
+        if (btn) btn.style.display = '';
+    }
 });
 </script>
 
