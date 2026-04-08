@@ -303,20 +303,66 @@
 
         {# Scheduling #}
         <div id="schedulingSection" style="display:none;">
-            <h3 class="page-title"><i class="bi bi-calendar3 me-2"></i>Scheduling</h3>
-            <div id="schedulingContent">
-                <!-- TODO: Port PA1 scheduling calendar, booking modal -->
-                <p class="text-muted">Equipment scheduling — to be ported from PA1 index.html</p>
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                <h3 class="page-title mb-0"><i class="bi bi-calendar3 me-2"></i>Scheduling</h3>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <div id="cal-nav" class="cal-nav">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="schedCalNav(-1)"><i class="bi bi-chevron-left"></i></button>
+                        <span id="cal-nav-label" class="cal-nav-label"></span>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="schedCalNav(1)"><i class="bi bi-chevron-right"></i></button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="schedCalToday()">Today</button>
+                    </div>
+                    <div class="cal-view-toggle" id="sched-view-toggle">
+                        <button onclick="setSchedView('day',this)" title="Day"><i class="bi bi-calendar-day"></i></button>
+                        <button class="active" onclick="setSchedView('week',this)" title="Week"><i class="bi bi-calendar-week"></i></button>
+                        <button onclick="setSchedView('month',this)" title="Month"><i class="bi bi-calendar-month"></i></button>
+                        <button onclick="setSchedView('list',this)" title="List"><i class="bi bi-list-ul"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3 d-flex gap-2 align-items-center flex-wrap">
+                <label class="small fw-semibold text-muted">Equipment:</label>
+                <select class="form-select form-select-sm" id="cal-equip-filter" style="max-width:240px" onchange="renderSchedView()">
+                    <option value="">All schedulable equipment</option>
+                </select>
+                <button class="btn btn-primary btn-sm ms-auto" id="cal-book-btn" style="display:none" onclick="openBookingModal()">
+                    <i class="bi bi-plus me-1"></i>Book Time
+                </button>
+            </div>
+            <div class="content-card p-0">
+                <div id="sched-view-container" class="cal-fullscreen" style="min-width:0;overflow-x:auto"></div>
             </div>
         </div>
 
         {# Authorizations #}
         <div id="authorizationsSection" style="display:none;">
-            <h3 class="page-title"><i class="bi bi-shield-check me-2"></i>Authorizations</h3>
-            <div id="authorizationsContent">
-                <!-- TODO: Port PA1 auth sessions, enrollment -->
-                <p class="text-muted">Authorization sessions — to be ported from PA1 index.html</p>
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                <h3 class="page-title mb-0"><i class="bi bi-shield-check me-2"></i>Authorizations</h3>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <div id="auth-cal-nav" class="cal-nav" style="display:none">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="authCalNav(-1)"><i class="bi bi-chevron-left"></i></button>
+                        <span id="auth-cal-nav-label" class="cal-nav-label"></span>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="authCalNav(1)"><i class="bi bi-chevron-right"></i></button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="authCalToday()">Today</button>
+                    </div>
+                    <div class="cal-view-toggle" id="auth-view-toggle">
+                        <button class="active" onclick="setAuthView('tiles',this)" title="Tiles"><i class="bi bi-grid"></i></button>
+                        <button onclick="setAuthView('list',this)" title="List"><i class="bi bi-list-ul"></i></button>
+                        <button onclick="setAuthView('day',this)" title="Day"><i class="bi bi-calendar-day"></i></button>
+                        <button onclick="setAuthView('week',this)" title="Week"><i class="bi bi-calendar-week"></i></button>
+                        <button onclick="setAuthView('month',this)" title="Month"><i class="bi bi-calendar-month"></i></button>
+                    </div>
+                    <button class="btn btn-primary btn-sm" id="btn-new-auth-session" style="display:none" onclick="openAuthSessionModal()">
+                        <i class="bi bi-plus me-1"></i>New Session
+                    </button>
+                </div>
             </div>
+            <div class="mb-3 d-flex gap-2 flex-wrap" id="auth-filter-bar">
+                <button class="btn btn-outline-secondary btn-sm active" onclick="setAuthFilter('upcoming',this)">Upcoming</button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="setAuthFilter('past',this)">Past</button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="setAuthFilter('mine',this)">My Enrollments</button>
+            </div>
+            <div id="auth-sessions-container" class="cal-fullscreen"></div>
         </div>
 
         {# Settings #}
@@ -391,6 +437,111 @@
             <div class="modal-footer">
                 <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                 <button class="btn btn-primary fw-semibold" onclick="saveEquipGroup()">Save Group</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── Booking Modal ── #}
+<div class="modal fade" id="bookingModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="bookingModalTitle">Book Equipment Time</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="bm-id">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Equipment <span class="text-danger">*</span></label>
+                        <select class="form-select" id="bm-equipment"></select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Title / Purpose</label>
+                        <input class="form-control" id="bm-title" placeholder="e.g. Cutting table legs">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Start <span class="text-danger">*</span></label>
+                        <input type="datetime-local" class="form-control" id="bm-start" step="900">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">End <span class="text-danger">*</span></label>
+                        <input type="datetime-local" class="form-control" id="bm-end" step="900">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Notes</label>
+                        <textarea class="form-control" id="bm-notes" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-danger me-auto" id="bm-delete-btn" style="display:none" onclick="deleteBooking()"><i class="bi bi-trash me-1"></i>Cancel Booking</button>
+                <button class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-primary fw-semibold" id="bm-save-btn" onclick="saveBooking()">Book</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── Auth Session Create / Edit Modal ── #}
+<div class="modal fade" id="authSessionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="authSessionModalTitle">New Authorization Session</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="asm-id">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Title <span class="text-danger">*</span></label>
+                        <input class="form-control" id="asm-title" placeholder="e.g. Laser Cutter Safety Certification">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Equipment <span class="text-muted fw-normal">(optional — hold Ctrl/Cmd for multiple)</span></label>
+                        <select class="form-select" id="asm-equipment" multiple size="4" style="min-height:80px"></select>
+                        <div class="form-text">Leave all deselected for non-equipment-specific sessions.</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Description</label>
+                        <textarea class="form-control" id="asm-description" rows="2"></textarea>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Start <span class="text-danger">*</span></label>
+                        <input type="datetime-local" class="form-control" id="asm-start">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">End <span class="text-danger">*</span></label>
+                        <input type="datetime-local" class="form-control" id="asm-end">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Available Slots <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="asm-slots" value="1" min="1" max="100">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-danger me-auto" id="asm-delete-btn" style="display:none" onclick="deleteAuthSession()"><i class="bi bi-trash me-1"></i>Delete</button>
+                <button class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-primary fw-semibold" id="asm-save-btn" onclick="saveAuthSession()">Create Session</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── Auth Session Detail Modal ── #}
+<div class="modal fade" id="authDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="adm-title"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="adm-body"></div>
+            <div class="modal-footer" id="adm-footer">
+                <button class="btn btn-light" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -676,6 +827,8 @@ function showSection(name) {
     if (name === 'areas') loadAreasSection();
     if (name === 'tickets') loadTickets();
     if (name === 'groups') loadGroupsSection();
+    if (name === 'scheduling') loadSchedulePage();
+    if (name === 'authorizations') loadAuthSessions();
 }
 
 function filterSidebarByPermissions() {
@@ -1565,6 +1718,744 @@ async function deleteTicket() {
 function renderAttachments() {} // placeholder — file uploads not yet implemented
 function openMaintScheduleForEquip() {}
 
+// ══════════════════════════════════════════════════════════════════
+// AUTHORIZATION SESSIONS
+// ══════════════════════════════════════════════════════════════════
+let authSessionsList = [];
+let authView         = 'tiles';
+let authDate         = new Date();
+let calAuthFilter    = 'upcoming';
+
+function setAuthView(mode, btn) {
+    authView = mode;
+    document.querySelectorAll('#auth-view-toggle button').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    const isCalView = ['day','week','month'].includes(mode);
+    const calNav = document.getElementById('auth-cal-nav');
+    const filterBar = document.getElementById('auth-filter-bar');
+    if (calNav) calNav.style.display = isCalView ? '' : 'none';
+    if (filterBar) filterBar.style.display = isCalView ? 'none' : '';
+    renderAuthView();
+}
+
+function authCalNav(dir) {
+    if (authView === 'day') authDate.setDate(authDate.getDate() + dir);
+    else if (authView === 'week') authDate.setDate(authDate.getDate() + dir * 7);
+    else if (authView === 'month') authDate.setMonth(authDate.getMonth() + dir);
+    renderAuthView();
+}
+function authCalToday() { authDate = new Date(); renderAuthView(); }
+
+function updateAuthNavLabel() {
+    const el = document.getElementById('auth-cal-nav-label');
+    if (!el) return;
+    if (authView === 'day') el.textContent = calNavLabelDay(authDate);
+    else if (authView === 'week') el.textContent = calNavLabelWeek(calMonday(authDate));
+    else if (authView === 'month') el.textContent = calNavLabelMonth(authDate);
+}
+
+function setAuthFilter(filter, btn) {
+    calAuthFilter = filter;
+    document.querySelectorAll('#auth-filter-bar button').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderAuthView();
+}
+
+async function loadAuthSessions() {
+    try { authSessionsList = await api('GET', '/api/auth-sessions') || []; } catch(e) { authSessionsList = []; }
+    try {
+        const all = await api('GET', '/api/equipment');
+        const sel = document.getElementById('asm-equipment');
+        if (sel) sel.innerHTML = all.map(e =>
+            `<option value="${e.id}">${escHtml(e.common_name||e.make+' '+e.model)}</option>`).join('');
+    } catch(e) {}
+    if (window.innerWidth < 768 && authView === 'week') {
+        authView = 'day';
+        document.querySelectorAll('#auth-view-toggle button').forEach(b => b.classList.remove('active'));
+        const dayBtn = document.querySelector('#auth-view-toggle button[title="Day"]');
+        if (dayBtn) dayBtn.classList.add('active');
+        const calNav = document.getElementById('auth-cal-nav');
+        const filterBar = document.getElementById('auth-filter-bar');
+        if (calNav) calNav.style.display = '';
+        if (filterBar) filterBar.style.display = 'none';
+    }
+    renderAuthView();
+}
+
+function _authIsEnrolled(s) {
+    return (s.enrollments||[]).some(e => e.member_id === MEMBER_ID);
+}
+function _authEventClass(s) {
+    const enrolled = _authIsEnrolled(s);
+    const full = s.enrolled_count >= s.total_slots;
+    return enrolled ? 'auth-enrolled' : full ? 'auth-full' : 'auth-open';
+}
+function _authEventColor(s) {
+    const enrolled = _authIsEnrolled(s);
+    const full = s.enrolled_count >= s.total_slots;
+    return enrolled ? '#0d6efd' : full ? '#dc3545' : '#198754';
+}
+
+function renderAuthView() {
+    updateAuthNavLabel();
+    if (authView === 'tiles') { renderAuthList(true); return; }
+    if (authView === 'list')  { renderAuthList(false); return; }
+
+    const enriched = authSessionsList.map(s => ({ ...s, _title: s.title || 'Session' }));
+    const container = document.getElementById('auth-sessions-container');
+    if (!container) return;
+
+    if (authView === 'month') {
+        calRenderMonth(container, {
+            refDate: authDate,
+            events: enriched,
+            onDayClick: '_authGoDay',
+            onEventClick: '_authEvtClick',
+            eventColorFn: _authEventColor,
+        });
+        return;
+    }
+
+    const days = authView === 'day'
+        ? [calStartOfDay(authDate)]
+        : Array.from({length:7}, (_,i) => new Date(calMonday(authDate).getTime() + i*86400000));
+
+    const windowEnd = new Date(days[days.length-1].getTime() + 86400000);
+    const inWindow = enriched.filter(s => {
+        const st = new Date(s.start_time), en = new Date(s.end_time);
+        return en > days[0] && st < windowEnd;
+    });
+
+    calRenderDayWeek(container, {
+        days,
+        events: inWindow,
+        onCellClick: '_authCellClick',
+        onEventClick: '_authEvtClick',
+        eventClassFn: _authEventClass,
+        scrollToNow: true,
+    });
+}
+
+function _authGoDay(isoStr) {
+    authDate = new Date(isoStr);
+    authView = 'day';
+    document.querySelectorAll('#auth-view-toggle button').forEach(b => b.classList.remove('active'));
+    const dayBtn = document.querySelector('#auth-view-toggle button[title="Day"]');
+    if (dayBtn) dayBtn.classList.add('active');
+    const calNav = document.getElementById('auth-cal-nav');
+    const filterBar = document.getElementById('auth-filter-bar');
+    if (calNav) calNav.style.display = '';
+    if (filterBar) filterBar.style.display = 'none';
+    renderAuthView();
+}
+function _authCellClick() { /* sessions are created via modal only */ }
+function _authEvtClick(id) { openAuthSessionDetail(parseInt(id, 10) || id); }
+
+function renderAuthList(tiles) {
+    const container = document.getElementById('auth-sessions-container');
+    if (!container) return;
+    const now = new Date();
+    let sessions = [...authSessionsList];
+    if (calAuthFilter === 'upcoming') sessions = sessions.filter(s => new Date(s.end_time) >= now);
+    else if (calAuthFilter === 'past') sessions = sessions.filter(s => new Date(s.end_time) < now);
+    else if (calAuthFilter === 'mine') sessions = sessions.filter(s =>
+        _authIsEnrolled(s) || s.member_id === MEMBER_ID);
+
+    if (!sessions.length) {
+        container.innerHTML = '<div class="text-center text-muted py-5 small">No sessions found</div>';
+        return;
+    }
+    sessions.sort((a,b) => new Date(a.start_time) - new Date(b.start_time));
+
+    if (tiles) {
+        container.innerHTML = sessions.map(s => {
+            const enrolled = _authIsEnrolled(s);
+            const filled   = s.enrolled_count >= s.total_slots;
+            const isPast   = new Date(s.end_time) < now;
+            const isMine   = s.member_id === MEMBER_ID;
+            const canManage = canChange('equipment.auth_sessions');
+            const startFmt = new Date(s.start_time).toLocaleString(undefined,{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+            const endFmt   = new Date(s.end_time).toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+            const slotBadge = enrolled
+                ? `<span class="session-slots joined"><i class="bi bi-check-circle me-1"></i>Enrolled · ${s.enrolled_count}/${s.total_slots}</span>`
+                : filled
+                ? `<span class="session-slots full"><i class="bi bi-x-circle me-1"></i>Full · ${s.enrolled_count}/${s.total_slots}</span>`
+                : `<span class="session-slots open"><i class="bi bi-person-plus me-1"></i>${s.total_slots - s.enrolled_count}/${s.total_slots} open</span>`;
+            const joinBtn  = !isPast && !enrolled && !filled
+                ? `<button class="btn btn-primary btn-sm" onclick="enrollSession(${s.id})"><i class="bi bi-person-plus me-1"></i>Join</button>` : '';
+            const leaveBtn = !isPast && enrolled
+                ? `<button class="btn btn-outline-secondary btn-sm" onclick="unenrollSession(${s.id})">Leave</button>` : '';
+            const editBtn  = canManage && (isMine || canChange('equipment.auth_sessions'))
+                ? `<button class="btn btn-outline-secondary btn-sm" onclick="openAuthSessionModal(${s.id})"><i class="bi bi-pencil"></i></button>` : '';
+            return `<div class="session-card">
+              <div class="d-flex justify-content-between align-items-start mb-1">
+                <div class="session-title" style="cursor:pointer" onclick="openAuthSessionDetail(${s.id})">${escHtml(s.title)}</div>
+                ${slotBadge}
+              </div>
+              <div class="small text-muted mb-2">
+                <i class="bi bi-clock me-1"></i>${startFmt} – ${endFmt}
+                ${s.authorizer_name ? `<span class="ms-2"><i class="bi bi-person me-1"></i>${escHtml(s.authorizer_name)}</span>` : ''}
+              </div>
+              ${s.description ? `<div class="small mb-2">${escHtml(s.description)}</div>` : ''}
+              <div class="d-flex gap-2">${joinBtn}${leaveBtn}${editBtn}
+                <button class="btn btn-outline-secondary btn-sm" onclick="openAuthSessionDetail(${s.id})"><i class="bi bi-info-circle"></i></button>
+              </div>
+            </div>`;
+        }).join('');
+    } else {
+        container.innerHTML = '<div class="content-card p-0">' + sessions.map(s => {
+            const enrolled = _authIsEnrolled(s);
+            const filled   = s.enrolled_count >= s.total_slots;
+            const dot = enrolled ? '#0d6efd' : filled ? '#dc3545' : '#198754';
+            const start = new Date(s.start_time);
+            return `<div class="sched-list-item" onclick="openAuthSessionDetail(${s.id})" style="cursor:pointer">
+              <div class="sched-list-date">
+                <div>${start.toLocaleDateString(undefined,{month:'short',day:'numeric'})}</div>
+                <div>${start.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}</div>
+              </div>
+              <div class="sched-list-body">
+                <div class="fw-semibold small d-flex align-items-center gap-2">
+                  <span style="width:8px;height:8px;border-radius:50%;background:${dot};flex-shrink:0;display:inline-block"></span>
+                  ${escHtml(s.title)}
+                </div>
+                <div class="text-muted" style="font-size:.78rem">
+                  ${escHtml(s.authorizer_name||'')} · ${s.enrolled_count}/${s.total_slots} enrolled
+                </div>
+              </div>
+            </div>`;
+        }).join('') + '</div>';
+    }
+}
+
+function openAuthSessionDetail(id) {
+    const s = authSessionsList.find(x => x.id === id || String(x.id) === String(id));
+    if (!s) return;
+    const now    = new Date();
+    const isPast = new Date(s.end_time) < now;
+    const enrolled = _authIsEnrolled(s);
+    const full     = s.enrolled_count >= s.total_slots;
+    const isMine   = s.member_id === MEMBER_ID;
+    const canManage = canChange('equipment.auth_sessions');
+    const startFmt = new Date(s.start_time).toLocaleString(undefined,{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    const endFmt   = new Date(s.end_time).toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+
+    let enrollHtml = '';
+    if ((s.enrollments||[]).length) {
+        enrollHtml = `<div class="detail-section-label mt-3">Enrolled (${s.enrolled_count}/${s.total_slots})</div>
+          <div>${(s.enrollments||[]).map(e =>
+            `<div class="enroll-row"><i class="bi bi-person-fill text-muted"></i> ${escHtml(e.member_name||e.member_id||'Member')}</div>`
+          ).join('')}</div>`;
+    }
+
+    document.getElementById('adm-title').textContent = s.title;
+    document.getElementById('adm-body').innerHTML = `
+      <p class="mb-1"><strong>Time:</strong> ${startFmt} – ${endFmt}</p>
+      <p class="mb-1"><strong>Slots:</strong> ${s.enrolled_count}/${s.total_slots} enrolled</p>
+      ${s.description ? `<p class="mb-1 text-muted small">${escHtml(s.description)}</p>` : ''}
+      ${s.authorizer_name ? `<p class="mb-2 small text-muted"><i class="bi bi-person me-1"></i>Hosted by ${escHtml(s.authorizer_name)}</p>` : ''}
+      ${enrollHtml}`;
+
+    let footer = '';
+    if (!isPast && !enrolled && !full)
+        footer += `<button class="btn btn-primary" onclick="enrollSession(${s.id});bsModal('authDetailModal').hide()"><i class="bi bi-person-plus me-1"></i>Join</button> `;
+    if (!isPast && enrolled)
+        footer += `<button class="btn btn-outline-secondary" onclick="unenrollSession(${s.id});bsModal('authDetailModal').hide()">Leave</button> `;
+    if (canManage && (isMine || canManage))
+        footer += `<button class="btn btn-outline-secondary" onclick="bsModal('authDetailModal').hide();openAuthSessionModal(${s.id})"><i class="bi bi-pencil me-1"></i>Edit</button> `;
+    footer += '<button class="btn btn-light" data-bs-dismiss="modal">Close</button>';
+    document.getElementById('adm-footer').innerHTML = footer;
+
+    bsModal('authDetailModal').show();
+}
+
+function openAuthSessionModal(existingId) {
+    document.getElementById('asm-id').value = existingId || '';
+    document.getElementById('asm-title').value = '';
+    document.getElementById('asm-description').value = '';
+    document.getElementById('asm-start').value = '';
+    document.getElementById('asm-end').value = '';
+    document.getElementById('asm-slots').value = '1';
+    document.getElementById('asm-delete-btn').style.display = 'none';
+    document.getElementById('asm-save-btn').textContent = 'Create Session';
+    document.getElementById('authSessionModalTitle').textContent = 'New Authorization Session';
+    Array.from(document.getElementById('asm-equipment').options).forEach(o => o.selected = false);
+
+    if (existingId) {
+        const s = authSessionsList.find(x => x.id === existingId || String(x.id) === String(existingId));
+        if (s) {
+            document.getElementById('asm-title').value = s.title;
+            document.getElementById('asm-description').value = s.description||'';
+            document.getElementById('asm-start').value = dtLocal(s.start_time);
+            document.getElementById('asm-end').value   = dtLocal(s.end_time);
+            document.getElementById('asm-slots').value = s.total_slots;
+            if (s.equipment_ids?.length) {
+                Array.from(document.getElementById('asm-equipment').options).forEach(o => {
+                    o.selected = s.equipment_ids.includes(parseInt(o.value, 10));
+                });
+            }
+            document.getElementById('asm-delete-btn').style.display = '';
+            document.getElementById('asm-save-btn').textContent = 'Save Changes';
+            document.getElementById('authSessionModalTitle').textContent = 'Edit Session';
+        }
+    }
+    bsModal('authSessionModal').show();
+}
+
+async function saveAuthSession() {
+    const id    = document.getElementById('asm-id').value;
+    const title = document.getElementById('asm-title').value.trim();
+    const start = document.getElementById('asm-start').value;
+    const end   = document.getElementById('asm-end').value;
+    const slots = parseInt(document.getElementById('asm-slots').value, 10);
+    const equipIds = Array.from(document.getElementById('asm-equipment').selectedOptions)
+        .map(o => parseInt(o.value, 10));
+    if (!title || !start || !end) { toast('Title, start and end are required','error'); return; }
+    const body = {
+        title,
+        equipment_ids: equipIds,
+        description:   document.getElementById('asm-description').value.trim()||null,
+        start_time:    new Date(start).toISOString(),
+        end_time:      new Date(end).toISOString(),
+        total_slots:   slots,
+    };
+    try {
+        if (id) { await api('PATCH', `/api/auth-sessions/${id}`, body); toast('Session updated','success'); }
+        else    { await api('POST',  '/api/auth-sessions', body); toast('Session created','success'); }
+        bsModal('authSessionModal').hide();
+        loadAuthSessions();
+    } catch(e) { toast(e.message,'error'); }
+}
+
+async function deleteAuthSession() {
+    const id = document.getElementById('asm-id').value;
+    if (!id || !confirm('Delete this authorization session?')) return;
+    try {
+        await api('DELETE', `/api/auth-sessions/${id}`);
+        toast('Session deleted','success');
+        bsModal('authSessionModal').hide();
+        loadAuthSessions();
+    } catch(e) { toast(e.message,'error'); }
+}
+
+async function enrollSession(id) {
+    try {
+        await api('POST', `/api/auth-sessions/${id}/enroll`);
+        toast('Enrolled successfully','success');
+        loadAuthSessions();
+    } catch(e) { toast(e.message,'error'); }
+}
+
+async function unenrollSession(id) {
+    if (!confirm('Leave this session?')) return;
+    try {
+        await api('DELETE', `/api/auth-sessions/${id}/enroll`);
+        toast('Left session','success');
+        loadAuthSessions();
+    } catch(e) { toast(e.message,'error'); }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SHARED CALENDAR ENGINE
+// ══════════════════════════════════════════════════════════════════
+const CAL_SLOT_H = 28;
+const CAL_HOUR_H = CAL_SLOT_H * 4;
+const CAL_BUSINESS_START = 7;
+const CAL_BUSINESS_END   = 20;
+const CAL_DAY_NAMES_SHORT = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const CAL_DAY_NAMES_FULL  = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+function calMonday(d) {
+    const day = new Date(d); const diff = (day.getDay() + 6) % 7;
+    day.setDate(day.getDate() - diff); day.setHours(0,0,0,0); return day;
+}
+function calStartOfDay(d) { const r = new Date(d); r.setHours(0,0,0,0); return r; }
+function calStartOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+function calFmtTime(d) { return d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'}); }
+function calFmtRange(a,b) { return calFmtTime(a)+' – '+calFmtTime(b); }
+function calDayStr(d) { return d.toISOString().slice(0,10); }
+
+function calRenderDayWeek(container, opts) {
+    const { days, events, onCellClick, onEventClick, eventClassFn, scrollToNow } = opts;
+    const numDays = days.length;
+    const now = new Date();
+    const todayStr = calDayStr(now);
+    const colTemplate = `60px repeat(${numDays},1fr)`;
+
+    let hdr = `<div class="cal-grid-header" style="grid-template-columns:${colTemplate}"><div></div>`;
+    days.forEach(d => {
+        const isToday = calDayStr(d) === todayStr;
+        const name = numDays === 1 ? CAL_DAY_NAMES_FULL[(d.getDay()+6)%7] : CAL_DAY_NAMES_SHORT[(d.getDay()+6)%7];
+        hdr += `<div class="${isToday?'cal-hdr-today':''}">${name}<br><span style="font-size:.92em;font-weight:${isToday?700:400}">${d.getDate()}</span></div>`;
+    });
+    hdr += '</div>';
+
+    let body = `<div class="cal-grid-body" style="grid-template-columns:${colTemplate};position:relative">`;
+    for (let h = 0; h < 24; h++) {
+        const hLabel = h===0?'12 AM':h<12?`${h} AM`:h===12?'12 PM':`${h-12} PM`;
+        const isOff = h < CAL_BUSINESS_START || h >= CAL_BUSINESS_END;
+        body += `<div class="cal-time-gutter" style="height:${CAL_HOUR_H}px"><span>${hLabel}</span></div>`;
+        for (let di = 0; di < numDays; di++) {
+            const isPast = calDayStr(days[di]) < todayStr;
+            const cls = isPast ? 'cal-cell past-day' : isOff ? 'cal-cell off-hours' : 'cal-cell';
+            const clickAttr = isPast ? '' : `onclick="${onCellClick}('${days[di].toISOString()}',${h})"`;
+            body += `<div class="${cls}" style="height:${CAL_HOUR_H}px" ${clickAttr}></div>`;
+        }
+    }
+    body += '</div>';
+
+    let evHtml = '';
+    events.forEach(ev => {
+        const start = new Date(ev.start_time), end = new Date(ev.end_time);
+        const dayIdx = days.findIndex(d => calDayStr(d) === calDayStr(start));
+        if (dayIdx < 0) return;
+        const startMin = start.getHours()*60 + start.getMinutes();
+        const dur = (end - start) / 60000;
+        const topPx = (startMin / 60) * CAL_HOUR_H;
+        const heightPx = Math.max((dur / 60) * CAL_HOUR_H, CAL_SLOT_H);
+        const isTall = heightPx > 44;
+        const cls = typeof eventClassFn === 'function' ? eventClassFn(ev) : '';
+        evHtml += `<div class="cal-event ${cls}${isTall?' cal-evt-tall':''}"
+          style="top:${topPx}px;height:${heightPx}px;left:calc(60px + (100% - 60px)*${dayIdx}/${numDays} + 2px);width:calc((100% - 60px)/${numDays} - 6px);pointer-events:auto"
+          onclick="event.stopPropagation();${onEventClick}('${ev.id}')"
+          title="${escHtml(ev._title||'')} · ${calFmtRange(start,end)}">
+          <span class="cal-evt-time">${calFmtRange(start,end)}</span>
+          <span class="cal-evt-title">${escHtml(ev._title||'Booked')}</span>
+        </div>`;
+    });
+
+    let nowHtml = '';
+    const nowDayIdx = days.findIndex(d => calDayStr(d) === todayStr);
+    if (nowDayIdx >= 0) {
+        const nowMin = now.getHours()*60 + now.getMinutes();
+        const nowTop = (nowMin / 60) * CAL_HOUR_H;
+        const nlLeft = `calc(60px + (100% - 60px)*${nowDayIdx}/${numDays})`;
+        const nlWidth = `calc((100% - 60px)/${numDays})`;
+        nowHtml = `<div class="cal-now-line" style="top:${nowTop}px;left:${nlLeft};width:${nlWidth}"></div>`;
+    }
+
+    container.innerHTML = hdr +
+        `<div style="position:relative">${body}<div style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none">${evHtml}${nowHtml}</div></div>`;
+
+    if (scrollToNow && nowDayIdx >= 0) {
+        const nowMin = now.getHours()*60 + now.getMinutes();
+        container.scrollTop = Math.max(0, (nowMin / 60) * CAL_HOUR_H - 80);
+    } else {
+        container.scrollTop = CAL_BUSINESS_START * CAL_HOUR_H - 10;
+    }
+}
+
+function calRenderMonth(container, opts) {
+    const { refDate, events, onDayClick, onEventClick, eventColorFn } = opts;
+    const year = refDate.getFullYear(), month = refDate.getMonth();
+    const first = new Date(year, month, 1);
+    const startDay = (first.getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    const now = new Date();
+    const todayStr = calDayStr(now);
+
+    const prevMonthDays = new Date(year, month, 0).getDate();
+    const cells = [];
+    for (let i = startDay - 1; i >= 0; i--) {
+        cells.push({ day: prevMonthDays - i, otherMonth: true, date: new Date(year, month-1, prevMonthDays - i) });
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+        cells.push({ day: d, otherMonth: false, date: new Date(year, month, d) });
+    }
+    const remaining = 7 - (cells.length % 7);
+    if (remaining < 7) {
+        for (let d = 1; d <= remaining; d++) {
+            cells.push({ day: d, otherMonth: true, date: new Date(year, month+1, d) });
+        }
+    }
+
+    const evByDay = {};
+    events.forEach(ev => {
+        const ds = calDayStr(new Date(ev.start_time));
+        if (!evByDay[ds]) evByDay[ds] = [];
+        evByDay[ds].push(ev);
+    });
+
+    let html = '<div class="cal-month-grid">';
+    CAL_DAY_NAMES_SHORT.forEach(n => { html += `<div class="cal-month-hdr">${n}</div>`; });
+    cells.forEach(cell => {
+        const ds = calDayStr(cell.date);
+        const isToday = ds === todayStr;
+        const cls = ['cal-month-cell', cell.otherMonth?'other-month':'', isToday?'today':''].filter(Boolean).join(' ');
+        const dayEvts = evByDay[ds] || [];
+        const MAX_SHOW = 3;
+        let evHtml = '';
+        dayEvts.slice(0, MAX_SHOW).forEach(ev => {
+            const color = typeof eventColorFn === 'function' ? eventColorFn(ev) : '#6c757d';
+            evHtml += `<div class="cal-month-evt" style="background:${color};color:#fff;cursor:pointer"
+              onclick="event.stopPropagation();${onEventClick}('${ev.id}')">${escHtml(ev._title||'Event')}</div>`;
+        });
+        if (dayEvts.length > MAX_SHOW) {
+            evHtml += `<div class="cal-month-more" onclick="event.stopPropagation();${onDayClick}('${cell.date.toISOString()}')">+${dayEvts.length - MAX_SHOW} more</div>`;
+        }
+        let dotHtml = '<div class="cal-mday-dots">';
+        dayEvts.slice(0,6).forEach(ev => {
+            const color = typeof eventColorFn === 'function' ? eventColorFn(ev) : '#6c757d';
+            dotHtml += `<span class="cal-month-dot" style="background:${color}"></span>`;
+        });
+        dotHtml += '</div>';
+        html += `<div class="${cls}" onclick="${onDayClick}('${cell.date.toISOString()}')">
+          <div class="cal-mday">${cell.day}</div>${evHtml}${dotHtml}</div>`;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+    container.scrollTop = 0;
+}
+
+function calNavLabelDay(d) {
+    return d.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric', year:'numeric'});
+}
+function calNavLabelWeek(start) {
+    const end = new Date(start.getTime() + 6*86400000);
+    return start.toLocaleDateString(undefined,{month:'short',day:'numeric'}) + ' – ' +
+        end.toLocaleDateString(undefined,{month:'short',day:'numeric', year:'numeric'});
+}
+function calNavLabelMonth(d) {
+    return d.toLocaleDateString(undefined,{month:'long', year:'numeric'});
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SCHEDULING PAGE
+// ══════════════════════════════════════════════════════════════════
+let schedDate = new Date();
+let schedMode = 'week';
+let calSchedules = [];
+let allSchedulableEquip = [];
+
+function setSchedView(mode, btn) {
+    schedMode = mode;
+    document.querySelectorAll('#sched-view-toggle button').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    const showNav = (mode !== 'list');
+    document.getElementById('cal-nav').style.display = showNav ? '' : 'none';
+    renderSchedView();
+}
+
+function schedCalNav(dir) {
+    if (schedMode === 'day') schedDate.setDate(schedDate.getDate() + dir);
+    else if (schedMode === 'week') schedDate.setDate(schedDate.getDate() + dir * 7);
+    else if (schedMode === 'month') schedDate.setMonth(schedDate.getMonth() + dir);
+    renderSchedView();
+}
+function schedCalToday() { schedDate = new Date(); renderSchedView(); }
+
+function updateSchedNavLabel() {
+    const el = document.getElementById('cal-nav-label');
+    if (!el) return;
+    if (schedMode === 'day') el.textContent = calNavLabelDay(schedDate);
+    else if (schedMode === 'week') el.textContent = calNavLabelWeek(calMonday(schedDate));
+    else if (schedMode === 'month') el.textContent = calNavLabelMonth(schedDate);
+}
+
+async function loadSchedulePage() {
+    try {
+        const all = await api('GET', '/api/equipment');
+        allSchedulableEquip = (all||[]).filter(e => e.schedulable);
+        const sel = document.getElementById('cal-equip-filter');
+        if (sel) {
+            sel.innerHTML = '<option value="">All schedulable equipment</option>' +
+                allSchedulableEquip.map(e => `<option value="${e.id}">${escHtml(e.common_name||e.make+' '+e.model)}</option>`).join('');
+        }
+    } catch(e) { console.error(e); }
+    if (window.innerWidth < 768 && schedMode === 'week') {
+        schedMode = 'day';
+        document.querySelectorAll('#sched-view-toggle button').forEach(b => b.classList.remove('active'));
+        const dayBtn = document.querySelector('#sched-view-toggle button[title="Day"]');
+        if (dayBtn) dayBtn.classList.add('active');
+    }
+    await renderSchedView();
+}
+
+async function renderSchedView() {
+    updateSchedNavLabel();
+    let fetchStart, fetchEnd;
+    if (schedMode === 'day') {
+        fetchStart = calStartOfDay(schedDate);
+        fetchEnd = new Date(fetchStart.getTime() + 86400000);
+    } else if (schedMode === 'week') {
+        fetchStart = calMonday(schedDate);
+        fetchEnd = new Date(fetchStart.getTime() + 7*86400000);
+    } else if (schedMode === 'month') {
+        const ms = calStartOfMonth(schedDate);
+        fetchStart = new Date(ms.getFullYear(), ms.getMonth(), -6);
+        fetchEnd = new Date(ms.getFullYear(), ms.getMonth()+1, 8);
+    } else {
+        fetchStart = new Date(schedDate.getTime() - 7*86400000);
+        fetchEnd = new Date(schedDate.getTime() + 60*86400000);
+    }
+
+    const equipId = document.getElementById('cal-equip-filter')?.value || '';
+    let url = `/api/schedules?from_time=${fetchStart.toISOString()}&to_time=${fetchEnd.toISOString()}`;
+    if (equipId) url += `&equipment_id=${equipId}`;
+    try { calSchedules = await api('GET', url) || []; } catch(e) { calSchedules = []; }
+
+    const enriched = calSchedules.map(s => ({
+        ...s,
+        _title: s.title || s.equipment_name || 'Booked',
+    }));
+
+    const container = document.getElementById('sched-view-container');
+    if (!container) return;
+
+    if (schedMode === 'list') {
+        renderSchedList(container, enriched);
+        return;
+    }
+
+    if (schedMode === 'month') {
+        calRenderMonth(container, {
+            refDate: schedDate,
+            events: enriched,
+            onDayClick: '_schedGoDay',
+            onEventClick: '_schedEvtClick',
+            eventColorFn: s => s.member_id === MEMBER_ID ? 'var(--color-accent,#f5a623)' : '#adb5bd',
+        });
+        return;
+    }
+
+    const days = schedMode === 'day'
+        ? [calStartOfDay(schedDate)]
+        : Array.from({length:7}, (_,i) => new Date(calMonday(schedDate).getTime() + i*86400000));
+
+    const inWindow = enriched.filter(s => {
+        const st = new Date(s.start_time), en = new Date(s.end_time);
+        return en > days[0] && st < new Date(days[days.length-1].getTime() + 86400000);
+    });
+
+    calRenderDayWeek(container, {
+        days,
+        events: inWindow,
+        onCellClick: '_schedCellClick',
+        onEventClick: '_schedEvtClick',
+        eventClassFn: s => s.member_id === MEMBER_ID ? 'mine' : 'others',
+        scrollToNow: true,
+    });
+}
+
+function _schedGoDay(isoStr) {
+    schedDate = new Date(isoStr);
+    schedMode = 'day';
+    document.querySelectorAll('#sched-view-toggle button').forEach(b => b.classList.remove('active'));
+    const dayBtn = document.querySelector('#sched-view-toggle button[title="Day"]');
+    if (dayBtn) dayBtn.classList.add('active');
+    renderSchedView();
+}
+function _schedCellClick(dayIso, hour) { openBookingModal(dayIso, hour); }
+function _schedEvtClick(id) {
+    const s = calSchedules.find(x => String(x.id) === String(id));
+    if (s && s.member_id === MEMBER_ID) openBookingModal(null, null, id);
+}
+
+function renderSchedList(container, enriched) {
+    const list = enriched || calSchedules.map(s => ({...s, _title: s.title||s.equipment_name||'Booked'}));
+    if (!list.length) {
+        container.innerHTML = '<div class="text-center text-muted py-5 small">No bookings found</div>';
+        return;
+    }
+    const sorted = [...list].sort((a,b) => new Date(a.start_time)-new Date(b.start_time));
+    container.innerHTML = '<div class="content-card p-0">' + sorted.map(s => {
+        const start = new Date(s.start_time), end = new Date(s.end_time);
+        const isMine = s.member_id === MEMBER_ID;
+        return `<div class="sched-list-item">
+          <div class="sched-list-date">
+            <div>${start.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}</div>
+            <div class="mt-1">${calFmtTime(start)}</div>
+          </div>
+          <div class="sched-list-body">
+            <div class="fw-semibold small">${escHtml(s._title||'Booking')}</div>
+            <div class="text-muted" style="font-size:.78rem">
+              ${escHtml(s.equipment_name||'')} · ${calFmtRange(start,end)}
+              ${isMine?'':' · '+escHtml(s.member_name||'')}
+            </div>
+          </div>
+          ${isMine?`<button class="btn btn-sm btn-outline-danger" onclick="openBookingModal(null,null,'${s.id}')"><i class="bi bi-trash"></i></button>`:''}
+        </div>`;
+    }).join('') + '</div>';
+}
+
+// ── Booking modal helpers ─────────────────────────────────────────
+function dtLocal(iso) {
+    const d = new Date(iso);
+    const pad = n => String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function roundToSlot(date) {
+    const m = new Date(date); m.setMinutes(Math.round(m.getMinutes()/15)*15, 0, 0); return m;
+}
+
+function openBookingModal(dayIso, hour, existingId) {
+    document.getElementById('bm-id').value = existingId || '';
+    document.getElementById('bm-title').value = '';
+    document.getElementById('bm-notes').value = '';
+    document.getElementById('bm-delete-btn').style.display = 'none';
+    document.getElementById('bm-save-btn').style.display = '';
+    document.getElementById('bookingModalTitle').textContent = 'Book Equipment Time';
+
+    document.getElementById('bm-equipment').innerHTML =
+        allSchedulableEquip.map(e => `<option value="${e.id}">${escHtml(e.common_name||e.make+' '+e.model)}</option>`).join('');
+    const filterId = document.getElementById('cal-equip-filter')?.value;
+    if (filterId) document.getElementById('bm-equipment').value = filterId;
+
+    if (existingId) {
+        const s = calSchedules.find(x => String(x.id) === String(existingId));
+        if (s) {
+            document.getElementById('bm-equipment').value = s.equipment_id;
+            document.getElementById('bm-title').value = s.title||'';
+            document.getElementById('bm-notes').value = s.notes||'';
+            document.getElementById('bm-start').value = dtLocal(s.start_time);
+            document.getElementById('bm-end').value   = dtLocal(s.end_time);
+            document.getElementById('bm-delete-btn').style.display = '';
+            document.getElementById('bm-save-btn').style.display = 'none';
+            document.getElementById('bookingModalTitle').textContent = 'View Booking';
+        }
+    } else if (dayIso !== null && dayIso !== undefined) {
+        const start = roundToSlot(new Date(new Date(dayIso).setHours(hour||0,0,0,0)));
+        const end   = new Date(start.getTime() + 60*60000);
+        document.getElementById('bm-start').value = dtLocal(start);
+        document.getElementById('bm-end').value   = dtLocal(end);
+    }
+    bsModal('bookingModal').show();
+}
+
+async function saveBooking() {
+    const equipId = document.getElementById('bm-equipment').value;
+    const startVal = document.getElementById('bm-start').value;
+    const endVal   = document.getElementById('bm-end').value;
+    if (!equipId || !startVal || !endVal) { toast('Equipment, start and end are required','error'); return; }
+    const startMs = new Date(startVal).getTime();
+    const endMs   = new Date(endVal).getTime();
+    const durMin  = (endMs - startMs) / 60000;
+    if (durMin < 15) { toast('Minimum booking duration is 15 minutes','error'); return; }
+    if (durMin > 24*60) { toast('Maximum booking duration is 24 hours','error'); return; }
+    try {
+        await api('POST', '/api/schedules', {
+            equipment_id: parseInt(equipId, 10),
+            title:      document.getElementById('bm-title').value.trim()||null,
+            start_time: new Date(startVal).toISOString(),
+            end_time:   new Date(endVal).toISOString(),
+            notes:      document.getElementById('bm-notes').value.trim()||null,
+        });
+        toast('Booking saved','success');
+        bsModal('bookingModal').hide();
+        renderSchedView();
+    } catch(e) { toast(e.message,'error'); }
+}
+
+async function deleteBooking() {
+    const id = document.getElementById('bm-id').value;
+    if (!id || !confirm('Cancel this booking?')) return;
+    try {
+        await api('DELETE', `/api/schedules/${id}`);
+        toast('Booking cancelled','success');
+        bsModal('bookingModal').hide();
+        renderSchedView();
+    } catch(e) { toast(e.message,'error'); }
+}
+
 // ── Init ──
 document.addEventListener('DOMContentLoaded', function() {
     filterSidebarByPermissions();
@@ -1584,6 +2475,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (canChange('equipment.groups')) {
         const btn = document.getElementById('btn-add-group');
+        if (btn) btn.style.display = '';
+    }
+    if (canView('equipment.schedules')) {
+        const btn = document.getElementById('cal-book-btn');
+        if (btn) btn.style.display = '';
+    }
+    if (canChange('equipment.auth_sessions')) {
+        const btn = document.getElementById('btn-new-auth-session');
         if (btn) btn.style.display = '';
     }
 });
