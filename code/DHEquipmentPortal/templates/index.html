@@ -294,10 +294,40 @@
 
         {# Maintenance #}
         <div id="maintenanceSection" style="display:none;">
-            <h3 class="page-title"><i class="bi bi-wrench-adjustable me-2"></i>Maintenance</h3>
-            <div id="maintenanceContent">
-                <!-- TODO: Port PA1 maintenance schedules, events, calendar -->
-                <p class="text-muted">Maintenance management — to be ported from PA1 index.html</p>
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                <h3 class="page-title mb-0"><i class="bi bi-wrench-adjustable me-2"></i>Maintenance</h3>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <div id="maint-cal-nav" class="cal-nav">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="maintCalNav(-1)"><i class="bi bi-chevron-left"></i></button>
+                        <span id="maint-cal-nav-label" class="cal-nav-label"></span>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="maintCalNav(1)"><i class="bi bi-chevron-right"></i></button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="maintCalToday()">Today</button>
+                    </div>
+                    <div class="cal-view-toggle" id="maint-view-toggle">
+                        <button onclick="setMaintView('day',this)" title="Day"><i class="bi bi-calendar-day"></i></button>
+                        <button class="active" onclick="setMaintView('week',this)" title="Week"><i class="bi bi-calendar-week"></i></button>
+                        <button onclick="setMaintView('month',this)" title="Month"><i class="bi bi-calendar-month"></i></button>
+                        <button onclick="setMaintView('list',this)" title="List"><i class="bi bi-list-ul"></i></button>
+                        <button onclick="setMaintView('schedules',this)" title="Schedules"><i class="bi bi-gear"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3 d-flex gap-2 align-items-center flex-wrap">
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+                    <span class="badge bg-warning text-dark">Pending</span>
+                    <span class="badge" style="background:#0dcaf0;color:#fff">In Progress</span>
+                    <span class="badge bg-danger">Overdue</span>
+                    <span class="badge bg-success">Completed</span>
+                </div>
+                <div class="d-flex gap-2 ms-auto align-items-center">
+                    <div id="maint-summary-stats" class="d-flex gap-2"></div>
+                    <button class="btn btn-primary btn-sm" id="btn-new-maint-schedule" style="display:none" onclick="openMaintScheduleModal()">
+                        <i class="bi bi-plus me-1"></i>New Schedule
+                    </button>
+                </div>
+            </div>
+            <div class="content-card p-0">
+                <div id="maint-view-container" class="cal-fullscreen" style="min-width:0;overflow-x:auto"></div>
             </div>
         </div>
 
@@ -479,6 +509,92 @@
                 <button class="btn btn-outline-danger me-auto" id="bm-delete-btn" style="display:none" onclick="deleteBooking()"><i class="bi bi-trash me-1"></i>Cancel Booking</button>
                 <button class="btn btn-light" data-bs-dismiss="modal">Close</button>
                 <button class="btn btn-primary fw-semibold" id="bm-save-btn" onclick="saveBooking()">Book</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── Maintenance Schedule Create / Edit Modal ── #}
+<div class="modal fade" id="maintScheduleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="maintSchedModalTitle">New Maintenance Schedule</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="ms-id">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="ms-title" placeholder="e.g. Monthly lubrication">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Description</label>
+                        <textarea class="form-control" id="ms-description" rows="2" placeholder="Details about the maintenance task"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Target Type</label>
+                        <select class="form-select" id="ms-target-type" onchange="_msTargetChanged()">
+                            <option value="equipment">Single Equipment</option>
+                            <option value="group">Equipment Group</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6" id="ms-equip-wrap">
+                        <label class="form-label small fw-semibold">Equipment <span class="text-danger">*</span></label>
+                        <select class="form-select" id="ms-equipment"></select>
+                    </div>
+                    <div class="col-md-6" id="ms-group-wrap" style="display:none">
+                        <label class="form-label small fw-semibold">Equipment Group <span class="text-danger">*</span></label>
+                        <select class="form-select" id="ms-group"></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Recurrence</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="ms-interval" value="30" min="1">
+                            <select class="form-select" id="ms-rec-type" style="max-width:110px">
+                                <option value="days">Days</option>
+                                <option value="weeks">Weeks</option>
+                                <option value="months">Months</option>
+                                <option value="years">Years</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Priority</label>
+                        <select class="form-select" id="ms-priority">
+                            <option value="low">Low</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Estimated Time (min)</label>
+                        <input type="number" class="form-control" id="ms-est-minutes" placeholder="e.g. 60">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-danger me-auto" id="ms-delete-btn" style="display:none" onclick="deleteMaintSchedule()"><i class="bi bi-trash me-1"></i>Delete</button>
+                <button class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-primary fw-semibold" id="ms-save-btn" onclick="saveMaintSchedule()">Create Schedule</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── Maintenance Event Detail Modal ── #}
+<div class="modal fade" id="maintEventModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="meModalTitle">Maintenance Event</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="me-body"></div>
+            <div class="modal-footer" id="me-footer">
+                <button class="btn btn-light" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -828,6 +944,7 @@ function showSection(name) {
     if (name === 'tickets') loadTickets();
     if (name === 'groups') loadGroupsSection();
     if (name === 'scheduling') loadSchedulePage();
+    if (name === 'maintenance') loadMaintenancePage();
     if (name === 'authorizations') loadAuthSessions();
 }
 
@@ -912,6 +1029,7 @@ function can(perm) {
         'maintenance.view':     () => canView('equipment.maintenance'),
         'maintenance.create':   () => canChange('equipment.maintenance'),
         'maintenance.complete': () => canChange('equipment.maintenance'),
+        'maintenance.manage':   () => canChange('equipment.maintenance'),
         'tickets.view':         () => canView('equipment.tickets'),
         'tickets.edit':         () => canChange('equipment.tickets'),
     };
@@ -1719,6 +1837,424 @@ function renderAttachments() {} // placeholder — file uploads not yet implemen
 function openMaintScheduleForEquip() {}
 
 // ══════════════════════════════════════════════════════════════════
+// MAINTENANCE
+// ══════════════════════════════════════════════════════════════════
+let maintDate      = new Date();
+let maintMode      = 'week';
+let maintEvents    = [];
+let maintSchedules = [];
+let _maintAllEquip  = [];
+let _maintAllGroups = [];
+
+const MAINT_STATUS_COLORS = {
+    pending:     '#ffc107',
+    in_progress: '#0dcaf0',
+    overdue:     '#dc3545',
+    completed:   '#198754',
+    skipped:     '#adb5bd',
+};
+const MAINT_PRIORITY_ICONS = { critical: '🚨', high: '⚠️', normal: '', low: '↓' };
+
+function setMaintView(mode, btn) {
+    maintMode = mode;
+    document.querySelectorAll('#maint-view-toggle button').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    const showNav = ['day','week','month'].includes(mode);
+    const calNav = document.getElementById('maint-cal-nav');
+    if (calNav) calNav.style.display = showNav ? '' : 'none';
+    renderMaintView();
+}
+
+function maintCalNav(dir) {
+    if (maintMode === 'day')   maintDate.setDate(maintDate.getDate() + dir);
+    else if (maintMode === 'week')  maintDate.setDate(maintDate.getDate() + dir * 7);
+    else if (maintMode === 'month') maintDate.setMonth(maintDate.getMonth() + dir);
+    renderMaintView();
+}
+function maintCalToday() { maintDate = new Date(); renderMaintView(); }
+
+function updateMaintNavLabel() {
+    const el = document.getElementById('maint-cal-nav-label');
+    if (!el) return;
+    if (maintMode === 'day')   el.textContent = calNavLabelDay(maintDate);
+    else if (maintMode === 'week')  el.textContent = calNavLabelWeek(calMonday(maintDate));
+    else if (maintMode === 'month') el.textContent = calNavLabelMonth(maintDate);
+}
+
+async function loadMaintenancePage() {
+    try {
+        const [equip, groups] = await Promise.all([
+            api('GET', '/api/equipment'),
+            api('GET', '/api/equipment-groups'),
+        ]);
+        _maintAllEquip  = equip  || [];
+        _maintAllGroups = groups || [];
+    } catch(e) { console.error(e); }
+    if (window.innerWidth < 768 && maintMode === 'week') {
+        maintMode = 'day';
+        document.querySelectorAll('#maint-view-toggle button').forEach(b => b.classList.remove('active'));
+        const dayBtn = document.querySelector('#maint-view-toggle button[title="Day"]');
+        if (dayBtn) dayBtn.classList.add('active');
+    }
+    await renderMaintView();
+}
+
+async function renderMaintView() {
+    updateMaintNavLabel();
+
+    let fetchStart, fetchEnd;
+    if (maintMode === 'day') {
+        fetchStart = calStartOfDay(maintDate);
+        fetchEnd   = new Date(fetchStart.getTime() + 86400000);
+    } else if (maintMode === 'week') {
+        fetchStart = calMonday(maintDate);
+        fetchEnd   = new Date(fetchStart.getTime() + 7*86400000);
+    } else if (maintMode === 'month') {
+        const ms = calStartOfMonth(maintDate);
+        fetchStart = new Date(ms.getFullYear(), ms.getMonth(), -6);
+        fetchEnd   = new Date(ms.getFullYear(), ms.getMonth()+1, 8);
+    } else {
+        fetchStart = new Date(maintDate.getTime() - 30*86400000);
+        fetchEnd   = new Date(maintDate.getTime() + 90*86400000);
+    }
+
+    try {
+        let evtUrl;
+        if (maintMode === 'list' || maintMode === 'schedules') {
+            evtUrl = '/api/maintenance/events?include_active=true';
+        } else {
+            evtUrl = `/api/maintenance/events?from_date=${fetchStart.toISOString()}&to_date=${fetchEnd.toISOString()}&include_active=true`;
+        }
+        maintEvents = await api('GET', evtUrl) || [];
+    } catch(e) { maintEvents = []; }
+
+    const container = document.getElementById('maint-view-container');
+    if (!container) return;
+
+    if (maintMode === 'schedules') { await renderMaintSchedulesList(container); return; }
+    if (maintMode === 'list')      { renderMaintList(container); return; }
+
+    // Enrich for calendar: map due_date → start_time
+    const enriched = maintEvents.map(ev => ({
+        ...ev,
+        start_time: ev.due_date,
+        end_time: new Date(new Date(ev.due_date).getTime() + (ev.estimated_minutes||60)*60000).toISOString(),
+        _title: `${MAINT_PRIORITY_ICONS[ev.priority]||''} ${ev.title||'Maintenance'}`.trim(),
+    }));
+
+    if (maintMode === 'month') {
+        calRenderMonth(container, {
+            refDate: maintDate,
+            events: enriched,
+            onDayClick: '_maintGoDay',
+            onEventClick: '_maintEvtClick',
+            eventColorFn: ev => MAINT_STATUS_COLORS[ev.status] || '#6c757d',
+        });
+        return;
+    }
+
+    const days = maintMode === 'day'
+        ? [calStartOfDay(maintDate)]
+        : Array.from({length:7}, (_,i) => new Date(calMonday(maintDate).getTime() + i*86400000));
+
+    const windowEnd = new Date(days[days.length-1].getTime() + 86400000);
+    const inWindow  = enriched.filter(ev => {
+        const st = new Date(ev.start_time), en = new Date(ev.end_time);
+        return en > days[0] && st < windowEnd;
+    });
+
+    calRenderDayWeek(container, {
+        days, events: inWindow,
+        onCellClick: '_maintCellClick',
+        onEventClick: '_maintEvtClick',
+        eventClassFn: () => '',
+        scrollToNow: true,
+    });
+
+    // Patch event chip colors by status (shared engine uses class; override with inline style)
+    setTimeout(() => {
+        container.querySelectorAll('.cal-event').forEach(el => {
+            const m = el.getAttribute('onclick')?.match(/'([^']+)'/);
+            const evId = m ? (parseInt(m[1],10) || m[1]) : null;
+            const ev = enriched.find(e => e.id == evId);
+            if (ev) {
+                el.style.background    = MAINT_STATUS_COLORS[ev.status] || '#6c757d';
+                el.style.color         = ev.status === 'pending' ? '#212529' : '#fff';
+                el.style.borderLeftColor = 'rgba(0,0,0,.2)';
+            }
+        });
+    }, 10);
+}
+
+function _maintGoDay(isoStr) {
+    maintDate = new Date(isoStr);
+    maintMode = 'day';
+    document.querySelectorAll('#maint-view-toggle button').forEach(b => b.classList.remove('active'));
+    const dayBtn = document.querySelector('#maint-view-toggle button[title="Day"]');
+    if (dayBtn) dayBtn.classList.add('active');
+    renderMaintView();
+}
+function _maintCellClick() { /* no-op — events come from schedules */ }
+function _maintEvtClick(id) { openMaintEventDetail(parseInt(id, 10) || id); }
+
+function renderMaintList(container) {
+    if (!maintEvents.length) {
+        container.innerHTML = '<div class="text-center text-muted py-5 small">No maintenance events found</div>';
+        return;
+    }
+    const sorted = [...maintEvents].sort((a,b) => new Date(a.due_date) - new Date(b.due_date));
+    container.innerHTML = '<div class="content-card p-0">' + sorted.map(ev => {
+        const due   = new Date(ev.due_date);
+        const color = MAINT_STATUS_COLORS[ev.status] || '#6c757d';
+        const txtCol = ev.status === 'pending' ? '#212529' : '#fff';
+        const equipLabel = ev.equipment_name || (ev.equipment_make ? ev.equipment_make+' '+ev.equipment_model : '') || ev.group_name || '';
+        const active = ['pending','in_progress','overdue'].includes(ev.status);
+        return `<div class="sched-list-item" onclick="openMaintEventDetail(${ev.id})" style="cursor:pointer">
+          <div class="sched-list-date">
+            <div>${due.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}</div>
+            <div class="mt-1"><span class="badge" style="background:${color};color:${txtCol};font-size:.7rem">${ev.status}</span></div>
+          </div>
+          <div class="sched-list-body">
+            <div class="fw-semibold small">${MAINT_PRIORITY_ICONS[ev.priority]||''} ${escHtml(ev.title||'Maintenance')}</div>
+            <div class="text-muted" style="font-size:.78rem">
+              ${escHtml(equipLabel)}
+              ${ev.recurrence_type ? ' · Every '+ev.recurrence_interval+' '+ev.recurrence_type : ''}
+              ${ev.ticket_number ? ' · <span class="cat-badge cat-maintenance">'+escHtml(ev.ticket_number)+'</span>' : ''}
+            </div>
+          </div>
+          ${active ? `<button class="btn btn-sm btn-success" onclick="event.stopPropagation();completeMaintEvent(${ev.id})"><i class="bi bi-check-lg"></i></button>` : ''}
+        </div>`;
+    }).join('') + '</div>';
+}
+
+async function renderMaintSchedulesList(container) {
+    try { maintSchedules = await api('GET', '/api/maintenance/schedules') || []; } catch(e) { maintSchedules = []; }
+    if (!maintSchedules.length) {
+        container.innerHTML = '<div class="text-center text-muted py-5 small">No maintenance schedules configured. Click <strong>+ New Schedule</strong> to create one.</div>';
+        return;
+    }
+    container.innerHTML = '<div class="p-3">' + maintSchedules.map(ms => {
+        const target = ms.equipment_name ? ms.equipment_name
+            : ms.equipment_make ? ms.equipment_make+' '+ms.equipment_model
+            : ms.group_name || 'Unknown';
+        const priCls = ms.priority==='critical'?'danger':ms.priority==='high'?'warning':ms.priority==='low'?'secondary':'primary';
+        return `<div class="maint-sched-row">
+          <div style="flex:1">
+            <div class="ms-title">${escHtml(ms.title)}${!ms.is_active?' <span class="badge bg-secondary">Paused</span>':''}</div>
+            <div class="ms-meta">
+              <i class="bi bi-cpu me-1"></i>${escHtml(target)} ·
+              <i class="bi bi-arrow-repeat me-1"></i>Every ${ms.recurrence_interval} ${ms.recurrence_type} ·
+              <span class="badge bg-${priCls}" style="font-size:.65rem">${ms.priority}</span>
+            </div>
+          </div>
+          <div class="d-flex gap-1">
+            <button class="btn btn-outline-primary btn-sm" onclick="openMaintScheduleModal(${ms.id})"><i class="bi bi-pencil"></i></button>
+            ${canChange('equipment.maintenance') ? `<button class="btn btn-outline-danger btn-sm" onclick="deleteMaintSchedule(${ms.id})"><i class="bi bi-trash"></i></button>` : ''}
+          </div>
+        </div>`;
+    }).join('') + '</div>';
+}
+
+// ── Event detail modal ──
+function openMaintEventDetail(id) {
+    const ev = maintEvents.find(e => e.id === id || String(e.id) === String(id));
+    if (!ev) return;
+
+    const due        = new Date(ev.due_date);
+    const color      = MAINT_STATUS_COLORS[ev.status] || '#6c757d';
+    const txtCol     = ev.status === 'pending' ? '#212529' : '#fff';
+    const equipLabel = ev.equipment_name || (ev.equipment_make ? ev.equipment_make+' '+ev.equipment_model : '') || ev.group_name || '';
+    const active     = ['pending','in_progress','overdue'].includes(ev.status);
+
+    // Checklist
+    let checklistHtml = '';
+    const items = ev.checklist_items || [];
+    const state = ev.checklist_state || [];
+    if (items.length) {
+        checklistHtml = `<div class="detail-section-label mt-3">Checklist</div>
+          <ul class="maint-checklist" id="me-checklist">`;
+        items.forEach((label, idx) => {
+            const done = Array.isArray(state) ? !!(state[idx]?.done ?? state[idx]) : false;
+            checklistHtml += `<li class="${done?'done':''}" id="me-chk-${idx}">
+              <input type="checkbox" class="form-check-input me-1 mt-0" ${done?'checked':''} ${!active?'disabled':''}
+                onchange="toggleMaintChecklist(${ev.id},${idx},this.checked)">
+              <span>${escHtml(typeof label==='object'?label.label:label)}</span>
+            </li>`;
+        });
+        checklistHtml += '</ul>';
+    }
+
+    document.getElementById('meModalTitle').textContent = ev.title || 'Maintenance Event';
+    document.getElementById('me-body').innerHTML = `
+      <div class="mb-2"><strong>Status:</strong> <span class="badge" style="background:${color};color:${txtCol}">${ev.status}</span></div>
+      <div class="mb-2"><strong>Due:</strong> ${due.toLocaleString(undefined,{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+      <div class="mb-2"><strong>Equipment:</strong> ${escHtml(equipLabel)}</div>
+      <div class="mb-2"><strong>Priority:</strong> ${MAINT_PRIORITY_ICONS[ev.priority]||''} ${ev.priority}</div>
+      ${ev.estimated_minutes ? `<div class="mb-2"><strong>Estimated:</strong> ${ev.estimated_minutes} min</div>` : ''}
+      ${ev.schedule_description ? `<div class="mb-2"><strong>Description:</strong> ${escHtml(ev.schedule_description)}</div>` : ''}
+      ${ev.recurrence_type ? `<div class="mb-2 text-muted small"><i class="bi bi-arrow-repeat me-1"></i>Recurs every ${ev.recurrence_interval} ${ev.recurrence_type} — next event created on completion</div>` : ''}
+      ${ev.ticket_id ? `<div class="mb-2"><strong>Linked Ticket:</strong> <a href="#" onclick="event.preventDefault();bsModal('maintEventModal').hide();openTicketDetail(${ev.ticket_id})" class="fw-semibold">${escHtml(ev.ticket_number||'View Ticket')}</a> <span class="cat-badge cat-maintenance">maintenance</span></div>` : ''}
+      ${!ev.ticket_id && ev.status === 'pending' ? '<div class="mb-2 text-muted small"><i class="bi bi-info-circle me-1"></i>A maintenance ticket will be auto-created when this event is started.</div>' : ''}
+      ${ev.completed_by_name ? `<div class="mb-2"><strong>Completed by:</strong> ${escHtml(ev.completed_by_name)} at ${new Date(ev.completed_at).toLocaleString()}</div>` : ''}
+      ${ev.notes ? `<div class="mb-2"><strong>Notes:</strong> ${escHtml(ev.notes)}</div>` : ''}
+      ${checklistHtml}
+      <div id="me-notes-input" ${active ? '' : 'style="display:none"'} class="mt-3">
+        <label class="form-label small fw-semibold">Completion Notes</label>
+        <textarea class="form-control form-control-sm" id="me-notes" rows="2" placeholder="Optional notes"></textarea>
+      </div>`;
+
+    let footer = '';
+    if (active && canChange('equipment.maintenance')) {
+        if (ev.status === 'pending')
+            footer += `<button class="btn btn-info btn-sm" onclick="updateMaintEvent(${ev.id},'in_progress')">Start</button> `;
+        footer += `<button class="btn btn-success" onclick="updateMaintEvent(${ev.id},'completed')"><i class="bi bi-check-lg me-1"></i>Complete</button> `;
+        footer += `<button class="btn btn-outline-secondary btn-sm" onclick="updateMaintEvent(${ev.id},'skipped')">Skip</button> `;
+    }
+    footer += '<button class="btn btn-light" data-bs-dismiss="modal">Close</button>';
+    document.getElementById('me-footer').innerHTML = footer;
+    bsModal('maintEventModal').show();
+}
+
+async function updateMaintEvent(id, status) {
+    const notes = document.getElementById('me-notes')?.value?.trim() || null;
+    try {
+        await api('PATCH', `/api/maintenance/events/${id}`, { status, notes });
+        toast(status === 'completed' ? 'Maintenance completed!' : `Status updated to ${status}`, 'success');
+        bsModal('maintEventModal').hide();
+        renderMaintView();
+    } catch(e) { toast(e.message, 'error'); }
+}
+
+async function completeMaintEvent(id) {
+    try {
+        await api('PATCH', `/api/maintenance/events/${id}`, { status: 'completed' });
+        toast('Maintenance completed!', 'success');
+        renderMaintView();
+    } catch(e) { toast(e.message, 'error'); }
+}
+
+async function toggleMaintChecklist(evId, idx, done) {
+    const ev = maintEvents.find(e => e.id === evId || String(e.id) === String(evId));
+    if (!ev) return;
+    const items = ev.checklist_items || [];
+    // Build updated state: array of {label, done} objects
+    let state = (ev.checklist_state || []).slice();
+    while (state.length < items.length) state.push(false);
+    if (typeof state[idx] === 'boolean') {
+        state[idx] = done;
+    } else {
+        state[idx] = { ...(typeof state[idx]==='object'?state[idx]:{}), done };
+    }
+    try {
+        await api('PATCH', `/api/maintenance/events/${evId}`, { checklist_state: state });
+        ev.checklist_state = state;
+        const li = document.getElementById(`me-chk-${idx}`);
+        if (li) li.className = done ? 'done' : '';
+    } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Schedule create/edit modal ──
+function _msTargetChanged() {
+    const type = document.getElementById('ms-target-type').value;
+    document.getElementById('ms-equip-wrap').style.display = type === 'equipment' ? '' : 'none';
+    document.getElementById('ms-group-wrap').style.display = type === 'group'     ? '' : 'none';
+}
+
+async function openMaintScheduleModal(existingId) {
+    // Lazy-load equipment/groups if needed
+    if (!_maintAllEquip.length || !_maintAllGroups.length) {
+        try {
+            const [equip, groups] = await Promise.all([
+                _maintAllEquip.length  ? Promise.resolve(_maintAllEquip)  : api('GET', '/api/equipment'),
+                _maintAllGroups.length ? Promise.resolve(_maintAllGroups) : api('GET', '/api/equipment-groups'),
+            ]);
+            _maintAllEquip  = equip  || [];
+            _maintAllGroups = groups || [];
+        } catch(e) { console.error(e); }
+    }
+
+    document.getElementById('ms-id').value = existingId || '';
+    document.getElementById('ms-title').value = '';
+    document.getElementById('ms-description').value = '';
+    document.getElementById('ms-interval').value = '30';
+    document.getElementById('ms-rec-type').value = 'days';
+    document.getElementById('ms-priority').value = 'normal';
+    document.getElementById('ms-est-minutes').value = '';
+    document.getElementById('ms-delete-btn').style.display = 'none';
+    document.getElementById('ms-save-btn').textContent = 'Create Schedule';
+    document.getElementById('maintSchedModalTitle').textContent = 'New Maintenance Schedule';
+    document.getElementById('ms-target-type').value = 'equipment';
+    _msTargetChanged();
+
+    document.getElementById('ms-equipment').innerHTML =
+        _maintAllEquip.map(e => `<option value="${e.id}">${escHtml(e.common_name||e.make+' '+e.model)}</option>`).join('');
+    document.getElementById('ms-group').innerHTML =
+        _maintAllGroups.map(g => `<option value="${g.id}">${escHtml(g.name)}</option>`).join('');
+
+    if (existingId) {
+        const ms = maintSchedules.find(s => s.id === existingId || String(s.id) === String(existingId));
+        if (ms) {
+            document.getElementById('ms-title').value       = ms.title || '';
+            document.getElementById('ms-description').value = ms.description || '';
+            document.getElementById('ms-interval').value    = ms.recurrence_interval;
+            document.getElementById('ms-rec-type').value    = ms.recurrence_type;
+            document.getElementById('ms-priority').value    = ms.priority;
+            document.getElementById('ms-est-minutes').value = ms.estimated_minutes || '';
+            if (ms.group_id) {
+                document.getElementById('ms-target-type').value = 'group';
+                _msTargetChanged();
+                document.getElementById('ms-group').value = ms.group_id;
+            } else if (ms.equipment_id) {
+                document.getElementById('ms-equipment').value = ms.equipment_id;
+            }
+            document.getElementById('ms-delete-btn').style.display = canChange('equipment.maintenance') ? '' : 'none';
+            document.getElementById('ms-save-btn').textContent = 'Save Changes';
+            document.getElementById('maintSchedModalTitle').textContent = 'Edit Maintenance Schedule';
+        }
+    }
+    bsModal('maintScheduleModal').show();
+}
+
+async function saveMaintSchedule() {
+    const id         = document.getElementById('ms-id').value;
+    const targetType = document.getElementById('ms-target-type').value;
+    const payload = {
+        title:               document.getElementById('ms-title').value.trim(),
+        description:         document.getElementById('ms-description').value.trim() || null,
+        equipment_id:        targetType === 'equipment' ? parseInt(document.getElementById('ms-equipment').value, 10) || null : null,
+        group_id:            targetType === 'group'     ? parseInt(document.getElementById('ms-group').value, 10) || null     : null,
+        recurrence_type:     document.getElementById('ms-rec-type').value,
+        recurrence_interval: parseInt(document.getElementById('ms-interval').value, 10) || 30,
+        priority:            document.getElementById('ms-priority').value,
+        estimated_minutes:   parseInt(document.getElementById('ms-est-minutes').value, 10) || null,
+    };
+    if (!payload.title) { toast('Title is required', 'error'); return; }
+    if (!payload.equipment_id && !payload.group_id) { toast('Select equipment or a group', 'error'); return; }
+    try {
+        if (id) {
+            await api('PATCH', `/api/maintenance/schedules/${id}`, payload);
+            toast('Schedule updated', 'success');
+        } else {
+            await api('POST', '/api/maintenance/schedules', payload);
+            toast('Maintenance schedule created', 'success');
+        }
+        bsModal('maintScheduleModal').hide();
+        renderMaintView();
+    } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteMaintSchedule(id) {
+    if (!id) id = document.getElementById('ms-id')?.value;
+    if (!id || !confirm('Delete this maintenance schedule and all its events?')) return;
+    try {
+        await api('DELETE', `/api/maintenance/schedules/${id}`);
+        toast('Schedule deleted', 'success');
+        bsModal('maintScheduleModal').hide();
+        renderMaintView();
+    } catch(e) { toast(e.message, 'error'); }
+}
+
+// ══════════════════════════════════════════════════════════════════
 // AUTHORIZATION SESSIONS
 // ══════════════════════════════════════════════════════════════════
 let authSessionsList = [];
@@ -2483,6 +3019,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (canChange('equipment.auth_sessions')) {
         const btn = document.getElementById('btn-new-auth-session');
+        if (btn) btn.style.display = '';
+    }
+    if (canChange('equipment.maintenance')) {
+        const btn = document.getElementById('btn-new-maint-schedule');
         if (btn) btn.style.display = '';
     }
 });

@@ -109,6 +109,17 @@
 /* ── Enrollment list in detail modal ── */
 .enroll-row { display: flex; align-items: center; gap: .5rem; padding: .35rem 0; border-bottom: 1px solid #f0f2f5; font-size: .85rem; }
 .enroll-row:last-child { border-bottom: none; }
+
+/* ── Maintenance schedule rows ── */
+.maint-sched-row { background: var(--surface-color, #fff); border: 1px solid var(--border-color, #dee2e6); border-radius: 6px; padding: .75rem 1rem; margin-bottom: .5rem; display: flex; align-items: flex-start; gap: .75rem; }
+.maint-sched-row .ms-title { font-weight: 600; font-size: .9rem; }
+.maint-sched-row .ms-meta  { font-size: .78rem; color: var(--text-muted, #6c757d); margin-top: .15rem; }
+
+/* ── Maintenance checklist ── */
+.maint-checklist { list-style: none; padding: 0; margin: 0; }
+.maint-checklist li { display: flex; align-items: flex-start; gap: .5rem; padding: .3rem 0; font-size: .875rem; border-bottom: 1px solid #f0f2f5; }
+.maint-checklist li:last-child { border-bottom: none; }
+.maint-checklist li.done { color: #6c757d; text-decoration: line-through; }
 /* List view */
 .sched-list-item { display: flex; align-items: center; gap: 1rem; padding: .75rem 1rem; border-bottom: 1px solid #f0f2f5; }
 .sched-list-item:last-child { border-bottom: none; }
