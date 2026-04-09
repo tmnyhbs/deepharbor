@@ -399,8 +399,7 @@
         <div id="settingsSection" style="display:none;">
             <h3 class="page-title"><i class="bi bi-gear me-2"></i>Settings</h3>
             <div id="settingsContent">
-                <!-- TODO: Port PA1 modules, templates, dashboard config, notifications, export -->
-                <p class="text-muted">Equipment module settings — to be ported from PA1 index.html</p>
+                <!-- populated by loadSettingsPage() -->
             </div>
         </div>
     </div>
@@ -946,6 +945,7 @@ function showSection(name) {
     if (name === 'scheduling') loadSchedulePage();
     if (name === 'maintenance') loadMaintenancePage();
     if (name === 'authorizations') loadAuthSessions();
+    if (name === 'settings') loadSettingsPage();
 }
 
 function filterSidebarByPermissions() {
@@ -2990,6 +2990,541 @@ async function deleteBooking() {
         bsModal('bookingModal').hide();
         renderSchedView();
     } catch(e) { toast(e.message,'error'); }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════════════════════════════════
+let _notifData = null;
+
+function loadSettingsPage() {
+    const content = document.getElementById('settingsContent');
+    if (!canChange('equipment.config')) {
+        content.innerHTML = '<div class="alert alert-secondary mt-2"><i class="bi bi-lock me-2"></i>Change permission on <code>equipment.config</code> is required to manage settings.</div>';
+        return;
+    }
+    content.innerHTML = `
+        <ul class="nav nav-tabs mb-3" id="settings-main-tabs">
+            <li class="nav-item"><button class="nav-link active" onclick="showSettingsTab('notifications',this)"><i class="bi bi-bell me-1"></i>Notifications</button></li>
+            <li class="nav-item"><button class="nav-link" onclick="showSettingsTab('export',this)"><i class="bi bi-download me-1"></i>Export</button></li>
+        </ul>
+        <div id="settings-tab-body"></div>`;
+    showSettingsTab('notifications');
+}
+
+function showSettingsTab(tab, btn) {
+    document.querySelectorAll('#settings-main-tabs .nav-link').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    else {
+        const first = document.querySelector(`#settings-main-tabs .nav-link`);
+        if (tab === 'notifications' && first) first.classList.add('active');
+    }
+    const body = document.getElementById('settings-tab-body');
+    if (!body) return;
+    if (tab === 'notifications') renderNotificationsPanel(body);
+    else if (tab === 'export')   renderExportPanel(body);
+}
+
+// ── Notification channel + event schema (hardcoded client-side) ──
+const NOTIF_CHANNEL_DEFS = {
+    email: {
+        label: 'Email',
+        fields: [
+            { key: 'smtp_host',     label: 'SMTP Host',          type: 'text',     hint: 'e.g. smtp.mailgun.org', required: true },
+            { key: 'smtp_port',     label: 'SMTP Port',          type: 'text',     hint: '587' },
+            { key: 'smtp_user',     label: 'SMTP Username',      type: 'text',     hint: 'postmaster@...' },
+            { key: 'smtp_password', label: 'SMTP Password',      type: 'password', hint: '' },
+            { key: 'from_address',  label: 'From Address',       type: 'text',     hint: 'equipment@yourdomain.com' },
+            { key: 'to_address',    label: 'Default To Address', type: 'text',     hint: 'admin@yourdomain.com' },
+        ]
+    },
+    push: {
+        label: 'Push',
+        fields: [
+            { key: 'vapid_public_key',  label: 'VAPID Public Key',  type: 'text',     hint: '' },
+            { key: 'vapid_private_key', label: 'VAPID Private Key', type: 'password', hint: '' },
+            { key: 'vapid_subject',     label: 'VAPID Subject',     type: 'text',     hint: 'mailto:admin@yourdomain.com' },
+        ]
+    }
+};
+
+const NOTIF_EVENT_DEFS = {
+    ticket_opened:            { label: 'Ticket Opened',            group: 'Tickets' },
+    ticket_closed:            { label: 'Ticket Closed',            group: 'Tickets' },
+    ticket_status_changed:    { label: 'Ticket Status Changed',    group: 'Tickets' },
+    equipment_status_changed: { label: 'Equipment Status Changed', group: 'Equipment' },
+    maintenance_due:          { label: 'Maintenance Due',          group: 'Maintenance' },
+    maintenance_started:      { label: 'Maintenance Started',      group: 'Maintenance' },
+    maintenance_completed:    { label: 'Maintenance Completed',    group: 'Maintenance' },
+    maintenance_overdue:      { label: 'Maintenance Overdue',      group: 'Maintenance' },
+};
+
+async function renderNotificationsPanel(container) {
+    container.innerHTML = '<div class="text-muted small p-2"><span class="spinner-border spinner-border-sm me-2"></span>Loading…</div>';
+    try {
+        const raw = await api('GET', '/api/config/notifications');
+        _notifData = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+    } catch(e) {
+        _notifData = {};
+    }
+    _notifData.channels = _notifData.channels || {};
+    _notifData.events   = _notifData.events   || {};
+    _notifData.webhooks = _notifData.webhooks  || [];
+    _renderNotifTabs(container, 'channels');
+}
+
+function _renderNotifTabs(container, activeTab) {
+    container.innerHTML = `
+    <div style="max-width:900px">
+        <div class="alert alert-info small mb-3">
+            <i class="bi bi-bell me-2"></i>
+            <strong>Notifications</strong> — Configure delivery channels, per-event triggers, and webhook endpoints.
+            Dispatch happens server-side; channel backends must be configured and reachable.
+        </div>
+        <ul class="nav nav-tabs mb-3" id="notif-tabs">
+            <li class="nav-item"><button class="nav-link ${activeTab==='channels'?'active':''}"
+                onclick="_renderNotifTabs(this.closest('.notif-panel-wrap'),'channels')">
+                <i class="bi bi-broadcast me-1"></i>Channels</button></li>
+            <li class="nav-item"><button class="nav-link ${activeTab==='events'?'active':''}"
+                onclick="_renderNotifTabs(this.closest('.notif-panel-wrap'),'events')">
+                <i class="bi bi-list-check me-1"></i>Events</button></li>
+            <li class="nav-item"><button class="nav-link ${activeTab==='webhooks'?'active':''}"
+                onclick="_renderNotifTabs(this.closest('.notif-panel-wrap'),'webhooks')">
+                <i class="bi bi-link-45deg me-1"></i>Webhooks</button></li>
+        </ul>
+        <div id="notif-tab-body"></div>
+    </div>`;
+    container.firstElementChild.classList.add('notif-panel-wrap');
+    if (activeTab === 'channels')       _renderNotifChannels();
+    else if (activeTab === 'events')    _renderNotifEvents();
+    else if (activeTab === 'webhooks')  _renderNotifWebhooks();
+}
+
+/* ── Channels ── */
+function _renderNotifChannels() {
+    const body = document.getElementById('notif-tab-body');
+    if (!body || !_notifData) return;
+    const channels = _notifData.channels || {};
+
+    body.innerHTML = `
+        <p class="text-muted small">Enable and configure delivery channels. Disabled channels won't dispatch any events.</p>
+        ${['email','push'].map(chKey => {
+            const def = NOTIF_CHANNEL_DEFS[chKey];
+            const ch  = channels[chKey] || {enabled: false, config: {}};
+            const cfg = ch.config || {};
+            return `
+            <div class="content-card mb-3">
+                <div class="content-card-header d-flex align-items-center justify-content-between">
+                    <span><i class="bi ${chKey==='email'?'bi-envelope':'bi-phone'} me-2"></i>${escHtml(def.label)}</span>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" id="nch-enable-${chKey}" ${ch.enabled?'checked':''}>
+                        <label class="form-check-label small" for="nch-enable-${chKey}">${ch.enabled?'Enabled':'Disabled'}</label>
+                    </div>
+                </div>
+                <div class="p-3">
+                    ${def.fields.map(f => {
+                        const val = cfg[f.key] || '';
+                        const req = f.required ? '<span class="text-danger ms-1">*</span>' : '';
+                        if (f.type === 'boolean') {
+                            return `<div class="mb-2 d-flex align-items-center gap-3">
+                                <label class="form-label mb-0 small">${escHtml(f.label)}${req}</label>
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" id="nch-${chKey}-${f.key}" ${val?'checked':''}>
+                                </div>
+                            </div>`;
+                        }
+                        return `<div class="mb-2">
+                            <label class="form-label small fw-semibold mb-1">${escHtml(f.label)}${req}</label>
+                            <input type="${f.type==='password'?'password':'text'}" class="form-control form-control-sm"
+                                id="nch-${chKey}-${f.key}"
+                                value="${escHtml(f.type!=='password'?String(val):'')}"
+                                placeholder="${f.hint?escHtml(f.hint):''}">
+                        </div>`;
+                    }).join('')}
+                </div>
+            </div>`;
+        }).join('')}
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-sm" onclick="_saveNotifChannels()"><i class="bi bi-floppy me-1"></i>Save Channels</button>
+        </div>
+        <div class="mt-2 small" id="notif-ch-msg"></div>`;
+
+    ['email','push'].forEach(chKey => {
+        const el = document.getElementById(`nch-enable-${chKey}`);
+        if (el) el.addEventListener('change', () => {
+            el.nextElementSibling.textContent = el.checked ? 'Enabled' : 'Disabled';
+        });
+    });
+}
+
+async function _saveNotifChannels() {
+    const newChannels = JSON.parse(JSON.stringify(_notifData.channels || {}));
+    ['email','push'].forEach(chKey => {
+        const def      = NOTIF_CHANNEL_DEFS[chKey];
+        const enableEl = document.getElementById(`nch-enable-${chKey}`);
+        newChannels[chKey] = newChannels[chKey] || {};
+        newChannels[chKey].enabled = enableEl ? enableEl.checked : false;
+        const cfg = {};
+        def.fields.forEach(f => {
+            const el = document.getElementById(`nch-${chKey}-${f.key}`);
+            if (!el) return;
+            cfg[f.key] = f.type === 'boolean' ? el.checked : el.value.trim();
+        });
+        newChannels[chKey].config = cfg;
+    });
+    const payload = { channels: newChannels, events: _notifData.events || {}, webhooks: _notifData.webhooks || [] };
+    const msgEl = document.getElementById('notif-ch-msg');
+    if (msgEl) msgEl.innerHTML = '<span class="text-muted"><span class="spinner-border spinner-border-sm me-1"></span>Saving…</span>';
+    try {
+        await api('PUT', '/api/config/notifications', payload);
+        _notifData.channels = newChannels;
+        if (msgEl) msgEl.innerHTML = '<span class="text-success"><i class="bi bi-check-circle me-1"></i>Channels saved.</span>';
+        toast('Notification channels saved', 'success');
+    } catch(e) {
+        if (msgEl) msgEl.innerHTML = `<span class="text-danger">${escHtml(e.message)}</span>`;
+        toast(e.message, 'error');
+    }
+}
+
+/* ── Events ── */
+function _renderNotifEvents() {
+    const body = document.getElementById('notif-tab-body');
+    if (!body || !_notifData) return;
+    const events   = _notifData.events || {};
+    const channels = ['email', 'push', 'webhook'];
+
+    const groups = {};
+    Object.entries(NOTIF_EVENT_DEFS).forEach(([key, def]) => {
+        const g = def.group || 'Other';
+        if (!groups[g]) groups[g] = [];
+        groups[g].push({key, ...def});
+    });
+
+    const colHeads = channels.map(ch =>
+        `<th style="min-width:70px;text-align:center">
+            <i class="bi ${ch==='email'?'bi-envelope':ch==='push'?'bi-phone':'bi-link-45deg'} me-1"></i>${ch}
+        </th>`
+    ).join('');
+
+    let rows = '';
+    Object.entries(groups).forEach(([group, evts]) => {
+        rows += `<tr class="notif-group-header"><td colspan="${channels.length+1}" class="py-1 px-2">${escHtml(group)}</td></tr>`;
+        evts.forEach(evt => {
+            const evtCfg = events[evt.key] || {};
+            const cells  = channels.map(ch => {
+                const checked = evtCfg[ch] ? 'checked' : '';
+                return `<td style="text-align:center"><input type="checkbox" class="notif-evt-check" data-event="${evt.key}" data-channel="${ch}" ${checked}></td>`;
+            }).join('');
+            rows += `<tr><td style="font-size:.82rem">${escHtml(evt.label)}</td>${cells}</tr>`;
+        });
+    });
+
+    body.innerHTML = `
+        <p class="text-muted small">Toggle which channels fire for each notification event.</p>
+        <div class="table-responsive mb-3">
+            <table class="table table-sm table-bordered notif-matrix-table" style="font-size:.8rem">
+                <thead><tr><th style="min-width:200px">Event</th>${colHeads}</tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-sm" onclick="_saveNotifEvents()"><i class="bi bi-floppy me-1"></i>Save Event Config</button>
+        </div>
+        <div class="mt-2 small" id="notif-evt-msg"></div>`;
+}
+
+async function _saveNotifEvents() {
+    const newEvents = {};
+    document.querySelectorAll('.notif-evt-check').forEach(cb => {
+        const evt = cb.dataset.event;
+        const ch  = cb.dataset.channel;
+        if (!newEvents[evt]) newEvents[evt] = {};
+        newEvents[evt][ch] = cb.checked;
+    });
+    const payload = { channels: _notifData.channels || {}, events: newEvents, webhooks: _notifData.webhooks || [] };
+    const msgEl = document.getElementById('notif-evt-msg');
+    if (msgEl) msgEl.innerHTML = '<span class="text-muted"><span class="spinner-border spinner-border-sm me-1"></span>Saving…</span>';
+    try {
+        await api('PUT', '/api/config/notifications', payload);
+        _notifData.events = newEvents;
+        if (msgEl) msgEl.innerHTML = '<span class="text-success"><i class="bi bi-check-circle me-1"></i>Events saved.</span>';
+        toast('Event config saved', 'success');
+    } catch(e) {
+        if (msgEl) msgEl.innerHTML = `<span class="text-danger">${escHtml(e.message)}</span>`;
+        toast(e.message, 'error');
+    }
+}
+
+/* ── Webhooks ── */
+function _renderNotifWebhooks() {
+    const body = document.getElementById('notif-tab-body');
+    if (!body || !_notifData) return;
+    const webhooks  = _notifData.webhooks || [];
+    const allEvents = Object.keys(NOTIF_EVENT_DEFS);
+
+    const whCards = webhooks.map((wh, idx) => {
+        const isDiscord = wh.type === 'discord';
+        return `
+        <div class="content-card mb-3 wh-card" data-idx="${idx}">
+            <div class="content-card-header d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi ${isDiscord?'bi-discord':'bi-link-45deg'}"></i>
+                    <input type="text" class="form-control form-control-sm wh-name border-0 bg-transparent fw-semibold" data-idx="${idx}"
+                        value="${escHtml(wh.name||'')}" placeholder="${isDiscord?'My Discord Channel':'My Webhook'}" style="max-width:200px">
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input wh-enabled" type="checkbox" data-idx="${idx}" ${wh.enabled!==false?'checked':''}>
+                        <label class="form-check-label small">${wh.enabled!==false?'Active':'Off'}</label>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm py-0 px-2" onclick="_testWebhook(${idx})" title="Send test"><i class="bi bi-send"></i></button>
+                    <button class="btn btn-outline-danger btn-sm py-0 px-2" onclick="_removeWebhook(${idx})" title="Remove"><i class="bi bi-trash"></i></button>
+                </div>
+            </div>
+            <div class="p-3">
+                <div class="row g-2 mb-2">
+                    <div class="col-auto">
+                        <label class="form-label small fw-semibold mb-1">Type</label>
+                        <select class="form-select form-select-sm wh-type" data-idx="${idx}" onchange="_whTypeChanged(${idx},this.value)">
+                            <option value="generic" ${!isDiscord?'selected':''}>Generic</option>
+                            <option value="discord" ${isDiscord?'selected':''}>Discord</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label class="form-label small fw-semibold mb-1">Webhook URL <span class="text-danger">*</span></label>
+                        <input type="url" class="form-control form-control-sm wh-url" data-idx="${idx}"
+                            value="${escHtml(wh.url||'')}"
+                            placeholder="${isDiscord?'https://discord.com/api/webhooks/...':'https://example.com/webhook'}">
+                    </div>
+                </div>
+                <div class="wh-discord-fields" data-idx="${idx}" style="${isDiscord?'':'display:none'}">
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold mb-1">Bot Username</label>
+                            <input type="text" class="form-control form-control-sm wh-discord-username" data-idx="${idx}"
+                                value="${escHtml(wh.discord_username||'')}" placeholder="Deep Harbor Bot">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold mb-1">Avatar URL</label>
+                            <input type="url" class="form-control form-control-sm wh-discord-avatar" data-idx="${idx}"
+                                value="${escHtml(wh.discord_avatar_url||'')}" placeholder="https://...">
+                        </div>
+                    </div>
+                    <div class="alert alert-secondary small py-2 px-3 mb-2" style="font-size:.75rem">
+                        <i class="bi bi-info-circle me-1"></i>
+                        <strong>Discord setup:</strong> Channel Settings → Integrations → Webhooks → New Webhook. Paste the URL above.
+                    </div>
+                </div>
+                <div class="wh-generic-fields" data-idx="${idx}" style="${isDiscord?'display:none':''}">
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold mb-1">Secret (HMAC-SHA256)</label>
+                        <input type="password" class="form-control form-control-sm wh-secret" data-idx="${idx}"
+                            value="" placeholder="${wh.secret?'(saved — leave blank to keep)':'optional signing secret'}">
+                    </div>
+                </div>
+                <div>
+                    <label class="form-label small fw-semibold mb-1">Event Filter</label>
+                    <select class="form-select form-select-sm wh-events" data-idx="${idx}" multiple size="4" style="font-size:.75rem">
+                        <option value="*" ${(!wh.events||!wh.events.length||wh.events.includes('*'))?'selected':''}>All Events (*)</option>
+                        ${allEvents.map(e => `<option value="${e}" ${wh.events?.includes(e)?'selected':''}>${escHtml(NOTIF_EVENT_DEFS[e]?.label||e)}</option>`).join('')}
+                    </select>
+                    <div class="form-text" style="font-size:.7rem">Hold Ctrl/Cmd to select specific events. "All Events (*)" fires on every event.</div>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+
+    body.innerHTML = `
+        <p class="text-muted small">Configure webhook endpoints. Generic webhooks receive signed JSON POST payloads.
+            Discord webhooks send rich embeds directly to a channel.</p>
+        <div id="wh-cards-container">
+            ${whCards || '<div class="text-muted small mb-3">No webhooks configured.</div>'}
+        </div>
+        <div class="d-flex gap-2 flex-wrap mb-2">
+            <button class="btn btn-outline-primary btn-sm" onclick="_addWebhook('generic')"><i class="bi bi-plus-lg me-1"></i>Add Webhook</button>
+            <button class="btn btn-outline-primary btn-sm" style="border-color:#5865F2;color:#5865F2" onclick="_addWebhook('discord')">
+                <i class="bi bi-discord me-1"></i>Add Discord Webhook</button>
+            <button class="btn btn-primary btn-sm" onclick="_saveNotifWebhooks()"><i class="bi bi-floppy me-1"></i>Save Webhooks</button>
+        </div>
+        <div class="mt-2 small" id="notif-wh-msg"></div>`;
+
+    webhooks.forEach((wh, idx) => {
+        const el = document.querySelector(`.wh-enabled[data-idx="${idx}"]`);
+        if (el) el.addEventListener('change', () => {
+            el.nextElementSibling.textContent = el.checked ? 'Active' : 'Off';
+        });
+    });
+}
+
+function _whTypeChanged(idx, newType) {
+    const discordFields = document.querySelector(`.wh-discord-fields[data-idx="${idx}"]`);
+    const genericFields = document.querySelector(`.wh-generic-fields[data-idx="${idx}"]`);
+    const urlInput      = document.querySelector(`.wh-url[data-idx="${idx}"]`);
+    const nameInput     = document.querySelector(`.wh-name[data-idx="${idx}"]`);
+    const icon          = document.querySelector(`.wh-card[data-idx="${idx}"] .content-card-header > div > i`);
+    if (discordFields) discordFields.style.display = newType === 'discord' ? '' : 'none';
+    if (genericFields) genericFields.style.display = newType === 'discord' ? 'none' : '';
+    if (urlInput)  urlInput.placeholder  = newType === 'discord' ? 'https://discord.com/api/webhooks/...' : 'https://example.com/webhook';
+    if (nameInput) nameInput.placeholder = newType === 'discord' ? 'My Discord Channel' : 'My Webhook';
+    if (icon) icon.className = `bi ${newType === 'discord' ? 'bi-discord' : 'bi-link-45deg'}`;
+}
+
+function _addWebhook(type) {
+    _notifData.webhooks = _notifData.webhooks || [];
+    const wh = { name: '', url: '', secret: '', enabled: true, events: ['*'], type: type || 'generic' };
+    if (type === 'discord') { wh.discord_username = 'Deep Harbor Bot'; wh.discord_avatar_url = ''; }
+    _notifData.webhooks.push(wh);
+    _renderNotifWebhooks();
+    setTimeout(() => {
+        const cards = document.querySelectorAll('.wh-card');
+        if (cards.length) cards[cards.length-1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
+}
+
+function _removeWebhook(idx) {
+    if (!confirm('Remove this webhook?')) return;
+    _notifData.webhooks.splice(idx, 1);
+    _renderNotifWebhooks();
+}
+
+async function _testWebhook(idx) {
+    const urlEl = document.querySelector(`.wh-url[data-idx="${idx}"]`);
+    const url   = urlEl ? urlEl.value.trim() : '';
+    if (!url) { toast('Enter a webhook URL first', 'error'); return; }
+    toast(`Test: would POST to ${url.substring(0,50)}…`, 'success');
+}
+
+function _collectWebhooks() {
+    const result = [];
+    document.querySelectorAll('.wh-card').forEach(card => {
+        const idx        = parseInt(card.dataset.idx);
+        const nameEl     = card.querySelector('.wh-name');
+        const urlEl      = card.querySelector('.wh-url');
+        const typeEl     = card.querySelector('.wh-type');
+        const secretEl   = card.querySelector('.wh-secret');
+        const enabledEl  = card.querySelector('.wh-enabled');
+        const eventsEl   = card.querySelector('.wh-events');
+        const discUserEl = card.querySelector('.wh-discord-username');
+        const discAvEl   = card.querySelector('.wh-discord-avatar');
+        const oldWh      = (_notifData.webhooks || [])[idx] || {};
+        const whType     = typeEl ? typeEl.value : (oldWh.type || 'generic');
+        const entry = {
+            name:    nameEl   ? nameEl.value.trim()  : '',
+            url:     urlEl    ? urlEl.value.trim()   : '',
+            type:    whType,
+            enabled: enabledEl ? enabledEl.checked   : true,
+            events:  eventsEl  ? Array.from(eventsEl.selectedOptions).map(o => o.value) : ['*'],
+        };
+        if (whType === 'discord') {
+            entry.discord_username   = discUserEl ? discUserEl.value.trim() : '';
+            entry.discord_avatar_url = discAvEl   ? discAvEl.value.trim()   : '';
+        } else {
+            entry.secret = (secretEl && secretEl.value) ? secretEl.value : (oldWh.secret || '');
+        }
+        result.push(entry);
+    });
+    return result;
+}
+
+async function _saveNotifWebhooks() {
+    const webhooks = _collectWebhooks();
+    const channels = JSON.parse(JSON.stringify(_notifData.channels || {}));
+    channels.webhook = channels.webhook || {};
+    channels.webhook.enabled = webhooks.some(w => w.enabled && w.url);
+    const payload = { channels, events: _notifData.events || {}, webhooks };
+    const msgEl = document.getElementById('notif-wh-msg');
+    if (msgEl) msgEl.innerHTML = '<span class="text-muted"><span class="spinner-border spinner-border-sm me-1"></span>Saving…</span>';
+    try {
+        await api('PUT', '/api/config/notifications', payload);
+        _notifData.webhooks = webhooks;
+        _notifData.channels = channels;
+        if (msgEl) msgEl.innerHTML = '<span class="text-success"><i class="bi bi-check-circle me-1"></i>Webhooks saved.</span>';
+        toast('Webhooks saved', 'success');
+    } catch(e) {
+        if (msgEl) msgEl.innerHTML = `<span class="text-danger">${escHtml(e.message)}</span>`;
+        toast(e.message, 'error');
+    }
+}
+
+// ── Export Panel ──
+const EXPORT_ENTITIES = [
+    { key: 'equipment',             label: 'Equipment',             icon: 'bi-cpu' },
+    { key: 'areas',                 label: 'Areas',                 icon: 'bi-map' },
+    { key: 'tickets',               label: 'Repair Tickets',        icon: 'bi-ticket-detailed' },
+    { key: 'groups',                label: 'Equipment Groups',      icon: 'bi-collection' },
+    { key: 'schedules',             label: 'Use Schedules',         icon: 'bi-calendar3' },
+    { key: 'maintenance_schedules', label: 'Maintenance Schedules', icon: 'bi-wrench-adjustable' },
+];
+
+function renderExportPanel(container) {
+    container.innerHTML = `
+    <div style="max-width:700px">
+        <div class="content-card">
+            <div class="content-card-header"><i class="bi bi-download me-2"></i>Export Data as CSV</div>
+            <div class="p-3">
+                <p class="text-muted small mb-3">Export any category as a CSV file. Each row is one record; nested objects are JSON-encoded in their column.</p>
+                <div class="row g-3">
+                    ${EXPORT_ENTITIES.map(e => `
+                    <div class="col-sm-6">
+                        <div class="export-entity-card">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi ${e.icon} text-primary" style="font-size:1.25rem"></i>
+                                <span class="fw-semibold small">${escHtml(e.label)}</span>
+                            </div>
+                            <button class="btn btn-outline-secondary btn-sm w-100" id="export-btn-${e.key}"
+                                onclick="doCSVExport('${e.key}')">
+                                <i class="bi bi-file-earmark-spreadsheet me-1"></i>Download CSV
+                            </button>
+                            <div class="mt-1 small" id="export-msg-${e.key}"></div>
+                        </div>
+                    </div>`).join('')}
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+function _jsonToCSV(data) {
+    if (!data || !data.length) return '';
+    const keys = Object.keys(data[0]);
+    const esc  = v => {
+        if (v === null || v === undefined) return '';
+        const s = typeof v === 'object' ? JSON.stringify(v) : String(v);
+        return (s.includes(',') || s.includes('"') || s.includes('\n'))
+            ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    return [keys.join(','), ...data.map(row => keys.map(k => esc(row[k])).join(','))].join('\n');
+}
+
+async function doCSVExport(entity) {
+    const btn   = document.getElementById(`export-btn-${entity}`);
+    const msgEl = document.getElementById(`export-msg-${entity}`);
+    if (btn)   btn.disabled = true;
+    if (msgEl) msgEl.innerHTML = '<span class="text-muted"><span class="spinner-border spinner-border-sm me-1"></span>Exporting…</span>';
+    try {
+        const data = await api('GET', `/api/export/${entity}`);
+        if (!data || !data.length) {
+            if (msgEl) msgEl.innerHTML = '<span class="text-muted">No records to export.</span>';
+            return;
+        }
+        const csv  = _jsonToCSV(data);
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = `${entity}_${new Date().toISOString().slice(0,10)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        if (msgEl) msgEl.innerHTML = `<span class="text-success"><i class="bi bi-check-circle me-1"></i>${data.length} records exported.</span>`;
+        toast(`${entity} exported (${data.length} rows)`, 'success');
+    } catch(e) {
+        if (msgEl) msgEl.innerHTML = `<span class="text-danger">${escHtml(e.message)}</span>`;
+        toast(e.message, 'error');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
 }
 
 // ── Init ──
