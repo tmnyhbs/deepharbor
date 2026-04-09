@@ -3,16 +3,69 @@
 # All equipment management endpoints under /v1/equipment/
 # *******************************************************************************
 
+import io
 import json
+import uuid
 from datetime import datetime, timezone
 from typing import Annotated, Optional
 
+import boto3
+from botocore.client import Config
 from fastapi import Depends, Request, HTTPException, UploadFile, File, Form
 
 from fastapiapp import app
 import auth
 import db
 from dhs_logging import logger
+from config import config as app_config
+
+# S3/RustFS storage client
+_STORAGE_ENDPOINT = app_config.get("storage", "endpoint_url", fallback="http://rustfs:9000")
+_STORAGE_ACCESS_KEY = app_config.get("storage", "access_key", fallback="deepharbor")
+_STORAGE_SECRET_KEY = app_config.get("storage", "secret_key", fallback="changeme")
+_STORAGE_BUCKET = app_config.get("storage", "bucket", fallback="deepharbor-equipment")
+_STORAGE_PUBLIC_URL = app_config.get("storage", "public_url", fallback="").rstrip("/")
+
+_s3 = boto3.client(
+    "s3",
+    endpoint_url=_STORAGE_ENDPOINT,
+    aws_access_key_id=_STORAGE_ACCESS_KEY,
+    aws_secret_access_key=_STORAGE_SECRET_KEY,
+    config=Config(signature_version="s3v4"),
+    region_name="us-east-1",
+)
+
+_PUBLIC_POLICY = json.dumps({
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Effect": "Allow",
+        "Principal": {"AWS": ["*"]},
+        "Action": ["s3:GetObject"],
+        "Resource": [f"arn:aws:s3:::{_STORAGE_BUCKET}/*"],
+    }],
+})
+
+_bucket_ready = False
+
+def _ensure_bucket():
+    global _bucket_ready
+    if _bucket_ready:
+        return
+    try:
+        _s3.head_bucket(Bucket=_STORAGE_BUCKET)
+    except Exception:
+        try:
+            _s3.create_bucket(Bucket=_STORAGE_BUCKET)
+            logger.info(f"Created storage bucket: {_STORAGE_BUCKET}")
+        except Exception as e:
+            logger.warning(f"Could not create bucket {_STORAGE_BUCKET}: {e}")
+            return
+    try:
+        _s3.put_bucket_policy(Bucket=_STORAGE_BUCKET, Policy=_PUBLIC_POLICY)
+        logger.info(f"Applied public-read policy to bucket: {_STORAGE_BUCKET}")
+    except Exception as e:
+        logger.warning(f"Could not set bucket policy for {_STORAGE_BUCKET}: {e}")
+    _bucket_ready = True
 from models import (
     AreaCreate, EquipmentCreate, EquipmentUpdate,
     TicketCreate, TicketUpdate, WorkLogEntry,
@@ -563,6 +616,67 @@ async def set_config(key: str, request: Request, current_client: AuthenticatedCl
     data = await request.json()
     result = db.set_config(key, data, updated_by=ctx.get("member_id"))
     return result
+
+
+###############################################################################
+# File Upload
+###############################################################################
+
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
+
+
+@app.post("/v1/equipment/upload")
+async def upload_file(
+    request: Request,
+    current_client: AuthenticatedClient,
+    file: UploadFile = File(...),
+    entity_type: str = Form(...),
+    entity_id: str = Form("new"),
+):
+    _require_change(request, "equipment.items")
+    _ensure_bucket()
+
+    if file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(400, f"Unsupported file type: {file.content_type}")
+
+    data = await file.read()
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(413, "File too large (max 10 MB)")
+
+    ext = (file.filename or "upload").rsplit(".", 1)[-1].lower() if "." in (file.filename or "") else "jpg"
+    key = f"{entity_type}/{entity_id}/{uuid.uuid4().hex}.{ext}"
+
+    try:
+        _s3.put_object(
+            Bucket=_STORAGE_BUCKET,
+            Key=key,
+            Body=io.BytesIO(data),
+            ContentType=file.content_type,
+        )
+    except Exception as e:
+        logger.error(f"Storage upload failed: {e}")
+        raise HTTPException(500, "File storage failed")
+
+    if _STORAGE_PUBLIC_URL:
+        url = f"{_STORAGE_PUBLIC_URL}/{_STORAGE_BUCKET}/{key}"
+    else:
+        url = f"{_STORAGE_ENDPOINT}/{_STORAGE_BUCKET}/{key}"
+
+    return {"url": url, "key": key}
+
+
+@app.get("/v1/equipment/media/{key:path}")
+async def get_media(key: str, current_client: AuthenticatedClient):
+    from fastapi.responses import StreamingResponse
+    import httpx
+    url = f"{_STORAGE_ENDPOINT}/{_STORAGE_BUCKET}/{key}"
+    async with httpx.AsyncClient() as client:
+        r = await client.get(url)
+    if r.status_code != 200:
+        raise HTTPException(r.status_code, "Media not found")
+    content_type = r.headers.get("content-type", "application/octet-stream")
+    return StreamingResponse(iter([r.content]), media_type=content_type)
 
 
 ###############################################################################
