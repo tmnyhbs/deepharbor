@@ -1223,10 +1223,10 @@ COMMENT ON TABLE roles IS 'This table holds the various roles defined in the Dee
  * the filterTabsByPermissions() function.
  */
 INSERT INTO roles (id, name, permission) OVERRIDING SYSTEM VALUE VALUES (1, 'Authorizer', '{"view": ["member.identity", "member.authorizations", "member.notes"], "change": ["member.authorizations", "member.notes"]}');
-INSERT INTO roles (id, name, permission) OVERRIDING SYSTEM VALUE VALUES (2, 'Administrator', '{"view": ["member.identity", "member.status", "member.roles", "member.forms", "member.connections", "member.extras", "member.authorizations", "member.notes", "member.access", "member.entry", "space.access_logs", "systems.roles", "systems.assign_roles"], "change": ["member.identity", "member.status", "member.roles", "member.forms", "member.connections", "member.extras", "member.authorizations", "member.notes", "member.access", "systems.roles", "systems.assign_roles"]}');
+INSERT INTO roles (id, name, permission) OVERRIDING SYSTEM VALUE VALUES (2, 'Administrator', '{"view": ["member.identity", "member.status", "member.roles", "member.forms", "member.connections", "member.extras", "member.authorizations", "member.notes", "member.access", "member.entry", "space.access_logs", "systems.roles", "systems.assign_roles", "equipment.areas", "equipment.items", "equipment.groups", "equipment.tickets", "equipment.schedules", "equipment.auth_sessions", "equipment.maintenance", "equipment.dashboard", "equipment.config"], "change": ["member.identity", "member.status", "member.roles", "member.forms", "member.connections", "member.extras", "member.authorizations", "member.notes", "member.access", "systems.roles", "systems.assign_roles", "equipment.areas", "equipment.items", "equipment.groups", "equipment.tickets", "equipment.schedules", "equipment.auth_sessions", "equipment.maintenance", "equipment.config"]}');
 INSERT INTO roles (id, name, permission) OVERRIDING SYSTEM VALUE VALUES (3, 'Board', '{"view": ["member.identity", "member.status", "member.notes", "member.entry"], "change": ["member.status", "member.notes"]}');
 INSERT INTO roles (id, name, permission) OVERRIDING SYSTEM VALUE VALUES (4, 'Just Forms', '{"view": ["member.forms"], "change": ["member.forms"]}');
-INSERT INTO roles (id, name, permission) OVERRIDING SYSTEM VALUE VALUES (5, 'SuperAdmin', '{"view": ["member.identity", "member.status", "member.roles", "member.forms", "member.connections", "member.extras", "member.authorizations", "member.notes", "member.access", "member.entry", "space.access_logs", "systems.roles", "systems.assign_roles"], "change": ["member.identity", "member.status", "member.roles", "member.forms", "member.connections", "member.extras", "member.authorizations", "member.notes", "member.access", "systems.roles", "systems.assign_roles"]}');
+INSERT INTO roles (id, name, permission) OVERRIDING SYSTEM VALUE VALUES (5, 'SuperAdmin', '{"view": ["member.identity", "member.status", "member.roles", "member.forms", "member.connections", "member.extras", "member.authorizations", "member.notes", "member.access", "member.entry", "space.access_logs", "systems.roles", "systems.assign_roles", "equipment.areas", "equipment.items", "equipment.groups", "equipment.tickets", "equipment.schedules", "equipment.auth_sessions", "equipment.maintenance", "equipment.dashboard", "equipment.config"], "change": ["member.identity", "member.status", "member.roles", "member.forms", "member.connections", "member.extras", "member.authorizations", "member.notes", "member.access", "systems.roles", "systems.assign_roles", "equipment.areas", "equipment.items", "equipment.groups", "equipment.tickets", "equipment.schedules", "equipment.auth_sessions", "equipment.maintenance", "equipment.config"]}');
 INSERT INTO roles (id, name, permission) OVERRIDING SYSTEM VALUE VALUES (6, 'just-space-logs', '{"view": ["space.access_logs"], "change": []}');
 SELECT setval(pg_get_serial_sequence('roles', 'id'), (SELECT MAX(id) FROM roles));
 
@@ -1510,6 +1510,7 @@ CREATE TABLE IF NOT EXISTS areas (
     name        TEXT UNIQUE NOT NULL,
     description TEXT,
     metadata    JSONB DEFAULT '{}',
+    attachments JSONB DEFAULT '[]',
     created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 COMMENT ON TABLE areas IS 'Named zones within the space (e.g. Woodshop, Electronics). Used by the equipment module and potentially other modules in the future.';
@@ -1573,6 +1574,7 @@ CREATE TABLE IF NOT EXISTS equipment_groups (
     name        TEXT NOT NULL,
     description TEXT,
     area_id     INTEGER REFERENCES areas(id) ON DELETE SET NULL,
+    attachments JSONB DEFAULT '[]',
     created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 COMMENT ON TABLE equipment_groups IS 'Groups of related equipment for organizational purposes. Equipment can belong to multiple groups.';
@@ -1789,7 +1791,7 @@ CREATE TRIGGER trg_tickets_ver BEFORE UPDATE ON repair_tickets
 INSERT INTO oauth2_users (client_name, client_secret, client_description)
 VALUES (
     'dev-equipment-portal',
-    '$2b$12$PLACEHOLDER_REPLACE_BEFORE_DEPLOY',
+    '$2b$12$qHfcyqUpH2oYE.0UbChDiePnA3C0s75L3mTWzcZoxTzP6tvBUTlOK',
     'Equipment management portal application'
 );
 
@@ -1797,7 +1799,7 @@ VALUES (
 INSERT INTO oauth2_users (client_name, client_secret, client_description)
 VALUES (
     'dev-discord-bot',
-    '$2b$12$PLACEHOLDER_REPLACE_BEFORE_DEPLOY',
+    '$2b$12$qHfcyqUpH2oYE.0UbChDiePnA3C0s75L3mTWzcZoxTzP6tvBUTlOK',
     'Discord bot for equipment ticket management'
 );
 

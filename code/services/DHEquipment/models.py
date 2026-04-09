@@ -122,6 +122,7 @@ class EquipGroupUpdate(BaseModel):
     description: Optional[str] = None
     area_id: Optional[int] = None
     equipment_ids: Optional[list[int]] = None
+    attachments: Optional[list] = None
 
 # ── Maintenance ──
 

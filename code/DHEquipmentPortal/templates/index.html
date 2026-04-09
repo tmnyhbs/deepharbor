@@ -97,6 +97,13 @@
 .upload-zone { border: 2px dashed #dee2e6; border-radius: 8px; padding: 1rem; text-align: center; cursor: pointer; color: #6c757d; font-size: .85rem; transition: border-color .15s, background .15s; }
 .upload-zone:hover, .upload-zone.dragover { border-color: var(--primary-color, #6f42c1); background: #f8f5ff; }
 .upload-zone input[type=file] { display: none; }
+.attach-list { list-style: none; padding: 0; margin: 0; }
+.attach-item { display: flex; align-items: center; gap: .5rem; padding: .4rem .5rem; border-radius: 6px; border: 1px solid #dee2e6; margin-bottom: .4rem; background: #f8f9fa; font-size: .82rem; }
+.attach-item .attach-icon { font-size: 1.1rem; flex-shrink: 0; }
+.attach-item .attach-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.attach-item .attach-size { color: #6c757d; flex-shrink: 0; }
+.attach-item .attach-remove { flex-shrink: 0; color: #dc3545; cursor: pointer; background: none; border: none; padding: 0 2px; line-height: 1; }
+.attach-item .attach-remove:hover { color: #a71d2a; }
 
 /* ── Attr editor ── */
 .attr-row { display: flex; gap: .4rem; margin-bottom: .4rem; }
@@ -441,7 +448,7 @@
 
 {# ── Equipment Group Modal ── #}
 <div class="modal fade" id="equipGroupModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title fw-bold" id="egm-title">New Equipment Group</h5>
@@ -461,6 +468,21 @@
                     <label class="form-label small fw-semibold">Equipment Members</label>
                     <div class="text-muted small mb-1">Hold Ctrl / Cmd to select multiple</div>
                     <select class="form-select" id="egm-equip" multiple size="6" style="min-height:120px"></select>
+                </div>
+                <hr class="my-3">
+                <div class="small fw-semibold text-muted text-uppercase mb-2" style="letter-spacing:.08em">
+                    <i class="bi bi-paperclip me-1"></i>Attachments
+                </div>
+                <ul class="attach-list" id="egm-attach-list"></ul>
+                <div class="upload-zone" id="egm-attach-zone"
+                    onclick="document.getElementById('egm-attach-file').click()"
+                    ondragover="event.preventDefault();this.classList.add('dragover')"
+                    ondragleave="this.classList.remove('dragover')"
+                    ondrop="attachHandleDrop(event,'egm')">
+                    <input type="file" id="egm-attach-file" multiple
+                        accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+                        onchange="attachHandleSelect(event,'egm')">
+                    <i class="bi bi-cloud-upload me-1"></i> Upload files (images, docs, video — max 250 MB each)
                 </div>
             </div>
             <div class="modal-footer">
@@ -733,6 +755,21 @@
                         </button>
                     </div>
                 </div>
+                <hr class="my-3">
+                <div class="small fw-semibold text-muted text-uppercase mb-2" style="letter-spacing:.08em">
+                    <i class="bi bi-paperclip me-1"></i>Attachments
+                </div>
+                <ul class="attach-list" id="tm-attach-list"></ul>
+                <div class="upload-zone" id="tm-attach-zone"
+                    onclick="document.getElementById('tm-attach-file').click()"
+                    ondragover="event.preventDefault();this.classList.add('dragover')"
+                    ondragleave="this.classList.remove('dragover')"
+                    ondrop="attachHandleDrop(event,'tm')">
+                    <input type="file" id="tm-attach-file" multiple
+                        accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+                        onchange="attachHandleSelect(event,'tm')">
+                    <i class="bi bi-cloud-upload me-1"></i> Upload files (images, docs, video — max 250 MB each)
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline-danger me-auto" id="tm-delete-btn" onclick="deleteTicket()" style="display:none">
@@ -786,6 +823,21 @@
                         <label class="form-label small fw-semibold"><i class="bi bi-discord me-1"></i>Discord Channel</label>
                         <input class="form-control" id="am-discord">
                     </div>
+                </div>
+                <hr class="my-3">
+                <div class="small fw-semibold text-muted text-uppercase mb-2" style="letter-spacing:.08em">
+                    <i class="bi bi-paperclip me-1"></i>Attachments
+                </div>
+                <ul class="attach-list" id="am-attach-list"></ul>
+                <div class="upload-zone" id="am-attach-zone"
+                    onclick="document.getElementById('am-attach-file').click()"
+                    ondragover="event.preventDefault();this.classList.add('dragover')"
+                    ondragleave="this.classList.remove('dragover')"
+                    ondrop="attachHandleDrop(event,'am')">
+                    <input type="file" id="am-attach-file" multiple
+                        accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+                        onchange="attachHandleSelect(event,'am')">
+                    <i class="bi bi-cloud-upload me-1"></i> Upload files (images, docs, video — max 250 MB each)
                 </div>
             </div>
             <div class="modal-footer">
@@ -880,6 +932,21 @@
                         <i class="bi bi-camera me-1"></i> Upload location photo
                     </div>
                     <input type="hidden" id="em-location-img-url" value="">
+                </div>
+                <hr class="my-3">
+                <div class="mb-2 small fw-semibold text-muted text-uppercase" style="letter-spacing:.08em">
+                    <i class="bi bi-paperclip me-1"></i>Attachments
+                </div>
+                <ul class="attach-list" id="em-attach-list"></ul>
+                <div class="upload-zone" id="em-attach-zone"
+                    onclick="document.getElementById('em-attach-file').click()"
+                    ondragover="event.preventDefault();this.classList.add('dragover')"
+                    ondragleave="this.classList.remove('dragover')"
+                    ondrop="attachHandleDrop(event,'em')">
+                    <input type="file" id="em-attach-file" multiple
+                        accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+                        onchange="attachHandleSelect(event,'em')">
+                    <i class="bi bi-cloud-upload me-1"></i> Upload files (images, docs, video — max 250 MB each)
                 </div>
             </div>
             <div class="modal-footer">
@@ -1238,6 +1305,7 @@ function openEquipModal() {
         + allAreas.map(a => `<option value="${a.id}">${escHtml(a.name)}</option>`).join('');
     renderAttrEditor({});
     setLocationFields('', '');
+    attachInit('em', []);
     bsModal('equipModal').show();
 }
 
@@ -1258,6 +1326,7 @@ async function editEquipment(id) {
     renderAttrEditor(eq.attributes || {});
     const locAttrs = eq.attributes || {};
     setLocationFields(locAttrs.__location_desc || '', locAttrs.__location_img || '');
+    attachInit('em', eq.attachments || []);
     bsModal('equipModal').show();
 }
 
@@ -1303,6 +1372,7 @@ async function saveEquipment() {
         area_id: document.getElementById('em-area').value ? parseInt(document.getElementById('em-area').value) : null,
         status: document.getElementById('em-status').value,
         attributes: getAttrsWithLocation(),
+        attachments: getAttachments('em'),
     };
     if (!payload.make || !payload.model || !payload.serial_number) { toast('Make, model and serial number are required', 'error'); return; }
     try {
@@ -1496,6 +1566,7 @@ function openAreaModal() {
     ['am-name', 'am-description', 'am-website', 'am-host-name', 'am-host-contact', 'am-email', 'am-discord']
         .forEach(id => document.getElementById(id).value = '');
     document.getElementById('areaModalTitle').textContent = 'Add Area';
+    attachInit('am', []);
     bsModal('areaModal').show();
 }
 
@@ -1512,6 +1583,7 @@ async function editAreaById(id) {
         document.getElementById('am-email').value = m.email || '';
         document.getElementById('am-discord').value = m.discord || '';
         document.getElementById('areaModalTitle').textContent = 'Edit Area';
+        attachInit('am', area.attachments || []);
         bsModal('areaModal').show();
     } catch(e) { toast('Failed to load area: ' + e.message, 'error'); }
 }
@@ -1528,6 +1600,7 @@ async function saveArea() {
             email:        document.getElementById('am-email').value.trim(),
             discord:      document.getElementById('am-discord').value.trim(),
         },
+        attachments: getAttachments('am'),
     };
     if (!payload.name) { toast('Area name is required', 'error'); return; }
     try {
@@ -1535,7 +1608,10 @@ async function saveArea() {
             await api('PATCH', `/api/areas/${id}`, payload);
             toast('Area updated', 'success');
         } else {
-            await api('POST', '/api/areas', payload);
+            const created = await api('POST', '/api/areas', payload);
+            if (payload.attachments.length && created?.id) {
+                await api('PATCH', `/api/areas/${created.id}`, { attachments: payload.attachments });
+            }
             toast('Area created', 'success');
         }
         bsModal('areaModal').hide();
@@ -1616,6 +1692,7 @@ async function openGroupModal(existingId) {
         Array.from(document.getElementById('egm-equip').options)
             .forEach(o => o.selected = memberIds.includes(parseInt(o.value, 10)));
     }
+    attachInit('egm', g?.attachments || []);
     bsModal('equipGroupModal').show();
 }
 
@@ -1627,12 +1704,19 @@ async function saveEquipGroup() {
         .map(o => parseInt(o.value, 10));
     const payload = {
         name,
-        description:  document.getElementById('egm-desc').value.trim() || null,
+        description:   document.getElementById('egm-desc').value.trim() || null,
         equipment_ids: equipIds,
+        attachments:   getAttachments('egm'),
     };
     try {
-        if (id) await api('PATCH', `/api/equipment-groups/${id}`, payload);
-        else    await api('POST',  '/api/equipment-groups', payload);
+        if (id) {
+            await api('PATCH', `/api/equipment-groups/${id}`, payload);
+        } else {
+            const created = await api('POST', '/api/equipment-groups', payload);
+            if (payload.attachments.length && created?.id) {
+                await api('PATCH', `/api/equipment-groups/${created.id}`, { attachments: payload.attachments });
+            }
+        }
         toast('Group saved', 'success');
         bsModal('equipGroupModal').hide();
         await loadGroupsSection();
@@ -1723,6 +1807,7 @@ async function openTicketModal(equipId) {
     document.getElementById('tm-equipment').innerHTML = allEquipment.map(e =>
         `<option value="${e.id}" ${e.id === equipId ? 'selected' : ''}>${escHtml(e.common_name || e.make + ' ' + e.model)}</option>`
     ).join('');
+    attachInit('tm', []);
     bsModal('ticketModal').show();
 }
 
@@ -1771,6 +1856,7 @@ async function openTicketDetail(id) {
         document.getElementById('wl-notes').value = '';
         document.getElementById('wl-parts').value = '';
 
+        attachInit('tm', t.attachments || []);
         bsModal('ticketModal').show();
     } catch(e) { toast('Failed to load ticket: ' + e.message, 'error'); }
 }
@@ -1785,6 +1871,7 @@ async function saveTicket() {
                 priority:    document.getElementById('tm-priority').value,
                 status:      document.getElementById('tm-status').value,
                 version:     parseInt(document.getElementById('tm-version').value, 10),
+                attachments: getAttachments('tm'),
             };
             await api('PATCH', `/api/tickets/${id}`, payload);
             toast('Ticket updated', 'success');
@@ -1792,12 +1879,19 @@ async function saveTicket() {
             const equipId = document.getElementById('tm-equipment').value;
             const title   = document.getElementById('tm-title').value.trim();
             if (!equipId || !title) { toast('Equipment and title are required', 'error'); return; }
-            await api('POST', '/api/tickets', {
+            const created = await api('POST', '/api/tickets', {
                 equipment_id: parseInt(equipId, 10),
                 title,
                 description: document.getElementById('tm-description').value.trim(),
                 priority:    document.getElementById('tm-priority').value,
             });
+            const attachments = getAttachments('tm');
+            if (attachments.length && created?.id) {
+                await api('PATCH', `/api/tickets/${created.id}`, {
+                    attachments,
+                    version: created.version || 1,
+                });
+            }
             toast('Ticket created', 'success');
         }
         bsModal('ticketModal').hide();
@@ -1833,7 +1927,120 @@ async function deleteTicket() {
     } catch(e) { toast(e.message, 'error'); }
 }
 
-function renderAttachments() {} // placeholder — file uploads not yet implemented
+// ── Shared attachment module ──
+// _attachState[prefix] = [{key, url, filename, size, content_type}, ...]
+const _attachState = {};
+
+function _attachIcon(ct) {
+    if (!ct) return 'bi-paperclip';
+    if (ct.startsWith('image/'))  return 'bi-file-image';
+    if (ct.startsWith('video/'))  return 'bi-file-play';
+    if (ct === 'application/pdf') return 'bi-file-earmark-pdf';
+    if (ct.includes('word'))      return 'bi-file-earmark-word';
+    if (ct.includes('excel') || ct.includes('spreadsheet') || ct === 'text/csv') return 'bi-file-earmark-spreadsheet';
+    if (ct.includes('powerpoint') || ct.includes('presentation')) return 'bi-file-earmark-slides';
+    return 'bi-file-earmark';
+}
+
+function _attachFmt(bytes) {
+    if (!bytes) return '';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+function attachInit(prefix, existing) {
+    _attachState[prefix] = Array.isArray(existing) ? [...existing] : [];
+    attachRender(prefix);
+}
+
+function attachRender(prefix) {
+    const list = document.getElementById(`${prefix}-attach-list`);
+    if (!list) return;
+    const items = _attachState[prefix] || [];
+    if (!items.length) { list.innerHTML = ''; return; }
+    list.innerHTML = items.map((a, i) => `
+        <li class="attach-item">
+            <i class="bi ${_attachIcon(a.content_type)} attach-icon"></i>
+            <a class="attach-name" href="${escHtml(a.url)}" target="_blank" title="${escHtml(a.filename)}">${escHtml(a.filename)}</a>
+            <span class="attach-size">${_attachFmt(a.size)}</span>
+            <button class="attach-remove" title="Remove" onclick="attachRemove('${prefix}',${i})"><i class="bi bi-x-lg"></i></button>
+        </li>`).join('');
+}
+
+async function attachRemove(prefix, idx) {
+    const items = _attachState[prefix] || [];
+    const item  = items[idx];
+    if (!item) return;
+    if (item.key) {
+        try {
+            await fetch(`/api/media/${item.key}`, {
+                method: 'DELETE',
+                headers: { 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '' },
+            });
+        } catch(e) { /* best-effort delete */ }
+    }
+    items.splice(idx, 1);
+    attachRender(prefix);
+}
+
+async function attachHandleSelect(event, prefix) {
+    const files = Array.from(event.target.files || []);
+    event.target.value = '';
+    for (const f of files) await attachUploadOne(prefix, f);
+}
+
+function attachHandleDrop(event, prefix) {
+    event.preventDefault();
+    document.getElementById(`${prefix}-attach-zone`)?.classList.remove('dragover');
+    const files = Array.from(event.dataTransfer.files || []);
+    (async () => { for (const f of files) await attachUploadOne(prefix, f); })();
+}
+
+async function attachUploadOne(prefix, file) {
+    const zone = document.getElementById(`${prefix}-attach-zone`);
+    const orig = zone ? zone.innerHTML : '';
+    if (zone) zone.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Uploading ${escHtml(file.name)}…`;
+    try {
+        // Determine entity_type and entity_id from the modal context
+        const entityType = _attachEntityType(prefix);
+        const entityId   = document.getElementById(`${prefix}-id`)?.value || 'new';
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('entity_type', entityType);
+        fd.append('entity_id', entityId);
+        const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '' },
+            body: fd,
+        });
+        if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error || res.statusText); }
+        const data = await res.json();
+        if (!_attachState[prefix]) _attachState[prefix] = [];
+        _attachState[prefix].push({
+            key:          data.key,
+            url:          data.url,
+            filename:     data.filename || file.name,
+            size:         data.size     || file.size,
+            content_type: data.content_type || file.type,
+        });
+        attachRender(prefix);
+    } catch(e) {
+        toast('Upload failed: ' + e.message, 'error');
+    } finally {
+        if (zone) zone.innerHTML = orig;
+    }
+}
+
+function _attachEntityType(prefix) {
+    const map = { em: 'equipment', tm: 'ticket', am: 'area', egm: 'group' };
+    return map[prefix] || prefix;
+}
+
+function getAttachments(prefix) {
+    return _attachState[prefix] || [];
+}
+
 function openMaintScheduleForEquip() {}
 
 // ══════════════════════════════════════════════════════════════════

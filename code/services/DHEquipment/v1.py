@@ -156,7 +156,7 @@ async def create_area(data: AreaCreate, request: Request, current_client: Authen
 @app.patch("/v1/equipment/areas/{area_id}")
 async def update_area(area_id: int, data: dict, request: Request, current_client: AuthenticatedClient):
     ctx = _require_change(request, "equipment.areas")
-    allowed = {"name", "description", "metadata"}
+    allowed = {"name", "description", "metadata", "attachments"}
     updates = {k: v for k, v in data.items() if k in allowed}
     if not updates:
         raise HTTPException(400, "No valid fields to update")
@@ -622,8 +622,22 @@ async def set_config(key: str, request: Request, current_client: AuthenticatedCl
 # File Upload
 ###############################################################################
 
-ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
-MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
+ALLOWED_ATTACHMENT_TYPES = {
+    # Images
+    "image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml", "image/tiff",
+    # Documents
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "text/plain", "text/csv",
+    # Video
+    "video/mp4", "video/quicktime", "video/x-msvideo", "video/webm", "video/mpeg",
+}
+MAX_UPLOAD_BYTES = 250 * 1024 * 1024  # 250 MB
 
 
 @app.post("/v1/equipment/upload")
@@ -637,14 +651,16 @@ async def upload_file(
     _require_change(request, "equipment.items")
     _ensure_bucket()
 
-    if file.content_type not in ALLOWED_IMAGE_TYPES:
-        raise HTTPException(400, f"Unsupported file type: {file.content_type}")
+    content_type = file.content_type or "application/octet-stream"
+    if content_type not in ALLOWED_ATTACHMENT_TYPES:
+        raise HTTPException(400, f"Unsupported file type: {content_type}")
 
     data = await file.read()
     if len(data) > MAX_UPLOAD_BYTES:
-        raise HTTPException(413, "File too large (max 10 MB)")
+        raise HTTPException(413, "File too large (max 250 MB)")
 
-    ext = (file.filename or "upload").rsplit(".", 1)[-1].lower() if "." in (file.filename or "") else "jpg"
+    original_filename = file.filename or "upload"
+    ext = original_filename.rsplit(".", 1)[-1].lower() if "." in original_filename else "bin"
     key = f"{entity_type}/{entity_id}/{uuid.uuid4().hex}.{ext}"
 
     try:
@@ -652,7 +668,7 @@ async def upload_file(
             Bucket=_STORAGE_BUCKET,
             Key=key,
             Body=io.BytesIO(data),
-            ContentType=file.content_type,
+            ContentType=content_type,
         )
     except Exception as e:
         logger.error(f"Storage upload failed: {e}")
@@ -663,7 +679,13 @@ async def upload_file(
     else:
         url = f"{_STORAGE_ENDPOINT}/{_STORAGE_BUCKET}/{key}"
 
-    return {"url": url, "key": key}
+    return {
+        "url": url,
+        "key": key,
+        "filename": original_filename,
+        "size": len(data),
+        "content_type": content_type,
+    }
 
 
 @app.get("/v1/equipment/media/{key:path}")
@@ -677,6 +699,16 @@ async def get_media(key: str, current_client: AuthenticatedClient):
         raise HTTPException(r.status_code, "Media not found")
     content_type = r.headers.get("content-type", "application/octet-stream")
     return StreamingResponse(iter([r.content]), media_type=content_type)
+
+
+@app.delete("/v1/equipment/media/{key:path}", status_code=204)
+async def delete_media(key: str, request: Request, current_client: AuthenticatedClient):
+    _require_change(request, "equipment.items")
+    try:
+        _s3.delete_object(Bucket=_STORAGE_BUCKET, Key=key)
+    except Exception as e:
+        logger.warning(f"Storage delete failed for key {key!r}: {e}")
+        raise HTTPException(500, "File delete failed")
 
 
 ###############################################################################
