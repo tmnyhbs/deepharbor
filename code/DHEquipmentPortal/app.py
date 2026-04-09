@@ -37,7 +37,8 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 @app.errorhandler(CSRFError)
 def handle_csrf_error(e):
     logger.warning(f"CSRF validation failed: {e.description}")
-    if request.is_json or request.content_type == "application/json":
+    if (request.is_json or request.content_type == "application/json"
+            or request.headers.get("X-CSRFToken") is not None):
         return {"error": "CSRF token missing or invalid"}, 400
     flash("Your session has expired. Please try again.", "error")
     return redirect(request.referrer or url_for("index"))
@@ -472,6 +473,59 @@ def api_list_maint_events():
 @app.route("/api/maintenance/events/<int:event_id>", methods=["PATCH"])
 def api_update_maint_event(event_id):
     return _proxy_patch(f"/v1/equipment/maintenance/events/{event_id}")
+
+
+# ── File Upload ──
+@app.route("/api/upload", methods=["POST"])
+def api_upload():
+    ctx = _member_context()
+    f = request.files.get("file")
+    if not f:
+        return jsonify({"error": "No file provided"}), 400
+    entity_type = request.form.get("entity_type", "equipment_location")
+    entity_id = request.form.get("entity_id", "new")
+    try:
+        token = dhservices._equip_token()
+        headers = dhservices._member_headers(token, **ctx)
+        resp = requests.post(
+            f"{dhservices.EQUIP_API_BASE_URL}/v1/equipment/upload",
+            headers=headers,
+            files={"file": (f.filename, f.stream, f.content_type)},
+            data={"entity_type": entity_type, "entity_id": entity_id},
+            timeout=30,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        # Rewrite the storage URL to a portal-relative path so it works
+        # regardless of how the portal is accessed (tunneled, proxied, etc.)
+        if data.get("key"):
+            data["url"] = f"/api/media/{data['key']}"
+        return jsonify(data), 200
+    except requests.HTTPError as e:
+        return jsonify({"error": str(e)}), e.response.status_code if e.response else 500
+    except Exception as e:
+        logger.error(f"Upload proxy error: {e}")
+        return jsonify({"error": "Upload failed"}), 500
+
+
+# ── Media proxy ──
+@app.route("/api/media/<path:key>")
+def api_media(key):
+    try:
+        token = dhservices._equip_token()
+        headers = dhservices._member_headers(token, **_member_context())
+        resp = requests.get(
+            f"{dhservices.EQUIP_API_BASE_URL}/v1/equipment/media/{key}",
+            headers=headers,
+            timeout=15,
+            stream=True,
+        )
+        resp.raise_for_status()
+        from flask import Response
+        return Response(resp.raw.read(), content_type=resp.headers.get("Content-Type", "application/octet-stream"))
+    except Exception as e:
+        logger.error(f"Media proxy error: {e}")
+        return "", 404
 
 
 # ── Dashboard / Config / Export ──

@@ -18,3 +18,4 @@ pg/sql/seed_data.local.sql
 .env.development*
 .env.*.production
 pa1-index.html
+CLAUDE.md
