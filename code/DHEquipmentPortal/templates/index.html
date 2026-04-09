@@ -47,6 +47,8 @@
 .equip-meta-row { display: flex; justify-content: space-between; gap: .5rem; font-size: .8rem; }
 .equip-meta-label { font-size: .68rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: #adb5bd; margin-bottom: 1px; }
 .equip-meta-val { color: #495057; font-weight: 500; }
+.equip-elec-badge { margin-top: .4rem; font-size: .72rem; color: #6c757d; display: flex; align-items: center; gap: .2rem; }
+.equip-elec-badge .bi { color: #f0c040; font-size: .75rem; }
 .equip-card-footer { padding: .5rem 1rem; background: #f8f9fa; border-top: 1px solid #f0f2f5; display: flex; justify-content: space-between; align-items: center; font-size: .78rem; color: #6c757d; }
 
 /* ── Status / Priority Badges ── */
@@ -901,6 +903,58 @@
                         </select>
                     </div>
                 </div>
+                <hr class="my-3">
+                <div class="mb-2 small fw-semibold text-muted text-uppercase" style="letter-spacing:.08em">
+                    <i class="bi bi-lightning-charge me-1"></i>Electrical
+                </div>
+                <div class="row g-2 mb-2">
+                    <div class="col-md-3 col-6">
+                        <label class="form-label small fw-semibold">Voltage (V)</label>
+                        <input class="form-control form-control-sm" type="number" id="em-elec-voltage" placeholder="e.g. 240">
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <label class="form-label small fw-semibold">Amperage (A)</label>
+                        <input class="form-control form-control-sm" type="number" id="em-elec-amperage" placeholder="e.g. 30">
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <label class="form-label small fw-semibold">Phase</label>
+                        <select class="form-select form-select-sm" id="em-elec-phase">
+                            <option value="">—</option>
+                            <option value="single">Single</option>
+                            <option value="three">Three</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <label class="form-label small fw-semibold">Plug Type</label>
+                        <input class="form-control form-control-sm" id="em-elec-plug" placeholder="e.g. NEMA 6-30P">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Notes</label>
+                        <input class="form-control form-control-sm" id="em-elec-notes" placeholder="e.g. Requires dedicated circuit">
+                    </div>
+                </div>
+                <div class="mb-2 small fw-semibold text-muted text-uppercase" style="letter-spacing:.08em">
+                    <i class="bi bi-toggles me-1"></i>Circuit Breaker
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-md-3 col-6">
+                        <label class="form-label small fw-semibold">Panel</label>
+                        <input class="form-control form-control-sm" id="em-brk-panel" placeholder="e.g. B">
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <label class="form-label small fw-semibold">Breaker #</label>
+                        <input class="form-control form-control-sm" type="number" id="em-brk-number" placeholder="e.g. 14">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Location Description</label>
+                        <input class="form-control form-control-sm" id="em-brk-location" placeholder="e.g. North wall, behind the CNC area">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Notes</label>
+                        <input class="form-control form-control-sm" id="em-brk-notes" placeholder="e.g. Shared circuit with dust collector">
+                    </div>
+                </div>
+                <hr class="my-3">
                 <div class="mb-2 small fw-semibold text-muted text-uppercase" style="letter-spacing:.08em">Additional Attributes</div>
                 <div id="attrEditor" class="mb-2 border rounded p-2 bg-light"></div>
                 <button class="btn btn-outline-secondary btn-sm" onclick="addAttrRow()"><i class="bi bi-plus me-1"></i>Add Attribute</button>
@@ -1187,6 +1241,16 @@ function renderEquipGrid(items) {
                         <div><div class="equip-meta-label">Serial No.</div><div class="equip-meta-val">${escHtml(e.serial_number)}</div></div>
                         <div><div class="equip-meta-label">Build Date</div><div class="equip-meta-val">${e.build_date ? e.build_date.split('T')[0] : '&#x2014;'}</div></div>
                     </div>
+                    ${(()=>{
+                        const el = e.electrical || {};
+                        const br = e.breaker || {};
+                        const parts = [];
+                        if (el.voltage != null)  parts.push(`${el.voltage}V`);
+                        if (el.amperage != null) parts.push(`${el.amperage}A`);
+                        if (br.panel && br.breaker_number != null) parts.push(`Panel ${br.panel}-${br.breaker_number}`);
+                        else if (br.panel) parts.push(`Panel ${br.panel}`);
+                        return parts.length ? `<div class="equip-elec-badge"><i class="bi bi-lightning-charge-fill me-1"></i>${parts.join(' · ')}</div>` : '';
+                    })()}
                 </div>
                 <div class="equip-card-footer">
                     <span><i class="bi bi-geo-alt me-1"></i>${escHtml(e.area_name || '—')}</span>
@@ -1236,6 +1300,31 @@ async function openEquipDetail(id) {
             ? `<table class="table table-sm attrs-table mb-0">${Object.entries(visAttrs).map(([k,v]) => `<tr><td>${escHtml(k)}</td><td>${escHtml(v)}</td></tr>`).join('')}</table>`
             : '<span class="text-muted small">No additional attributes</span>';
 
+        const elec = equip.electrical || {};
+        const brk  = equip.breaker    || {};
+        const elecRows = [
+            elec.voltage   != null ? {label:'Voltage',   val:`${elec.voltage} V`}     : null,
+            elec.amperage  != null ? {label:'Amperage',  val:`${elec.amperage} A`}    : null,
+            elec.phase              ? {label:'Phase',     val: elec.phase === 'single' ? 'Single phase' : 'Three phase'} : null,
+            elec.plug_type          ? {label:'Plug Type', val: elec.plug_type}          : null,
+            elec.notes              ? {label:'Notes',     val: elec.notes}              : null,
+        ].filter(Boolean);
+        const brkRows = [
+            brk.panel               ? {label:'Panel',    val: brk.panel}               : null,
+            brk.breaker_number != null ? {label:'Breaker #', val: brk.breaker_number}  : null,
+            brk.location_description ? {label:'Location', val: brk.location_description} : null,
+            brk.notes               ? {label:'Notes',    val: brk.notes}               : null,
+        ].filter(Boolean);
+        const hasElec = elecRows.length > 0 || brkRows.length > 0;
+        const elecHtml = hasElec ? `
+            <div class="detail-section-label"><i class="bi bi-lightning-charge me-1"></i>Electrical</div>
+            <div class="mb-3">
+                ${elecRows.length ? `<div class="row g-2 mb-2">${elecRows.map(r=>`<div class="col-6"><div class="small text-muted fw-semibold">${escHtml(r.label)}</div><div class="small">${escHtml(String(r.val))}</div></div>`).join('')}</div>` : ''}
+                ${brkRows.length ? `
+                    <div class="small fw-semibold text-muted mb-1 mt-2">Circuit Breaker</div>
+                    <div class="row g-2">${brkRows.map(r=>`<div class="col-6"><div class="small text-muted fw-semibold">${escHtml(r.label)}</div><div class="small">${escHtml(String(r.val))}</div></div>`).join('')}</div>` : ''}
+            </div>` : '';
+
         const ticketsHtml = tickets.length ? tickets.map(t => {
             const wl = Array.isArray(t.work_log) ? t.work_log : [];
             const logHtml = wl.length
@@ -1279,6 +1368,7 @@ async function openEquipDetail(id) {
                 <button class="btn btn-primary btn-sm" onclick="newTicketFor(${equip.id})"><i class="bi bi-plus me-1"></i>New Ticket</button>
                 ${isAdmin ? `<button class="btn btn-outline-danger btn-sm ms-auto" onclick="deleteEquipment(${equip.id})"><i class="bi bi-trash me-1"></i>Delete</button>` : ''}
             </div>` : ''}
+            ${elecHtml}
             <div class="detail-section-label">Additional Attributes</div>
             <div class="mb-3">${attrHtml}</div>
             ${locationHtml}
@@ -1305,6 +1395,7 @@ function openEquipModal() {
         + allAreas.map(a => `<option value="${a.id}">${escHtml(a.name)}</option>`).join('');
     renderAttrEditor({});
     setLocationFields('', '');
+    setElecFields({}, {});
     attachInit('em', []);
     bsModal('equipModal').show();
 }
@@ -1326,6 +1417,7 @@ async function editEquipment(id) {
     renderAttrEditor(eq.attributes || {});
     const locAttrs = eq.attributes || {};
     setLocationFields(locAttrs.__location_desc || '', locAttrs.__location_img || '');
+    setElecFields(eq.electrical || {}, eq.breaker || {});
     attachInit('em', eq.attachments || []);
     bsModal('equipModal').show();
 }
@@ -1373,6 +1465,7 @@ async function saveEquipment() {
         status: document.getElementById('em-status').value,
         attributes: getAttrsWithLocation(),
         attachments: getAttachments('em'),
+        ...getElecPayload(),
     };
     if (!payload.make || !payload.model || !payload.serial_number) { toast('Make, model and serial number are required', 'error'); return; }
     try {
@@ -1461,6 +1554,46 @@ function getAttrsWithLocation() {
     if (desc) attrs.__location_desc = desc; else delete attrs.__location_desc;
     if (img)  attrs.__location_img  = img;  else delete attrs.__location_img;
     return attrs;
+}
+
+// ── Electrical / Breaker helpers ──
+function setElecFields(elec, brk) {
+    document.getElementById('em-elec-voltage').value  = elec.voltage   ?? '';
+    document.getElementById('em-elec-amperage').value = elec.amperage  ?? '';
+    document.getElementById('em-elec-phase').value    = elec.phase     || '';
+    document.getElementById('em-elec-plug').value     = elec.plug_type || '';
+    document.getElementById('em-elec-notes').value    = elec.notes     || '';
+    document.getElementById('em-brk-panel').value     = brk.panel      || '';
+    document.getElementById('em-brk-number').value    = brk.breaker_number ?? '';
+    document.getElementById('em-brk-location').value  = brk.location_description || '';
+    document.getElementById('em-brk-notes').value     = brk.notes      || '';
+}
+
+function getElecPayload() {
+    const voltage   = document.getElementById('em-elec-voltage').value.trim();
+    const amperage  = document.getElementById('em-elec-amperage').value.trim();
+    const phase     = document.getElementById('em-elec-phase').value;
+    const plug_type = document.getElementById('em-elec-plug').value.trim();
+    const elecNotes = document.getElementById('em-elec-notes').value.trim();
+    const panel     = document.getElementById('em-brk-panel').value.trim();
+    const brkNum    = document.getElementById('em-brk-number').value.trim();
+    const brkLoc    = document.getElementById('em-brk-location').value.trim();
+    const brkNotes  = document.getElementById('em-brk-notes').value.trim();
+
+    const electrical = {};
+    if (voltage)   electrical.voltage   = parseFloat(voltage);
+    if (amperage)  electrical.amperage  = parseFloat(amperage);
+    if (phase)     electrical.phase     = phase;
+    if (plug_type) electrical.plug_type = plug_type;
+    if (elecNotes) electrical.notes     = elecNotes;
+
+    const breaker = {};
+    if (panel)  breaker.panel              = panel;
+    if (brkNum) breaker.breaker_number     = parseInt(brkNum);
+    if (brkLoc) breaker.location_description = brkLoc;
+    if (brkNotes) breaker.notes            = brkNotes;
+
+    return { electrical, breaker };
 }
 
 // ── Areas section ──
@@ -3521,6 +3654,59 @@ function _renderNotifWebhooks() {
                         <i class="bi bi-info-circle me-1"></i>
                         <strong>Discord setup:</strong> Channel Settings → Integrations → Webhooks → New Webhook. Paste the URL above.
                     </div>
+                    <details class="mb-2">
+                        <summary class="small fw-semibold text-primary" style="cursor:pointer;user-select:none">
+                            <i class="bi bi-palette me-1"></i>Message Style
+                        </summary>
+                        <div class="pt-2">
+                            <div class="mb-2">
+                                <label class="form-label small fw-semibold mb-1">Content <span class="text-muted fw-normal">(plain text above embed, supports emoji)</span></label>
+                                <input type="text" class="form-control form-control-sm wh-discord-content" data-idx="${idx}"
+                                    value="${escHtml((wh.discord_style||{}).content||'')}"
+                                    placeholder="e.g. 🔔 New equipment event">
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold mb-1">Title Prefix <span class="text-muted fw-normal">(emoji or text before event name)</span></label>
+                                    <input type="text" class="form-control form-control-sm wh-discord-title-prefix" data-idx="${idx}"
+                                        value="${escHtml((wh.discord_style||{}).title_prefix||'')}"
+                                        placeholder="e.g. 🎫">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold mb-1">
+                                        Embed Color
+                                        <button type="button" class="btn btn-link btn-sm p-0 ms-1 wh-discord-color-clear" data-idx="${idx}"
+                                            title="Reset to per-event defaults" style="font-size:.7rem;vertical-align:baseline">reset</button>
+                                    </label>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <input type="color" class="form-control form-control-color form-control-sm wh-discord-color" data-idx="${idx}"
+                                            value="${(wh.discord_style||{}).color||'#5865F2'}"
+                                            style="width:3rem;height:2rem;padding:.1rem">
+                                        <span class="small text-muted wh-discord-color-hint" data-idx="${idx}">${(wh.discord_style||{}).color?'custom':'per-event defaults'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small fw-semibold mb-1">Footer Text</label>
+                                <input type="text" class="form-control form-control-sm wh-discord-footer" data-idx="${idx}"
+                                    value="${escHtml((wh.discord_style||{}).footer||'')}"
+                                    placeholder="Deep Harbor Equipment">
+                            </div>
+                            <div class="mb-1">
+                                <label class="form-label small fw-semibold mb-1">
+                                    Description Template
+                                    <span class="text-muted fw-normal">(leave blank for auto-generated)</span>
+                                </label>
+                                <textarea class="form-control form-control-sm wh-discord-desc-template" data-idx="${idx}"
+                                    rows="3" placeholder="e.g. **{title}** changed to {status} (priority: {priority})"
+                                    style="font-size:.8rem;font-family:monospace">${escHtml((wh.discord_style||{}).description_template||'')}</textarea>
+                                <div class="form-text" style="font-size:.7rem">
+                                    Variables: <code>{title}</code> <code>{status}</code> <code>{priority}</code>
+                                    <code>{equipment_id}</code> <code>{ticket_id}</code> <code>{common_name}</code> <code>{id}</code>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
                 </div>
                 <div class="wh-generic-fields" data-idx="${idx}" style="${isDiscord?'display:none':''}">
                     <div class="mb-2">
@@ -3556,10 +3742,42 @@ function _renderNotifWebhooks() {
         <div class="mt-2 small" id="notif-wh-msg"></div>`;
 
     webhooks.forEach((wh, idx) => {
-        const el = document.querySelector(`.wh-enabled[data-idx="${idx}"]`);
-        if (el) el.addEventListener('change', () => {
-            el.nextElementSibling.textContent = el.checked ? 'Active' : 'Off';
+        const enabledEl = document.querySelector(`.wh-enabled[data-idx="${idx}"]`);
+        if (enabledEl) enabledEl.addEventListener('change', () => {
+            enabledEl.nextElementSibling.textContent = enabledEl.checked ? 'Active' : 'Off';
         });
+
+        // Color picker: track whether a custom color has been explicitly set
+        const colorEl   = document.querySelector(`.wh-discord-color[data-idx="${idx}"]`);
+        const colorHint = document.querySelector(`.wh-discord-color-hint[data-idx="${idx}"]`);
+        const clearBtn  = document.querySelector(`.wh-discord-color-clear[data-idx="${idx}"]`);
+        if (colorEl && colorHint) {
+            // Initialize state from stored value
+            const hasCustom = !!(wh.discord_style?.color);
+            colorEl.disabled  = !hasCustom;
+            colorHint.dataset.custom = hasCustom ? '1' : '0';
+            colorHint.textContent    = hasCustom ? wh.discord_style.color : 'per-event defaults';
+
+            colorEl.addEventListener('input', () => {
+                colorEl.disabled = false;
+                colorHint.dataset.custom = '1';
+                colorHint.textContent = colorEl.value;
+            });
+            colorEl.addEventListener('click', () => {
+                // Clicking the picker activates custom color
+                colorEl.disabled = false;
+                colorHint.dataset.custom = '1';
+                colorHint.textContent = colorEl.value;
+            });
+        }
+        if (clearBtn && colorEl && colorHint) {
+            clearBtn.addEventListener('click', () => {
+                colorEl.disabled = true;
+                colorHint.dataset.custom = '0';
+                colorHint.textContent = 'per-event defaults';
+                colorEl.value = '#5865F2';
+            });
+        }
     });
 }
 
@@ -3579,7 +3797,11 @@ function _whTypeChanged(idx, newType) {
 function _addWebhook(type) {
     _notifData.webhooks = _notifData.webhooks || [];
     const wh = { name: '', url: '', secret: '', enabled: true, events: ['*'], type: type || 'generic' };
-    if (type === 'discord') { wh.discord_username = 'Deep Harbor Bot'; wh.discord_avatar_url = ''; }
+    if (type === 'discord') {
+        wh.discord_username   = 'Deep Harbor Bot';
+        wh.discord_avatar_url = '';
+        wh.discord_style      = { content: '', title_prefix: '', color: '', footer: '', description_template: '' };
+    }
     _notifData.webhooks.push(wh);
     _renderNotifWebhooks();
     setTimeout(() => {
@@ -3595,10 +3817,58 @@ function _removeWebhook(idx) {
 }
 
 async function _testWebhook(idx) {
-    const urlEl = document.querySelector(`.wh-url[data-idx="${idx}"]`);
-    const url   = urlEl ? urlEl.value.trim() : '';
+    const card        = document.querySelector(`.wh-card[data-idx="${idx}"]`);
+    const urlEl       = card?.querySelector('.wh-url');
+    const typeEl      = card?.querySelector('.wh-type');
+    const secretEl    = card?.querySelector('.wh-secret');
+    const discUserEl  = card?.querySelector('.wh-discord-username');
+    const discAvEl    = card?.querySelector('.wh-discord-avatar');
+    const url         = urlEl ? urlEl.value.trim() : '';
     if (!url) { toast('Enter a webhook URL first', 'error'); return; }
-    toast(`Test: would POST to ${url.substring(0,50)}…`, 'success');
+
+    const whType = typeEl ? typeEl.value : 'generic';
+    const btn = card?.querySelector(`button[onclick="_testWebhook(${idx})"]`);
+    const origHtml = btn ? btn.innerHTML : '';
+    if (btn) btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+    const colorHint = card?.querySelector('.wh-discord-color-hint');
+    const colorEl   = card?.querySelector('.wh-discord-color');
+    const discordStyle = {
+        content:              (card?.querySelector('.wh-discord-content')?.value      || '').trim(),
+        title_prefix:         (card?.querySelector('.wh-discord-title-prefix')?.value || '').trim(),
+        color:                colorHint?.dataset.custom === '1' ? (colorEl?.value || '') : '',
+        footer:               (card?.querySelector('.wh-discord-footer')?.value       || '').trim(),
+        description_template: (card?.querySelector('.wh-discord-desc-template')?.value || '').trim(),
+    };
+
+    try {
+        const res = await fetch('/api/webhook-test', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '',
+            },
+            body: JSON.stringify({
+                url,
+                type: whType,
+                secret:             secretEl   ? secretEl.value.trim()   : '',
+                discord_username:   discUserEl ? discUserEl.value.trim() : '',
+                discord_avatar_url: discAvEl   ? discAvEl.value.trim()   : '',
+                discord_style:      discordStyle,
+            }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || res.statusText);
+        if (data.ok) {
+            toast(`Test sent — webhook responded ${data.status}`, 'success');
+        } else {
+            toast(`Webhook responded with ${data.status} (check URL/config)`, 'error');
+        }
+    } catch(e) {
+        toast('Test failed: ' + e.message, 'error');
+    } finally {
+        if (btn) btn.innerHTML = origHtml;
+    }
 }
 
 function _collectWebhooks() {
@@ -3625,6 +3895,15 @@ function _collectWebhooks() {
         if (whType === 'discord') {
             entry.discord_username   = discUserEl ? discUserEl.value.trim() : '';
             entry.discord_avatar_url = discAvEl   ? discAvEl.value.trim()   : '';
+            const colorEl    = card.querySelector('.wh-discord-color');
+            const colorHint  = card.querySelector('.wh-discord-color-hint');
+            entry.discord_style = {
+                content:              (card.querySelector('.wh-discord-content')?.value      || '').trim(),
+                title_prefix:         (card.querySelector('.wh-discord-title-prefix')?.value || '').trim(),
+                color:                colorHint?.dataset.custom === '1' ? (colorEl?.value || '') : '',
+                footer:               (card.querySelector('.wh-discord-footer')?.value       || '').trim(),
+                description_template: (card.querySelector('.wh-discord-desc-template')?.value || '').trim(),
+            };
         } else {
             entry.secret = (secretEl && secretEl.value) ? secretEl.value : (oldWh.secret || '');
         }

@@ -489,7 +489,7 @@ def api_upload():
     entity_type = request.form.get("entity_type", "equipment_location")
     entity_id = request.form.get("entity_id", "new")
     try:
-        token = dhservices._equip_token()
+        token = dhservices.get_access_token(dhservices.EQUIP_CLIENT_ID, dhservices.EQUIP_CLIENT_SECRET, dhservices.EQUIP_API_BASE_URL)
         headers = dhservices._member_headers(token, **ctx)
         resp = requests.post(
             f"{dhservices.EQUIP_API_BASE_URL}/v1/equipment/upload",
@@ -516,7 +516,7 @@ def api_upload():
 @app.route("/api/media/<path:key>")
 def api_media(key):
     try:
-        token = dhservices._equip_token()
+        token = dhservices.get_access_token(dhservices.EQUIP_CLIENT_ID, dhservices.EQUIP_CLIENT_SECRET, dhservices.EQUIP_API_BASE_URL)
         headers = dhservices._member_headers(token, **_member_context())
         resp = requests.get(
             f"{dhservices.EQUIP_API_BASE_URL}/v1/equipment/media/{key}",
@@ -535,7 +535,7 @@ def api_media(key):
 @app.route("/api/media/<path:key>", methods=["DELETE"])
 def api_delete_media(key):
     try:
-        token = dhservices._equip_token()
+        token = dhservices.get_access_token(dhservices.EQUIP_CLIENT_ID, dhservices.EQUIP_CLIENT_SECRET, dhservices.EQUIP_API_BASE_URL)
         headers = dhservices._member_headers(token, **_member_context())
         resp = requests.delete(
             f"{dhservices.EQUIP_API_BASE_URL}/v1/equipment/media/{key}",
@@ -567,6 +567,87 @@ def api_set_config(key):
 @app.route("/api/export/<entity>", methods=["GET"])
 def api_export(entity):
     return _proxy_get(f"/v1/equipment/export/{entity}")
+
+
+@app.route("/api/webhook-test", methods=["POST"])
+def api_webhook_test():
+    """Send a test payload to a webhook URL server-side (avoids CORS)."""
+    body = request.get_json(silent=True) or {}
+    url = body.get("url", "").strip()
+    wh_type = body.get("type", "generic")
+    secret = body.get("secret", "")
+    discord_username = body.get("discord_username", "DH Equipment")
+    discord_avatar = body.get("discord_avatar_url", "")
+    discord_style = body.get("discord_style", {})
+
+    if not url:
+        return jsonify({"error": "No URL provided"}), 400
+
+    ts = datetime.utcnow().isoformat() + "Z"
+    test_payload = {"title": "Test Event", "status": "test", "event": "test"}
+
+    try:
+        if wh_type == "discord":
+            import hmac as _hmac, hashlib as _hashlib
+
+            # Apply discord_style the same way notifications.py does
+            title_prefix = discord_style.get("title_prefix", "").strip()
+            embed_title = f"{title_prefix} Test Notification".strip() if title_prefix else "Test Notification"
+
+            custom_color = discord_style.get("color", "").strip().lstrip("#")
+            try:
+                color = int(custom_color, 16) if custom_color else 0x5865F2
+            except ValueError:
+                color = 0x5865F2
+
+            desc_template = discord_style.get("description_template", "").strip()
+            description = desc_template.format_map({**test_payload, "event": "test"}) if desc_template \
+                else "This is a test notification from Deep Harbor Equipment Management."
+
+            footer_text = discord_style.get("footer", "").strip() or "Deep Harbor Equipment"
+            content = discord_style.get("content", "").strip()
+
+            send_body = {
+                "username": discord_username or "DH Equipment",
+                "embeds": [{
+                    "title": embed_title,
+                    "description": description,
+                    "color": color,
+                    "footer": {"text": footer_text},
+                    "timestamp": ts,
+                }],
+            }
+            if content:
+                send_body["content"] = content
+            if discord_avatar:
+                send_body["avatar_url"] = discord_avatar
+
+            discord_headers = {
+                "User-Agent": "DiscordBot (https://github.com/discord/discord-api-docs, 10)",
+            }
+            resp = requests.post(url, json=send_body, headers=discord_headers, timeout=10)
+        else:
+            generic_payload = {
+                "event": "test",
+                "source": "dh-equipment",
+                "message": "This is a test notification from Deep Harbor Equipment Management.",
+                "timestamp": ts,
+            }
+            headers = {"Content-Type": "application/json"}
+            if secret:
+                import hmac, hashlib
+                sig = hmac.new(secret.encode(), json.dumps(generic_payload).encode(), hashlib.sha256).hexdigest()
+                headers["X-DH-Signature"] = f"sha256={sig}"
+            resp = requests.post(url, json=generic_payload, headers=headers, timeout=10)
+
+        return jsonify({"status": resp.status_code, "ok": resp.ok}), 200
+    except requests.exceptions.ConnectionError:
+        return jsonify({"error": "Could not connect to webhook URL"}), 502
+    except requests.exceptions.Timeout:
+        return jsonify({"error": "Webhook URL timed out"}), 504
+    except Exception as e:
+        logger.error(f"Webhook test error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 ###############################################################################
