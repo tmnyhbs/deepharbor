@@ -37,16 +37,58 @@ def get_access_token(client_id: str, client_secret: str, base_url: str = None) -
     cache_key = url
     if cache_key in _tokens:
         return _tokens[cache_key]
+    return _fetch_token(client_id, client_secret, url)
 
-    response = requests.post(
-        f"{url}/token",
-        data={"username": client_id, "password": client_secret},
-        timeout=10,
-    )
-    response.raise_for_status()
-    token = response.json()["access_token"]
-    _tokens[cache_key] = token
-    return token
+
+def _fetch_token(client_id: str, client_secret: str, base_url: str, retries: int = 2) -> str:
+    """Fetch a fresh token and store it in the cache. Retries on transient errors (502/503/connection)."""
+    import time
+    last_exc = None
+    for attempt in range(retries):
+        try:
+            response = requests.post(
+                f"{base_url}/token",
+                data={"username": client_id, "password": client_secret},
+                timeout=10,
+            )
+            if response.status_code in (502, 503, 504) and attempt < retries - 1:
+                time.sleep(1)
+                continue
+            response.raise_for_status()
+            token = response.json()["access_token"]
+            _tokens[base_url] = token
+            return token
+        except requests.exceptions.ConnectionError as e:
+            last_exc = e
+            if attempt < retries - 1:
+                time.sleep(1)
+    raise last_exc or requests.exceptions.ConnectionError(f"Could not reach {base_url}/token")
+
+
+def _evict_token(base_url: str):
+    """Remove a cached token so the next call re-fetches it."""
+    _tokens.pop(base_url, None)
+
+
+def _equip_request(method: str, path: str, member_id=None, permissions=None,
+                   role=None, json=None, params=None, timeout=15):
+    """Make an authenticated request to the equipment service, retrying once on 401."""
+    for attempt in range(2):
+        if attempt == 1:
+            _evict_token(EQUIP_API_BASE_URL)
+        token = _fetch_token(EQUIP_CLIENT_ID, EQUIP_CLIENT_SECRET, EQUIP_API_BASE_URL) if attempt == 1 \
+            else get_access_token(EQUIP_CLIENT_ID, EQUIP_CLIENT_SECRET, EQUIP_API_BASE_URL)
+        headers = _member_headers(token, member_id, permissions, role)
+        response = requests.request(
+            method, f"{EQUIP_API_BASE_URL}{path}",
+            headers=headers, json=json, params=params, timeout=timeout,
+        )
+        if response.status_code == 401 and attempt == 0:
+            _evict_token(EQUIP_API_BASE_URL)
+            continue
+        response.raise_for_status()
+        return response
+    response.raise_for_status()  # re-raise if both attempts failed
 
 
 def _auth_headers(token: str) -> dict:
@@ -115,51 +157,27 @@ def _equip_token():
 
 def _equip_get(path: str, member_id: int = None, permissions: dict = None,
                role: str = None, params: dict = None):
-    token = _equip_token()
-    headers = _member_headers(token, member_id, permissions, role)
-    response = requests.get(f"{EQUIP_API_BASE_URL}{path}",
-                            headers=headers, params=params, timeout=15)
-    response.raise_for_status()
-    return response.json()
+    return _equip_request("GET", path, member_id, permissions, role, params=params).json()
 
 
 def _equip_post(path: str, data: dict, member_id: int = None,
                 permissions: dict = None, role: str = None):
-    token = _equip_token()
-    headers = _member_headers(token, member_id, permissions, role)
-    response = requests.post(f"{EQUIP_API_BASE_URL}{path}",
-                             headers=headers, json=data, timeout=15)
-    response.raise_for_status()
-    return response.json()
+    return _equip_request("POST", path, member_id, permissions, role, json=data).json()
 
 
 def _equip_patch(path: str, data: dict, member_id: int = None,
                  permissions: dict = None, role: str = None):
-    token = _equip_token()
-    headers = _member_headers(token, member_id, permissions, role)
-    response = requests.patch(f"{EQUIP_API_BASE_URL}{path}",
-                              headers=headers, json=data, timeout=15)
-    response.raise_for_status()
-    return response.json()
+    return _equip_request("PATCH", path, member_id, permissions, role, json=data).json()
 
 
 def _equip_put(path: str, data: dict, member_id: int = None,
                permissions: dict = None, role: str = None):
-    token = _equip_token()
-    headers = _member_headers(token, member_id, permissions, role)
-    response = requests.put(f"{EQUIP_API_BASE_URL}{path}",
-                            headers=headers, json=data, timeout=15)
-    response.raise_for_status()
-    return response.json()
+    return _equip_request("PUT", path, member_id, permissions, role, json=data).json()
 
 
 def _equip_delete(path: str, member_id: int = None,
                   permissions: dict = None, role: str = None):
-    token = _equip_token()
-    headers = _member_headers(token, member_id, permissions, role)
-    response = requests.delete(f"{EQUIP_API_BASE_URL}{path}",
-                               headers=headers, timeout=15)
-    response.raise_for_status()
+    _equip_request("DELETE", path, member_id, permissions, role)
 
 
 # ── Convenience methods ──

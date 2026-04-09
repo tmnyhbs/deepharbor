@@ -652,7 +652,7 @@ services:
     environment:
       TZ: "America/Chicago"
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
-      DISCORD_GUILD_IDS: ${DISCORD_GUILD_IDS:-}
+      DISCORD_GUILD_IDS: 1484014218037559298
       DH_EQUIP_API_URL: http://gateway/dh/equipment
       DH_BOT_CLIENT_NAME: ${DH_BOT_CLIENT_NAME:-dev-discord-bot}
       DH_BOT_CLIENT_SECRET: ${DH_BOT_CLIENT_SECRET:-}

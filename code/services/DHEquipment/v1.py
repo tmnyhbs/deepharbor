@@ -16,6 +16,7 @@ from fastapi import Depends, Request, HTTPException, UploadFile, File, Form
 from fastapiapp import app
 import auth
 import db
+import notifications
 from dhs_logging import logger
 from config import config as app_config
 
@@ -228,7 +229,15 @@ async def update_equipment(equipment_id: int, data: EquipmentUpdate, request: Re
     if not updates:
         raise HTTPException(400, "No fields to update")
 
+    old_equip = db.get_equipment(equipment_id)
+    old_status = old_equip.get("status") if old_equip else None
     row = db.update_equipment(equipment_id, updates)
+    if "status" in updates and row and row.get("status") != old_status:
+        notifications.schedule_event("equipment_status_changed", {
+            "id": equipment_id,
+            "common_name": row.get("common_name"),
+            "status": row.get("status"),
+        })
     return row
 
 
@@ -278,6 +287,13 @@ async def create_ticket(data: TicketCreate, request: Request, current_client: Au
     if not ctx["member_id"]:
         raise HTTPException(400, "Member ID required")
     row = db.create_ticket(data.model_dump(), opened_by=ctx["member_id"])
+    notifications.schedule_event("ticket_opened", {
+        "ticket_id": row.get("id"),
+        "title": row.get("title"),
+        "status": row.get("status"),
+        "priority": row.get("priority"),
+        "equipment_id": row.get("equipment_id"),
+    })
     return row
 
 
@@ -290,6 +306,7 @@ async def update_ticket(ticket_id: int, data: TicketUpdate, request: Request, cu
     if current["version"] != data.version:
         raise HTTPException(409, "Ticket was modified by another user. Please refresh and try again.")
 
+    old_status = current.get("status")
     updates = {}
     for field in ("title", "description", "status", "priority", "assigned_to", "metadata", "attachments"):
         val = getattr(data, field, None)
@@ -299,6 +316,16 @@ async def update_ticket(ticket_id: int, data: TicketUpdate, request: Request, cu
         raise HTTPException(400, "No fields to update")
 
     row = db.update_ticket(ticket_id, updates)
+    new_status = row.get("status") if row else None
+    if "status" in updates and new_status != old_status:
+        event_name = "ticket_closed" if new_status == "closed" else "ticket_status_changed"
+        notifications.schedule_event(event_name, {
+            "ticket_id": row.get("id"),
+            "title": row.get("title"),
+            "status": new_status,
+            "priority": row.get("priority"),
+            "equipment_id": row.get("equipment_id"),
+        })
     return row
 
 
@@ -586,6 +613,25 @@ async def update_maintenance_event(event_id: int, data: MaintenanceEventUpdate, 
     row = db.update_maintenance_event(event_id, data.model_dump(exclude_none=True), current_member_id=ctx["member_id"])
     if row is None:
         raise HTTPException(404, "Event not found or no fields to update")
+    new_status = row.get("status")
+    if new_status == "in_progress":
+        notifications.schedule_event("maintenance_started", {
+            "id": event_id,
+            "equipment_id": row.get("equipment_id"),
+            "status": new_status,
+        })
+    elif new_status == "completed":
+        notifications.schedule_event("maintenance_completed", {
+            "id": event_id,
+            "equipment_id": row.get("equipment_id"),
+            "status": new_status,
+        })
+    elif new_status == "overdue":
+        notifications.schedule_event("maintenance_overdue", {
+            "id": event_id,
+            "equipment_id": row.get("equipment_id"),
+            "status": new_status,
+        })
     return row
 
 
