@@ -71,3 +71,6 @@ else:
 
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_HTTPONLY = True
+
+# Allow uploads up to 260 MB (backend enforces 250 MB; extra headroom for multipart overhead)
+MAX_CONTENT_LENGTH = 260 * 1024 * 1024

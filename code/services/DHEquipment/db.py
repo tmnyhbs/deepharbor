@@ -170,8 +170,9 @@ def create_area(name: str, description: str, metadata: dict):
 
 
 def update_area(area_id: int, updates: dict):
-    if "metadata" in updates:
-        updates["metadata"] = json.dumps(updates["metadata"])
+    for col in ("metadata", "attachments"):
+        if col in updates:
+            updates[col] = json.dumps(updates[col])
     set_parts = []
     values = []
     for k, v in updates.items():
@@ -785,7 +786,7 @@ def list_equipment_groups():
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT g.id, g.name, g.description, g.area_id, g.created_at,
+                SELECT g.id, g.name, g.description, g.area_id, g.attachments, g.created_at,
                        a.name as area_name,
                        COALESCE(
                          json_agg(json_build_object(
@@ -833,6 +834,8 @@ def update_equipment_group(group_id: int, data: dict):
                 updates["description"] = data["description"]
             if data.get("area_id") is not None:
                 updates["area_id"] = data["area_id"]
+            if "attachments" in data:
+                updates["attachments"] = json.dumps(data["attachments"])
 
             if updates:
                 set_parts = [f"{k} = %s" for k in updates]
@@ -858,7 +861,7 @@ def get_equipment_group_by_id(group_id: int):
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT g.id, g.name, g.description, g.area_id, g.created_at,
+                SELECT g.id, g.name, g.description, g.area_id, g.attachments, g.created_at,
                        COALESCE(json_agg(json_build_object(
                          'id', e.id, 'common_name', e.common_name,
                          'make', e.make, 'model', e.model, 'status', e.status

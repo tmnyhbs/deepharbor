@@ -330,6 +330,10 @@ def api_list_areas():
 def api_create_area():
     return _proxy_post("/v1/equipment/areas")
 
+@app.route("/api/areas/<int:area_id>", methods=["GET"])
+def api_get_area(area_id):
+    return _proxy_get(f"/v1/equipment/areas/{area_id}")
+
 @app.route("/api/areas/<int:area_id>", methods=["PATCH"])
 def api_update_area(area_id):
     return _proxy_patch(f"/v1/equipment/areas/{area_id}")
@@ -492,7 +496,7 @@ def api_upload():
             headers=headers,
             files={"file": (f.filename, f.stream, f.content_type)},
             data={"entity_type": entity_type, "entity_id": entity_id},
-            timeout=30,
+            timeout=300,
         )
         resp.raise_for_status()
         data = resp.json()
@@ -517,7 +521,7 @@ def api_media(key):
         resp = requests.get(
             f"{dhservices.EQUIP_API_BASE_URL}/v1/equipment/media/{key}",
             headers=headers,
-            timeout=15,
+            timeout=60,
             stream=True,
         )
         resp.raise_for_status()
@@ -526,6 +530,25 @@ def api_media(key):
     except Exception as e:
         logger.error(f"Media proxy error: {e}")
         return "", 404
+
+
+@app.route("/api/media/<path:key>", methods=["DELETE"])
+def api_delete_media(key):
+    try:
+        token = dhservices._equip_token()
+        headers = dhservices._member_headers(token, **_member_context())
+        resp = requests.delete(
+            f"{dhservices.EQUIP_API_BASE_URL}/v1/equipment/media/{key}",
+            headers=headers,
+            timeout=15,
+        )
+        resp.raise_for_status()
+        return "", 204
+    except requests.HTTPError as e:
+        return jsonify({"error": str(e)}), e.response.status_code if e.response else 500
+    except Exception as e:
+        logger.error(f"Media delete proxy error: {e}")
+        return jsonify({"error": "Delete failed"}), 500
 
 
 # ── Dashboard / Config / Export ──
