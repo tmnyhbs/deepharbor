@@ -126,6 +126,16 @@
 .sched-list-date { min-width: 90px; text-align: center; background: #f8f9fa; border-radius: 6px; padding: .35rem .5rem; font-size: .78rem; font-weight: 600; color: #495057; }
 .sched-list-body { flex: 1; }
 
+/* ── Settings: notification event matrix ── */
+.notif-matrix-table { border-collapse: collapse; }
+.notif-matrix-table thead th { background: #f8f9fa; font-weight: 600; }
+.notif-matrix-table thead th:first-child { text-align: left; }
+.notif-group-header td { background: #f0f2f5; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #6c757d; }
+.notif-matrix-table input[type="checkbox"] { cursor: pointer; width: 1rem; height: 1rem; }
+
+/* ── Settings: export entity cards ── */
+.export-entity-card { background: var(--surface-color, #fff); border: 1px solid var(--border-color, #dee2e6); border-radius: 8px; padding: 1rem; height: 100%; }
+
 * {
     margin: 0;
     padding: 0;
