@@ -1,7 +1,7 @@
 /*
  * Deep Harbor Seed Data
  *
- * This file populates the database with ~25 fictional members for
+ * This file populates the database with ~30 fictional members for
  * local development and testing. It runs as 02-seed_data.sql during
  * Docker first-boot init, after the schema (01-pgsql_schema.sql)
  * is already in place.
@@ -399,6 +399,87 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 
 
 /* =====================================================================
+ * Pending Members (IDs 26-28)
+ *
+ * New signups who have paid but haven't been onboarded yet. They have
+ * minimal data: identity from signup form, pending status, empty forms
+ * (no ID check), no RFID tags, no authorizations.
+ * ===================================================================== */
+
+/* ID 26 - Rosalind Franklin, Pending — Stripe paid */
+INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
+    '{"first_name": "Rosalind", "last_name": "Franklin", "nickname": "photo51", "birthday": "1990-07-25", "emails": [{"type": "primary", "email_address": "rosalind.franklin@example.com"}], "pronouns": "she/her"}'::jsonb,
+    '{"discord_username": "rfranklin_xray"}'::jsonb,
+    '{"membership_status": "pending", "membership_level": "Membership", "stripe_product_id": "prod_Tws7udZJSXI9DU", "stripe_subscription_id": "sub_fake_franklin"}'::jsonb,
+    '{"id_check_1": "", "id_check_2": "", "waiver_signed_date": "2026-03-28", "terms_of_use_accepted": "true", "essentials_form": "", "orientation_completed_date": "", "is_21_or_older": false}'::jsonb,
+    '{"rfid_tags": []}'::jsonb,
+    '{"authorizations": [], "computer_authorizations": []}'::jsonb,
+    NULL,
+    '{"notes": [{"date": "2026-03-28", "author": "System", "text": "New signup via Stripe"}]}'::jsonb
+);
+
+/* ID 27 - Alan Turing, Pending — Stripe paid */
+INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
+    '{"first_name": "Alan", "last_name": "Turing", "nickname": "enigma_cracker", "birthday": "1998-06-23", "emails": [{"type": "primary", "email_address": "alan.turing@example.com"}], "pronouns": "he/him"}'::jsonb,
+    NULL,
+    '{"membership_status": "pending", "membership_level": "Membership", "stripe_product_id": "prod_Tws7udZJSXI9DU", "stripe_subscription_id": "sub_fake_turing"}'::jsonb,
+    '{"id_check_1": "", "id_check_2": "", "waiver_signed_date": "2026-03-29", "terms_of_use_accepted": "true", "essentials_form": "", "orientation_completed_date": "", "is_21_or_older": false}'::jsonb,
+    '{"rfid_tags": []}'::jsonb,
+    '{"authorizations": [], "computer_authorizations": []}'::jsonb,
+    NULL,
+    '{"notes": [{"date": "2026-03-29", "author": "System", "text": "New signup via Stripe"}]}'::jsonb
+);
+
+/* ID 28 - Emmy Noether, Pending — NO Stripe (cash payment) */
+INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
+    '{"first_name": "Emmy", "last_name": "Noether", "nickname": "symmetry_queen", "birthday": "1995-03-23", "emails": [{"type": "primary", "email_address": "emmy.noether@example.com"}]}'::jsonb,
+    NULL,
+    '{"membership_status": "pending", "membership_level": "Member - Cash Payment"}'::jsonb,
+    '{"id_check_1": "", "id_check_2": "", "waiver_signed_date": "2026-03-30", "terms_of_use_accepted": "true", "essentials_form": "", "orientation_completed_date": "", "is_21_or_older": false}'::jsonb,
+    '{"rfid_tags": []}'::jsonb,
+    '{"authorizations": [], "computer_authorizations": []}'::jsonb,
+    NULL,
+    '{"notes": [{"date": "2026-03-30", "author": "System", "text": "New signup — cash payment"}]}'::jsonb
+);
+
+
+/* =====================================================================
+ * Banned Members (IDs 29-30)
+ *
+ * Members who have been banned from the space. They retain their
+ * historical data but have no active access.
+ * ===================================================================== */
+
+/* ID 29 - Edward Teller, Banned
+ * Former member banned after repeated safety violations.
+ */
+INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
+    '{"first_name": "Edward", "last_name": "Teller", "nickname": "h_bomb_ed", "active_directory_username": "eteller", "emails": [{"type": "primary", "email_address": "edward.teller@example.com"}]}'::jsonb,
+    '{"discord_username": "eteller_phys"}'::jsonb,
+    '{"membership_status": "banned", "membership_level": "Membership", "member_since": "2019-04-01"}'::jsonb,
+    '{"id_check_1": "IL", "id_check_2": "DL-6677", "waiver_signed_date": "2019-04-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2019-04-08"}'::jsonb,
+    NULL,
+    '{"authorizations": ["Table Saw", "Mig Welders"], "computer_authorizations": []}'::jsonb,
+    NULL,
+    '{"notes": [{"date": "2019-04-08", "author": "System", "text": "Completed orientation"}, {"date": "2025-01-15", "author": "Board", "text": "Banned — repeated safety violations in metalworking area"}]}'::jsonb
+);
+
+/* ID 30 - Fritz Haber, Banned
+ * Former member banned for code of conduct violation.
+ */
+INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
+    '{"first_name": "Fritz", "last_name": "Haber", "nickname": "ammonia_fritz", "active_directory_username": "fhaber", "emails": [{"type": "primary", "email_address": "fritz.haber@example.com"}]}'::jsonb,
+    NULL,
+    '{"membership_status": "banned", "membership_level": "Membership with Storage", "member_since": "2021-08-15"}'::jsonb,
+    '{"id_check_1": "IL", "id_check_2": "DL-7788", "waiver_signed_date": "2021-08-15", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2021-08-22"}'::jsonb,
+    NULL,
+    '{"authorizations": ["Band Saw", "Ender 3D Printers", "Cold Metals Basic"], "computer_authorizations": ["Epilog Authorized Users"]}'::jsonb,
+    '{"storage_id": "D-12", "storage_area": "South Wall"}'::jsonb,
+    '{"notes": [{"date": "2021-08-22", "author": "System", "text": "Completed orientation"}, {"date": "2024-11-01", "author": "Board", "text": "Banned — code of conduct violation"}]}'::jsonb
+);
+
+
+/* =====================================================================
  * Role Assignments for Dev Bypass Users
  *
  * Roles: Authorizer (1), Administrator (2), Board (3)
@@ -421,7 +502,7 @@ INSERT INTO member_to_role (role_id, member_id) VALUES (3, 6);   /* Margaret Ham
 SELECT setval(pg_get_serial_sequence('member', 'id'), (SELECT MAX(id) FROM member));
 
 /* That's all the seed data! On first boot the dispatcher will
- * process the ~25 member_changes records created by the insert
+ * process the ~30 member_changes records created by the insert
  * triggers. With DEV_MODE=true on the worker services, these
  * will be handled gracefully without trying to talk to hardware.
  */

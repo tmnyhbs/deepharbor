@@ -669,8 +669,14 @@ def generate_random_member(
     used_emails: set,
 ) -> dict:
     """Generate a single randomized member dict."""
-    # ~80% Active, ~20% Inactive
-    is_active = random.random() < 0.8
+    # Status distribution: 50% active, 35% suspended, 10% pending, 5% banned
+    membership_status = random.choices(
+        ["active", "suspended", "pending", "banned"],
+        weights=[50, 35, 10, 5],
+        k=1,
+    )[0]
+    is_active = membership_status == "active"
+    is_pending = membership_status == "pending"
 
     # ~8% of active members are "brand new" (minimal data)
     is_new = is_active and random.random() < 0.08
@@ -694,22 +700,23 @@ def generate_random_member(
         email = f"{first_name.lower()}.{last_name.lower()}{counter}@example.com"
         counter += 1
 
-    if not is_new:
+    if not is_new and not is_pending:
         used_usernames.add(username)
     used_emails.add(email)
 
-    # Identity
+    # Identity — pending members have minimal data like brand-new members
+    has_full_data = not is_new and not is_pending
     identity = {
         "first_name": first_name,
         "last_name": last_name,
-        "nickname": fake.user_name() if not is_new else None,
-        "active_directory_username": username if not is_new else None,
+        "nickname": fake.user_name() if has_full_data else None,
+        "active_directory_username": username if has_full_data else None,
         "emails": [{"type": "primary", "email_address": email}],
     }
 
     # Status
-    membership_level = pick_membership_level(is_active, is_new)
-    if is_new:
+    membership_level = pick_membership_level(is_active, is_new or is_pending)
+    if is_new or is_pending:
         member_since = fake.date_between(start_date="-14d", end_date="today").isoformat()
     elif is_active:
         member_since = fake.date_between(start_date="-7y", end_date="-2m").isoformat()
@@ -717,34 +724,34 @@ def generate_random_member(
         member_since = fake.date_between(start_date="-8y", end_date="-1y").isoformat()
 
     status = {
-        "membership_status": "active" if is_active else "suspended",
+        "membership_status": membership_status,
         "membership_level": membership_level,
         "member_since": member_since,
     }
 
-    # Connections (~65% chance if not new)
+    # Connections (~65% chance if not new/pending)
     connections = None
-    if not is_new and random.random() < 0.65:
+    if has_full_data and random.random() < 0.65:
         connections = {"discord_username": fake.user_name()}
 
-    # Forms (null if brand new)
-    forms = None if is_new else generate_forms(fake)
+    # Forms (null if brand new or pending)
+    forms = None if not has_full_data else generate_forms(fake)
 
-    # Access / RFID (null if brand new)
+    # Access / RFID (null if brand new or pending)
     access = None
-    if not is_new:
+    if has_full_data:
         num_tags = random.choices([0, 1, 1, 1, 2, 2, 3], k=1)[0]
         if num_tags > 0:
             tags = generate_unique_rfid_tags(num_tags, used_rfid_tags)
             if tags:
                 access = {"rfid_tags": tags}
 
-    # Authorizations (null if brand new)
-    authorizations = None if is_new else generate_authorizations()
+    # Authorizations (null if brand new or pending)
+    authorizations = None if not has_full_data else generate_authorizations()
 
     # Extras — storage for members with storage-type plans, or ~15% random
     extras = None
-    if not is_new:
+    if has_full_data:
         has_storage_plan = "Storage" in membership_level
         if has_storage_plan or random.random() < 0.15:
             area = random.choice(STORAGE_AREAS)
@@ -755,19 +762,19 @@ def generate_random_member(
                 "storage_area": area,
             }
 
-    # Notes (~35% chance if not new)
+    # Notes (~35% chance if not new/pending)
     notes = None
-    if not is_new and random.random() < 0.35:
+    if has_full_data and random.random() < 0.35:
         notes = generate_notes(fake)
 
-    # Inactive members might have a lapsed note
-    if not is_active and (notes is None or random.random() < 0.6):
+    # Suspended members might have a lapsed note
+    if membership_status == "suspended" and (notes is None or random.random() < 0.6):
         lapsed_note = {
             "date": fake.date_between(start_date="-6m", end_date="today").isoformat(),
             "author": "System",
             "text": random.choice([
-                "Membership lapsed \u2014 moved to inactive",
-                "Payment failed \u2014 membership deactivated",
+                "Membership lapsed \u2014 moved to suspended",
+                "Payment failed \u2014 membership suspended",
                 "Member requested deactivation",
                 "Membership expired \u2014 no renewal",
             ]),
@@ -776,6 +783,23 @@ def generate_random_member(
             notes = {"notes": [lapsed_note]}
         else:
             notes["notes"].append(lapsed_note)
+
+    # Banned members always have a ban note
+    if membership_status == "banned":
+        ban_note = {
+            "date": fake.date_between(start_date="-1y", end_date="today").isoformat(),
+            "author": "Board",
+            "text": random.choice([
+                "Banned \u2014 repeated safety violations",
+                "Banned \u2014 code of conduct violation",
+                "Banned \u2014 harassment policy violation",
+                "Banned \u2014 unauthorized use of equipment",
+            ]),
+        }
+        if notes is None:
+            notes = {"notes": [ban_note]}
+        else:
+            notes["notes"].append(ban_note)
 
     return {
         "identity": identity,
