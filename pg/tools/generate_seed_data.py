@@ -880,26 +880,52 @@ def generate_sql(count: int, seed: str) -> str:
         lines.append(make_member_sql(user))
         lines.append("")
 
-    # Random members
+    # Random members — generate all, then split pending from non-pending
+    # so pending members are inserted last (highest IDs, appear first
+    # in the admin portal's default descending sort)
     used_rfid_tags = set(DEV_USER_RFID_TAGS)
     used_usernames = set(DEV_USER_USERNAMES)
     used_emails = set(DEV_USER_EMAILS)
 
-    start_id = len(DEV_USERS) + 1
-    end_id = start_id + count - 1
-
-    lines.append("")
-    lines.append("/* =====================================================")
-    lines.append(f" * Random Members (IDs {start_id}-{end_id})")
-    lines.append(" * ===================================================== */")
-    lines.append("")
-
-    for i in range(count):
+    all_members = []
+    for _ in range(count):
         member = generate_random_member(fake, used_rfid_tags, used_usernames, used_emails)
-        name = f"{member['identity']['first_name']} {member['identity']['last_name']}"
-        lines.append(f"/* ID {start_id + i} - {name} */")
-        lines.append(make_member_sql(member))
+        all_members.append(member)
+
+    non_pending = [m for m in all_members if m["status"]["membership_status"] != "pending"]
+    pending = [m for m in all_members if m["status"]["membership_status"] == "pending"]
+
+    start_id = len(DEV_USERS) + 1
+
+    if non_pending:
+        np_end_id = start_id + len(non_pending) - 1
         lines.append("")
+        lines.append("/* =====================================================")
+        lines.append(f" * Random Members (IDs {start_id}-{np_end_id})")
+        lines.append(" * ===================================================== */")
+        lines.append("")
+        for i, member in enumerate(non_pending):
+            name = f"{member['identity']['first_name']} {member['identity']['last_name']}"
+            lines.append(f"/* ID {start_id + i} - {name} */")
+            lines.append(make_member_sql(member))
+            lines.append("")
+
+    if pending:
+        p_start_id = start_id + len(non_pending)
+        p_end_id = p_start_id + len(pending) - 1
+        lines.append("")
+        lines.append("/* =====================================================")
+        lines.append(f" * Pending Members (IDs {p_start_id}-{p_end_id})")
+        lines.append(" *")
+        lines.append(" * Inserted last so they get the highest IDs and appear")
+        lines.append(" * at the top of the admin portal's default member list.")
+        lines.append(" * ===================================================== */")
+        lines.append("")
+        for i, member in enumerate(pending):
+            name = f"{member['identity']['first_name']} {member['identity']['last_name']}"
+            lines.append(f"/* ID {p_start_id + i} - {name} */")
+            lines.append(make_member_sql(member))
+            lines.append("")
 
     # Role assignments
     lines.append("")
