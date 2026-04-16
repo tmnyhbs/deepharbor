@@ -36,7 +36,7 @@
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Ada", "last_name": "Lovelace", "nickname": "enchantress_of_numbers", "active_directory_username": "alovelace", "emails": [{"type": "primary", "email_address": "ada.lovelace@example.com"}]}'::jsonb,
     '{"discord_username": "ada_admin"}'::jsonb,
-    '{"membership_status": "Active", "membership_level": "Stripe Member - $65", "member_since": "2020-01-15"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "Stripe Member - $65", "member_since": "2020-01-15"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-1234", "waiver_signed_date": "2020-01-15", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2020-01-22"}'::jsonb,
     '{"rfid_tags": ["1012345678", "1087654321"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Mig Welders", "Tig Welders", "Jointer", "Planer", "Mitre Saw", "Sanders", "Wood Drill Press", "Router Table"], "computer_authorizations": ["Epilog Authorized Users", "Tormach Authorized Users", "ShopBot Authorized Users"]}'::jsonb,
@@ -51,7 +51,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Charles", "last_name": "Babbage", "nickname": "difference_engine", "active_directory_username": "cbabbage", "emails": [{"type": "primary", "email_address": "charles.babbage@example.com"}]}'::jsonb,
     '{"discord_username": "cbabbage"}'::jsonb,
-    '{"membership_status": "Active", "membership_level": "Member - Cash Payment", "member_since": "2019-03-10"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "Member - Cash Payment", "member_since": "2019-03-10"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-5678", "waiver_signed_date": "2019-03-10", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2019-03-17"}'::jsonb,
     '{"rfid_tags": ["1023456789"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Metal Band Saw", "Metal Drill Press", "Bridgeport Mill", "Clausing Lathe"], "computer_authorizations": ["Boss Authorized Users", "CNC Plasma Authorized Users"]}'::jsonb,
@@ -66,7 +66,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Nikola", "last_name": "Tesla", "nickname": "spark_lord", "active_directory_username": "ntesla", "emails": [{"type": "primary", "email_address": "nikola.tesla@example.com"}]}'::jsonb,
     '{"discord_username": "spark_lord"}'::jsonb,
-    '{"membership_status": "Active", "membership_level": "Volunteer", "member_since": "2018-06-01"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "Volunteer", "member_since": "2018-06-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "PP-9012", "waiver_signed_date": "2018-06-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2018-06-08"}'::jsonb,
     '{"rfid_tags": ["1011223344"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Mig Welders", "Tig Welders", "Jointer", "Planer", "Mitre Saw", "Sanders", "Wood Drill Press", "Router Table", "Metal Band Saw", "Metal Drill Press", "Bridgeport Mill", "Clausing Lathe", "LeBlond Lathe", "Surface Grinder", "Hand held plasma cutter", "Pneumatic Power Tools", "Powder Coating Equipment", "Tube Bending Equipment"], "computer_authorizations": ["Epilog Authorized Users", "Tormach Authorized Users", "Universal Authorized Users", "Boss Authorized Users", "CNC Plasma Authorized Users", "ShopBot Authorized Users"]}'::jsonb,
@@ -81,7 +81,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Hedy", "last_name": "Lamarr", "nickname": "frequency_hopper", "active_directory_username": "hlamarr", "emails": [{"type": "primary", "email_address": "hedy.lamarr@example.com"}]}'::jsonb,
     '{"discord_username": "hedy_builds"}'::jsonb,
-    '{"membership_status": "Active", "membership_level": "Volunteer w/ Free Storage", "member_since": "2019-09-15"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "Volunteer w/ Free Storage", "member_since": "2019-09-15"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-3456", "waiver_signed_date": "2019-09-15", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2019-09-22"}'::jsonb,
     '{"rfid_tags": ["1044556677", "1055667788"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Wood Lathe", "Wood Mini Lathe", "Drum Sander", "Panel Saw", "Saw Dado", "Square Chisel Morticer", "Jointer", "Planer", "Ender 3D Printers", "Prusa 3D printers", "Formlabs Form 3 printer"], "computer_authorizations": ["Epilog Authorized Users", "Universal Authorized Users", "Vinyl Cutter Authorized Users", "Mimaki CJV30 printer Users"]}'::jsonb,
@@ -96,7 +96,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Grace", "last_name": "Hopper", "nickname": "queen_bug", "active_directory_username": "ghopper", "emails": [{"type": "primary", "email_address": "grace.hopper@example.com"}]}'::jsonb,
     '{"discord_username": "admiral_grace"}'::jsonb,
-    '{"membership_status": "Active", "membership_level": "Board Member / Officer", "member_since": "2017-11-01"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "Board Member / Officer", "member_since": "2017-11-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-7890", "waiver_signed_date": "2017-11-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2017-11-08"}'::jsonb,
     '{"rfid_tags": ["1099887766"]}'::jsonb,
     '{"authorizations": ["Ender 3D Printers", "Prusa 3D printers", "Band Saw"], "computer_authorizations": []}'::jsonb,
@@ -110,7 +110,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Margaret", "last_name": "Hamilton", "nickname": "stack_overflow", "active_directory_username": "mhamilton", "emails": [{"type": "primary", "email_address": "margaret.hamilton@example.com"}]}'::jsonb,
     '{"discord_username": "mhamilton_apollo"}'::jsonb,
-    '{"membership_status": "Active", "membership_level": "Board Member / Officer", "member_since": "2018-03-15"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "Board Member / Officer", "member_since": "2018-03-15"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-2345", "waiver_signed_date": "2018-03-15", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2018-03-22"}'::jsonb,
     '{"rfid_tags": ["1077665544"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Mitre Saw", "Sanders", "Ender 3D Printers"], "computer_authorizations": ["Epilog Authorized Users"]}'::jsonb,
@@ -125,7 +125,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Rosalind", "last_name": "Franklin", "nickname": "photo_51", "active_directory_username": "rfranklin", "emails": [{"type": "primary", "email_address": "rosalind.franklin@example.com"}]}'::jsonb,
     '{"discord_username": "xray_rosalind"}'::jsonb,
-    '{"membership_status": "Active", "membership_level": "Member - Cash Payment", "member_since": "2021-04-01"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "Member - Cash Payment", "member_since": "2021-04-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-6789", "waiver_signed_date": "2021-04-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2021-04-08"}'::jsonb,
     '{"rfid_tags": ["1033221100", "1044332211"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Mig Welders", "Jointer", "Planer", "Ender 3D Printers", "Prusa 3D printers"], "computer_authorizations": ["Epilog Authorized Users", "Tormach Authorized Users"]}'::jsonb,
@@ -139,7 +139,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Katherine", "last_name": "Johnson", "nickname": "human_computer", "active_directory_username": "kjohnson", "emails": [{"type": "primary", "email_address": "katherine.johnson@example.com"}]}'::jsonb,
     '{"discord_username": "kjohnson_math"}'::jsonb,
-    '{"membership_status": "Active", "membership_level": "Stripe Member - $65", "member_since": "2022-02-14"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "Stripe Member - $65", "member_since": "2022-02-14"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-0123", "waiver_signed_date": "2022-02-14", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2022-02-21"}'::jsonb,
     '{"rfid_tags": ["1066778899"]}'::jsonb,
     '{"authorizations": ["Ender 3D Printers", "Prusa 3D printers", "Formlabs Form 3 printer", "Tier one Sewing Machine", "Serger sewing machine", "Button sewing machines"], "computer_authorizations": ["Epilog Authorized Users", "Vinyl Cutter Authorized Users"]}'::jsonb,
@@ -154,7 +154,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Marie", "last_name": "Curie", "nickname": "glow_girl", "active_directory_username": "mcurie", "emails": [{"type": "primary", "email_address": "marie.curie@example.com"}]}'::jsonb,
     '{"discord_username": "mcurie_rad"}'::jsonb,
-    '{"membership_status": "Inactive", "membership_level": "Member - Cash Payment", "member_since": "2018-06-01"}'::jsonb,
+    '{"membership_status": "suspended", "membership_level": "Member - Cash Payment", "member_since": "2018-06-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-4567", "waiver_signed_date": "2018-06-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2018-06-08"}'::jsonb,
     '{"rfid_tags": ["1033445566"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Mig Welders", "Cold Metals Basic"], "computer_authorizations": []}'::jsonb,
@@ -169,7 +169,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Laika", "last_name": "Sputnik", "nickname": "good_dog", "active_directory_username": "lsputnik", "emails": [{"type": "primary", "email_address": "laika.sputnik@example.com"}]}'::jsonb,
     NULL,
-    '{"membership_status": "Inactive", "membership_level": "Stripe Member - $65", "member_since": "2023-09-01"}'::jsonb,
+    '{"membership_status": "suspended", "membership_level": "Stripe Member - $65", "member_since": "2023-09-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-8901", "waiver_signed_date": "2023-09-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2023-09-08"}'::jsonb,
     NULL,
     '{"authorizations": ["Band Saw", "Ender 3D Printers"], "computer_authorizations": []}'::jsonb,
@@ -192,7 +192,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Wernher", "last_name": "Von Braun", "nickname": "rocket_man", "active_directory_username": "wvonbraun", "emails": [{"type": "primary", "email_address": "wernher.vonbraun@example.com"}]}'::jsonb,
     '{"discord_username": "rocketman_w"}'::jsonb,
-    '{"membership_status": "Active", "membership_level": "Area Host", "member_since": "2017-01-15"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "Area Host", "member_since": "2017-01-15"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-1111", "waiver_signed_date": "2017-01-15", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2017-01-22"}'::jsonb,
     '{"rfid_tags": ["1010203040", "1050607080"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Mig Welders", "Tig Welders", "Metal Band Saw", "Metal Drill Press", "Bridgeport Mill", "Clausing Lathe", "LeBlond Lathe", "Surface Grinder", "Hand held plasma cutter", "Pneumatic Power Tools", "Powder Coating Equipment", "Tube Bending Equipment", "Cold Metals Basic"], "computer_authorizations": ["Boss Authorized Users", "CNC Plasma Authorized Users", "Tormach Authorized Users"]}'::jsonb,
@@ -206,7 +206,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Emmy", "last_name": "Noether", "nickname": "symmetry_queen", "active_directory_username": "enoether", "emails": [{"type": "primary", "email_address": "emmy.noether@example.com"}]}'::jsonb,
     '{"discord_username": "emmy_makes"}'::jsonb,
-    '{"membership_status": "Active", "membership_level": "Stripe Member w/ Storage - $95", "member_since": "2021-08-01"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "Stripe Member w/ Storage - $95", "member_since": "2021-08-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-2222", "waiver_signed_date": "2021-08-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2021-08-08"}'::jsonb,
     '{"rfid_tags": ["1011112222", "1033334444", "1055556666"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Jointer", "Planer", "Mitre Saw", "Router Table", "Wood Lathe", "Drum Sander", "Panel Saw", "Ender 3D Printers", "Prusa 3D printers", "Formlabs Form 3 printer"], "computer_authorizations": ["Epilog Authorized Users", "Universal Authorized Users", "ShopBot Authorized Users"]}'::jsonb,
@@ -220,7 +220,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Richard", "last_name": "Feynman", "nickname": "surely_joking", "active_directory_username": "rfeynman", "emails": [{"type": "primary", "email_address": "richard.feynman@example.com"}]}'::jsonb,
     '{"discord_username": "feynman_diagrams"}'::jsonb,
-    '{"membership_status": "Active", "membership_level": "Member - Grandfathered Price", "member_since": "2016-05-01"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "Member - Grandfathered Price", "member_since": "2016-05-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-3333", "waiver_signed_date": "2016-05-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2016-05-08"}'::jsonb,
     '{"rfid_tags": ["1077778888"]}'::jsonb,
     '{"authorizations": ["Ender 3D Printers", "Band Saw", "Sanders"], "computer_authorizations": []}'::jsonb,
@@ -234,7 +234,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Barbara", "last_name": "McClintock", "nickname": "jumping_genes", "active_directory_username": "bmcclintock", "emails": [{"type": "primary", "email_address": "barbara.mcclintock@example.com"}]}'::jsonb,
     '{"discord_username": "barb_bio"}'::jsonb,
-    '{"membership_status": "Active", "membership_level": "Scholarship", "member_since": "2024-01-15"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "Scholarship", "member_since": "2024-01-15"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-4444", "waiver_signed_date": "2024-01-15", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2024-01-22"}'::jsonb,
     '{"rfid_tags": ["1099990000"]}'::jsonb,
     '{"authorizations": ["Band Saw", "Ender 3D Printers", "Tier one Sewing Machine"], "computer_authorizations": []}'::jsonb,
@@ -248,7 +248,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Guglielmo", "last_name": "Marconi", "nickname": "radio_wave", "active_directory_username": "gmarconi", "emails": [{"type": "primary", "email_address": "guglielmo.marconi@example.com"}]}'::jsonb,
     '{"discord_username": "marconi_radio"}'::jsonb,
-    '{"membership_status": "Active", "membership_level": "Stripe Volunteer w/ Paid Storage - $30", "member_since": "2020-07-01"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "Stripe Volunteer w/ Paid Storage - $30", "member_since": "2020-07-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-5555", "waiver_signed_date": "2020-07-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2020-07-08"}'::jsonb,
     '{"rfid_tags": ["1012121212"]}'::jsonb,
     '{"authorizations": ["Band Saw", "Sanders", "Ender 3D Printers", "Cold Metals Basic"], "computer_authorizations": []}'::jsonb,
@@ -263,7 +263,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Dorothy", "last_name": "Vaughan", "nickname": null, "active_directory_username": null, "emails": [{"type": "primary", "email_address": "dorothy.vaughan@example.com"}]}'::jsonb,
     NULL,
-    '{"membership_status": "Active", "membership_level": "New Member", "member_since": "2026-02-10"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "New Member", "member_since": "2026-02-10"}'::jsonb,
     NULL,
     NULL,
     NULL,
@@ -277,7 +277,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "James", "last_name": "Watt", "nickname": "steam_power", "active_directory_username": "jwatt", "emails": [{"type": "primary", "email_address": "james.watt@example.com"}]}'::jsonb,
     '{"discord_username": "jwatt_steam"}'::jsonb,
-    '{"membership_status": "Active", "membership_level": "Member w/ Storage - Cash Payment", "member_since": "2019-11-01"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "Member w/ Storage - Cash Payment", "member_since": "2019-11-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-6666", "waiver_signed_date": "2019-11-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2019-11-08"}'::jsonb,
     '{"rfid_tags": ["1034343434"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Mig Welders", "Tig Welders", "Metal Band Saw", "Metal Drill Press", "Bridgeport Mill", "Blacksmithing"], "computer_authorizations": ["CNC Plasma Authorized Users"]}'::jsonb,
@@ -291,7 +291,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Chien-Shiung", "last_name": "Wu", "nickname": "first_lady_of_physics", "active_directory_username": "cwu", "emails": [{"type": "primary", "email_address": "chienshiung.wu@example.com"}]}'::jsonb,
     '{"discord_username": "cswu_physics"}'::jsonb,
-    '{"membership_status": "Active", "membership_level": "Member - PayPal", "member_since": "2022-09-01"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "Member - PayPal", "member_since": "2022-09-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-7777", "waiver_signed_date": "2022-09-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2022-09-08"}'::jsonb,
     '{"rfid_tags": ["1056565656"]}'::jsonb,
     '{"authorizations": ["Ender 3D Printers", "Prusa 3D printers", "Band Saw", "Table Saw", "Mitre Saw"], "computer_authorizations": ["Epilog Authorized Users"]}'::jsonb,
@@ -305,7 +305,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Buckminster", "last_name": "Fuller", "nickname": "bucky_ball", "active_directory_username": "bfuller", "emails": [{"type": "primary", "email_address": "buckminster.fuller@example.com"}]}'::jsonb,
     '{"discord_username": "bucky_dome"}'::jsonb,
-    '{"membership_status": "Active", "membership_level": "Stripe Member - $65", "member_since": "2023-03-01"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "Stripe Member - $65", "member_since": "2023-03-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-8888", "waiver_signed_date": "2023-03-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2023-03-08"}'::jsonb,
     '{"rfid_tags": ["1078787878"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Jointer", "Planer", "Mitre Saw", "Router Table", "Wood Drill Press", "Multi-Router", "Panel Saw"], "computer_authorizations": ["ShopBot Authorized Users"]}'::jsonb,
@@ -319,7 +319,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Rachel", "last_name": "Carson", "nickname": "silent_spring", "active_directory_username": "rcarson", "emails": [{"type": "primary", "email_address": "rachel.carson@example.com"}]}'::jsonb,
     NULL,
-    '{"membership_status": "Active", "membership_level": "Contractor", "member_since": "2025-06-01"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "Contractor", "member_since": "2025-06-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-9999", "waiver_signed_date": "2025-06-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2025-06-08"}'::jsonb,
     '{"rfid_tags": ["1090909090"]}'::jsonb,
     '{"authorizations": ["Band Saw", "Sanders"], "computer_authorizations": []}'::jsonb,
@@ -333,7 +333,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Philo", "last_name": "Farnsworth", "nickname": "tv_inventor", "active_directory_username": "pfarnsworth", "emails": [{"type": "primary", "email_address": "philo.farnsworth@example.com"}]}'::jsonb,
     '{"discord_username": "philo_tv"}'::jsonb,
-    '{"membership_status": "Active", "membership_level": "Member w/ Storage - Grandfathered Price", "member_since": "2016-09-01"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "Member w/ Storage - Grandfathered Price", "member_since": "2016-09-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-1010", "waiver_signed_date": "2016-09-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2016-09-08"}'::jsonb,
     '{"rfid_tags": ["1021212121"]}'::jsonb,
     '{"authorizations": ["Band Saw", "Table Saw", "Ender 3D Printers", "Sanders", "Wood Drill Press", "Cold Metals Basic", "Coffee Roaster"], "computer_authorizations": []}'::jsonb,
@@ -347,7 +347,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Jocelyn", "last_name": "Bell Burnell", "nickname": "pulsar_finder", "active_directory_username": "jbellburnell", "emails": [{"type": "primary", "email_address": "jocelyn.bellburnell@example.com"}]}'::jsonb,
     '{"discord_username": "jocelyn_stars"}'::jsonb,
-    '{"membership_status": "Active", "membership_level": "Volunteer w/ Paid Storage", "member_since": "2021-01-15"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "Volunteer w/ Paid Storage", "member_since": "2021-01-15"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-1212", "waiver_signed_date": "2021-01-15", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2021-01-22"}'::jsonb,
     '{"rfid_tags": ["1043434343"]}'::jsonb,
     '{"authorizations": ["Ender 3D Printers", "Prusa 3D printers", "Band Saw", "Tier one Sewing Machine", "Billiards"], "computer_authorizations": ["Epilog Authorized Users"]}'::jsonb,
@@ -361,7 +361,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Dmitri", "last_name": "Mendeleev", "nickname": "periodic_table", "active_directory_username": "dmendeleev", "emails": [{"type": "primary", "email_address": "dmitri.mendeleev@example.com"}]}'::jsonb,
     '{"discord_username": "element118"}'::jsonb,
-    '{"membership_status": "Inactive", "membership_level": "Member - Grandfathered Price", "member_since": "2015-03-01"}'::jsonb,
+    '{"membership_status": "suspended", "membership_level": "Member - Grandfathered Price", "member_since": "2015-03-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-1313", "waiver_signed_date": "2015-03-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2015-03-08"}'::jsonb,
     '{"rfid_tags": ["1065656565"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Mig Welders", "Metal Band Saw", "Blacksmithing"], "computer_authorizations": []}'::jsonb,
@@ -375,7 +375,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Michael", "last_name": "Faraday", "nickname": "field_lines", "active_directory_username": "mfaraday", "emails": [{"type": "primary", "email_address": "michael.faraday@example.com"}]}'::jsonb,
     NULL,
-    '{"membership_status": "Inactive", "membership_level": "Member - PayPal", "member_since": "2022-05-01"}'::jsonb,
+    '{"membership_status": "suspended", "membership_level": "Member - PayPal", "member_since": "2022-05-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-1414", "waiver_signed_date": "2022-05-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2022-05-08"}'::jsonb,
     NULL,
     '{"authorizations": ["Band Saw", "Ender 3D Printers", "Sanders"], "computer_authorizations": []}'::jsonb,
@@ -389,7 +389,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "George Washington", "last_name": "Carver", "nickname": "peanut_wizard", "active_directory_username": "gwcarver", "emails": [{"type": "primary", "email_address": "george.carver@example.com"}]}'::jsonb,
     '{"discord_username": "gwcarver_makes"}'::jsonb,
-    '{"membership_status": "Active", "membership_level": "Member w/ Storage - PayPal", "member_since": "2020-10-01"}'::jsonb,
+    '{"membership_status": "active", "membership_level": "Member w/ Storage - PayPal", "member_since": "2020-10-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-1515", "waiver_signed_date": "2020-10-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2020-10-08"}'::jsonb,
     '{"rfid_tags": ["1087878787"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Jointer", "Planer", "Wood Lathe", "Tier one Sewing Machine", "Serger sewing machine", "Button sewing machines", "Saw Dado"], "computer_authorizations": ["Vinyl Cutter Authorized Users", "Mimaki CJV30 printer Users"]}'::jsonb,
