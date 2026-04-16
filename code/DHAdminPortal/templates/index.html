@@ -157,8 +157,12 @@
                                 <div class="text-center my-2">
                                     <div id="stripeQrCode" class="d-inline-block" style="padding: 10px; background: #fff;"></div>
                                 </div>
+                                <div class="text-center mt-3">
+                                    <a href="#" class="text-muted small" onclick="dismissStripeWarning(); return false;">Ignore missing payment</a>
+                                </div>
                             </div>
 
+                            <div id="onboardSteps">
                             <!-- Step 1: Verify ID -->
                             <div class="mb-4">
                                 <h6><i class="fa-solid fa-id-card me-2"></i>Step 1: Verify ID</h6>
@@ -199,6 +203,7 @@
                                 </button>
                                 <div id="onboardingActivateError" class="alert alert-danger py-2 small mt-2" style="display: none;"></div>
                             </div>
+                            </div><!-- end onboardSteps -->
                             </div><!-- end onboardContent -->
                         </div>
                     </div>
@@ -2058,8 +2063,12 @@ function loadMemberData(memberOrId) {
             });
 
             stripeWarningEl.style.display = '';
+            const onboardSteps = document.getElementById('onboardSteps');
+            if (onboardSteps) onboardSteps.style.display = 'none';
         } else {
             stripeWarningEl.style.display = 'none';
+            const onboardSteps = document.getElementById('onboardSteps');
+            if (onboardSteps) onboardSteps.style.display = '';
         }
     }
 
@@ -2075,10 +2084,12 @@ function loadMemberData(memberOrId) {
         if (pane) { pane.classList.remove('show', 'active'); }
     });
 
-    // Show/hide onboard tab based on member status
+    // Show/hide onboard tab based on member status and permissions
+    // Onboarding requires change access to identity (DOB), access (RFID), and status (activate)
     const onboardNav = document.getElementById('onboard-nav');
     const memberStatus = member ? (member.membership_status || '').toLowerCase() : '';
-    const showOnboard = memberStatus === 'pending';
+    const canOnboard = canChangeTab('member.identity') && canChangeTab('member.access') && canChangeTab('member.status');
+    const showOnboard = memberStatus === 'pending' && canOnboard;
     if (onboardNav) {
         onboardNav.style.display = showOnboard ? 'block' : 'none';
     }
@@ -2180,6 +2191,13 @@ function loadOnboardTab(memberId) {
             if (loadingEl) loadingEl.style.display = 'none';
             if (contentEl) contentEl.style.display = '';
         });
+}
+
+function dismissStripeWarning() {
+    const warning = document.getElementById('memberStripeWarning');
+    const steps = document.getElementById('onboardSteps');
+    if (warning) warning.style.display = 'none';
+    if (steps) steps.style.display = '';
 }
 
 function enableOnboardingDobEdit() {
