@@ -512,6 +512,11 @@ def member_update_profile():
         logger.error(f"Error fetching identity for update: {str(e)}", exc_info=True)
         identity_data = {}
 
+    # Save original identity before applying form fields so we can
+    # skip the update if nothing actually changed — avoids creating
+    # a spurious member_changes row that delays access change processing
+    original_identity = dict(identity_data)
+
     apply_form_fields(request.form, identity_data, UPDATABLE_FIELDS["identity"])
 
     if not identity_data.get("emails") and user_email:
@@ -535,7 +540,8 @@ def member_update_profile():
     source_page = request.form.get('source_page', 'profile')
 
     try:
-        dhservices.update_member_identity(access_token, member_id, identity_data)
+        if identity_data != original_identity:
+            dhservices.update_member_identity(access_token, member_id, identity_data)
         if 'rfid_tags' in request.form:
             dhservices.update_member_access(access_token, member_id, access_data)
         flash('Profile updated successfully', 'success')
