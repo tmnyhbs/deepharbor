@@ -61,8 +61,9 @@ on top of the production compose file:
 5. **Bypasses external calls** — `DEV_MODE=true` on worker services
    (DH2AD, DH2RFID) so they return success without contacting
    hardware controllers
-6. **Loads seed data** — 25 members inserted on first boot (10 dev
-   users with stable IDs + 15 random members)
+6. **Loads seed data** — 30 members inserted on first boot (10 dev
+   users with stable IDs, 15 additional active/suspended members,
+   2 banned members, and 3 pending members)
 7. **Sets Flask secret key** — `DH_SECRET_KEY` is set automatically
    for CSRF protection and session security (production requires
    generating your own — see [README.md](README.md))
@@ -145,7 +146,7 @@ cp -n .env.grafana.okta.example .env.grafana.okta.production
 tools/seed_data.sh generate              # 25 members (15 random + 10 dev)
 tools/seed_data.sh generate 100          # 110 members (100 random + 10 dev)
 tools/seed_data.sh generate 50 myseed    # Reproducible with a specific seed
-tools/seed_data.sh static                # Hand-crafted static data (25 members)
+tools/seed_data.sh static                # Hand-crafted static data (30 members)
 tools/seed_data.sh status                # Show current seed data info
 ```
 

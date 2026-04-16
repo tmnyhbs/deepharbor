@@ -12,7 +12,7 @@
  *
  * Inserting members fires the audit trigger, log_member_changes(),
  * and pg_notify. First boot will be noisy as the dispatcher processes
- * ~25 change events. This is expected and harmless with DEV_MODE=true
+ * ~30 change events. This is expected and harmless with DEV_MODE=true
  * on the worker services.
  */
 
@@ -399,14 +399,53 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 
 
 /* =====================================================================
- * Pending Members (IDs 26-28)
+ * Banned Members (IDs 26-27)
+ *
+ * Members who have been banned from the space. They retain their
+ * historical data but have no active access.
+ * ===================================================================== */
+
+/* ID 26 - Edward Teller, Banned
+ * Former member banned after repeated safety violations.
+ */
+INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
+    '{"first_name": "Edward", "last_name": "Teller", "nickname": "h_bomb_ed", "active_directory_username": "eteller", "emails": [{"type": "primary", "email_address": "edward.teller@example.com"}]}'::jsonb,
+    '{"discord_username": "eteller_phys"}'::jsonb,
+    '{"membership_status": "banned", "membership_level": "Stripe Member - $65", "member_since": "2019-04-01"}'::jsonb,
+    '{"id_check_1": "IL", "id_check_2": "DL-6677", "waiver_signed_date": "2019-04-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2019-04-08"}'::jsonb,
+    NULL,
+    '{"authorizations": ["Table Saw", "Mig Welders"], "computer_authorizations": []}'::jsonb,
+    NULL,
+    '{"notes": [{"date": "2019-04-08", "author": "System", "text": "Completed orientation"}, {"date": "2025-01-15", "author": "Board", "text": "Banned — repeated safety violations in metalworking area"}]}'::jsonb
+);
+
+/* ID 27 - Fritz Haber, Banned
+ * Former member banned for code of conduct violation.
+ */
+INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
+    '{"first_name": "Fritz", "last_name": "Haber", "nickname": "ammonia_fritz", "active_directory_username": "fhaber", "emails": [{"type": "primary", "email_address": "fritz.haber@example.com"}]}'::jsonb,
+    NULL,
+    '{"membership_status": "banned", "membership_level": "Stripe Member w/ Storage - $95", "member_since": "2021-08-15"}'::jsonb,
+    '{"id_check_1": "IL", "id_check_2": "DL-7788", "waiver_signed_date": "2021-08-15", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2021-08-22"}'::jsonb,
+    NULL,
+    '{"authorizations": ["Band Saw", "Ender 3D Printers", "Cold Metals Basic"], "computer_authorizations": ["Epilog Authorized Users"]}'::jsonb,
+    '{"storage_id": "D-12", "storage_area": "South Wall"}'::jsonb,
+    '{"notes": [{"date": "2021-08-22", "author": "System", "text": "Completed orientation"}, {"date": "2024-11-01", "author": "Board", "text": "Banned — code of conduct violation"}]}'::jsonb
+);
+
+
+/* =====================================================================
+ * Pending Members (IDs 28-30)
  *
  * New signups who have paid but haven't been onboarded yet. They have
  * minimal data: identity from signup form, pending status, empty forms
  * (no ID check), no RFID tags, no authorizations.
+ *
+ * These are inserted last so they get the highest IDs and appear at
+ * the top of the default member list (sorted by ID descending).
  * ===================================================================== */
 
-/* ID 26 - Rosalind Franklin, Pending — Stripe paid */
+/* ID 28 - Rosalind Franklin, Pending — Stripe paid */
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Rosalind", "last_name": "Franklin", "nickname": "photo51", "active_directory_username": "rfranklin", "birthday": "1990-07-25", "emails": [{"type": "primary", "email_address": "rosalind.franklin@example.com"}], "pronouns": "she/her"}'::jsonb,
     '{"discord_username": "rfranklin_xray"}'::jsonb,
@@ -418,7 +457,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"notes": [{"date": "2026-03-28", "author": "System", "text": "New signup via Stripe"}]}'::jsonb
 );
 
-/* ID 27 - Alan Turing, Pending — Stripe paid */
+/* ID 29 - Alan Turing, Pending — Stripe paid */
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Alan", "last_name": "Turing", "nickname": "enigma_cracker", "active_directory_username": "aturing", "birthday": "1998-06-23", "emails": [{"type": "primary", "email_address": "alan.turing@example.com"}], "pronouns": "he/him"}'::jsonb,
     NULL,
@@ -430,7 +469,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"notes": [{"date": "2026-03-29", "author": "System", "text": "New signup via Stripe"}]}'::jsonb
 );
 
-/* ID 28 - Emmy Noether, Pending — NO Stripe (cash payment) */
+/* ID 30 - Emmy Noether, Pending — NO Stripe (cash payment) */
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Emmy", "last_name": "Noether", "nickname": "symmetry_queen", "active_directory_username": "enoether", "birthday": "1995-03-23", "emails": [{"type": "primary", "email_address": "emmy.noether@example.com"}]}'::jsonb,
     NULL,
@@ -440,42 +479,6 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"authorizations": [], "computer_authorizations": []}'::jsonb,
     NULL,
     '{"notes": [{"date": "2026-03-30", "author": "System", "text": "New signup — cash payment"}]}'::jsonb
-);
-
-
-/* =====================================================================
- * Banned Members (IDs 29-30)
- *
- * Members who have been banned from the space. They retain their
- * historical data but have no active access.
- * ===================================================================== */
-
-/* ID 29 - Edward Teller, Banned
- * Former member banned after repeated safety violations.
- */
-INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
-    '{"first_name": "Edward", "last_name": "Teller", "nickname": "h_bomb_ed", "active_directory_username": "eteller", "emails": [{"type": "primary", "email_address": "edward.teller@example.com"}]}'::jsonb,
-    '{"discord_username": "eteller_phys"}'::jsonb,
-    '{"membership_status": "banned", "membership_level": "Membership", "member_since": "2019-04-01"}'::jsonb,
-    '{"id_check_1": "IL", "id_check_2": "DL-6677", "waiver_signed_date": "2019-04-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2019-04-08"}'::jsonb,
-    NULL,
-    '{"authorizations": ["Table Saw", "Mig Welders"], "computer_authorizations": []}'::jsonb,
-    NULL,
-    '{"notes": [{"date": "2019-04-08", "author": "System", "text": "Completed orientation"}, {"date": "2025-01-15", "author": "Board", "text": "Banned — repeated safety violations in metalworking area"}]}'::jsonb
-);
-
-/* ID 30 - Fritz Haber, Banned
- * Former member banned for code of conduct violation.
- */
-INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
-    '{"first_name": "Fritz", "last_name": "Haber", "nickname": "ammonia_fritz", "active_directory_username": "fhaber", "emails": [{"type": "primary", "email_address": "fritz.haber@example.com"}]}'::jsonb,
-    NULL,
-    '{"membership_status": "banned", "membership_level": "Membership with Storage", "member_since": "2021-08-15"}'::jsonb,
-    '{"id_check_1": "IL", "id_check_2": "DL-7788", "waiver_signed_date": "2021-08-15", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2021-08-22"}'::jsonb,
-    NULL,
-    '{"authorizations": ["Band Saw", "Ender 3D Printers", "Cold Metals Basic"], "computer_authorizations": ["Epilog Authorized Users"]}'::jsonb,
-    '{"storage_id": "D-12", "storage_area": "South Wall"}'::jsonb,
-    '{"notes": [{"date": "2021-08-22", "author": "System", "text": "Completed orientation"}, {"date": "2024-11-01", "author": "Board", "text": "Banned — code of conduct violation"}]}'::jsonb
 );
 
 
