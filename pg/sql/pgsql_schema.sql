@@ -763,54 +763,51 @@ COMMENT ON TRIGGER trigger_insert_member_changes ON member_changes IS 'This trig
 -- It handles both INSERT and UPDATE operations.
 CREATE OR REPLACE FUNCTION log_member_changes()
 RETURNS TRIGGER AS $body$
-DECLARE
-    change_data JSONB;
 BEGIN
-    -- Initialize with the member_id
-    change_data := jsonb_build_object('member_id', NEW.id);
-    
-    -- Check each monitored column and add to change_data if changed
-    -- For INSERT, OLD is NULL so we check TG_OP
-    
+    -- Insert one member_changes row per changed column so each gets its own
+    -- 'change' key and DHDispatcher can route them independently.
+
     IF TG_OP = 'INSERT' THEN
         IF NEW.identity IS NOT NULL THEN
-            change_data := change_data || jsonb_build_object('change', 'identity', 'identity', NEW.identity);
+            INSERT INTO member_changes (member_id, data)
+            VALUES (NEW.id, jsonb_build_object('member_id', NEW.id, 'change', 'identity', 'identity', NEW.identity));
         END IF;
         IF NEW.status IS NOT NULL THEN
-            change_data := change_data || jsonb_build_object('change', 'status', 'status', NEW.status);
+            INSERT INTO member_changes (member_id, data)
+            VALUES (NEW.id, jsonb_build_object('member_id', NEW.id, 'change', 'status', 'status', NEW.status));
         END IF;
         IF NEW.access IS NOT NULL THEN
-            change_data := change_data || jsonb_build_object('change', 'access', 'access', NEW.access);
+            INSERT INTO member_changes (member_id, data)
+            VALUES (NEW.id, jsonb_build_object('member_id', NEW.id, 'change', 'access', 'access', NEW.access));
         END IF;
         IF NEW.authorizations IS NOT NULL THEN
-            change_data := change_data || jsonb_build_object('change', 'authorizations', 'authorizations', NEW.authorizations);
+            INSERT INTO member_changes (member_id, data)
+            VALUES (NEW.id, jsonb_build_object('member_id', NEW.id, 'change', 'authorizations', 'authorizations', NEW.authorizations));
         END IF;
     ELSE
         -- UPDATE operation - only log changed columns
         IF NEW.identity IS DISTINCT FROM OLD.identity THEN
-            change_data := change_data || jsonb_build_object('change', 'identity', 'identity', NEW.identity);
+            INSERT INTO member_changes (member_id, data)
+            VALUES (NEW.id, jsonb_build_object('member_id', NEW.id, 'change', 'identity', 'identity', NEW.identity));
         END IF;
         IF NEW.status IS DISTINCT FROM OLD.status THEN
-            change_data := change_data || jsonb_build_object('change', 'status', 'status', NEW.status);
+            INSERT INTO member_changes (member_id, data)
+            VALUES (NEW.id, jsonb_build_object('member_id', NEW.id, 'change', 'status', 'status', NEW.status));
         END IF;
         IF NEW.access IS DISTINCT FROM OLD.access THEN
-            change_data := change_data || jsonb_build_object('change', 'access', 'access', NEW.access);
+            INSERT INTO member_changes (member_id, data)
+            VALUES (NEW.id, jsonb_build_object('member_id', NEW.id, 'change', 'access', 'access', NEW.access));
         END IF;
         IF NEW.authorizations IS DISTINCT FROM OLD.authorizations THEN
-            change_data := change_data || jsonb_build_object('change', 'authorizations', 'authorizations', NEW.authorizations);
+            INSERT INTO member_changes (member_id, data)
+            VALUES (NEW.id, jsonb_build_object('member_id', NEW.id, 'change', 'authorizations', 'authorizations', NEW.authorizations));
         END IF;
     END IF;
-    
-    -- Only insert if there are actual changes (more than just member_id)
-    IF change_data != jsonb_build_object('member_id', NEW.id) THEN
-        INSERT INTO member_changes (member_id, data)
-        VALUES (NEW.id, change_data);
-    END IF;
-    
+
     RETURN NEW;
 END;
 $body$ LANGUAGE plpgsql;
-COMMENT ON FUNCTION log_member_changes() IS 'This function logs changes to specific columns (status, access, authorizations) in the member table into the member_changes table for processing by DHDispatcher. It handles both INSERT and UPDATE operations.';
+COMMENT ON FUNCTION log_member_changes() IS 'This function logs changes to monitored columns (identity, status, access, authorizations) in the member table. Each changed column gets its own member_changes row so DHDispatcher can route them independently.';
 
 -- Create the trigger for INSERT operations on the monitored columns
 -- of the member table.
