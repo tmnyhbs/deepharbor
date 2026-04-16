@@ -1,0 +1,151 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "DeepHarbor PostgreSQL",
+      "description": "Count of members who currently have at least one role assigned.",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "dataset": "deepharbor",
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT COUNT(DISTINCT member_id) AS members_with_roles FROM member_to_role",
+          "refId": "A"
+        }
+      ],
+      "title": "Members With Roles",
+      "type": "stat"
+    },
+    {
+      "datasource": "DeepHarbor PostgreSQL",
+      "description": "Current role assignments grouped by member. Includes only users who have one or more assigned roles.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "hideFrom": {
+              "viz": false
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 2,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "dataset": "deepharbor",
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT m.id AS member_id,\n       m.identity ->> 'first_name' AS first_name,\n       m.identity ->> 'last_name' AS last_name,\n       jsonb_path_query_first(m.identity, '$.emails[*] ? (@.type == \"primary\").email_address') #>> '{}' AS primary_email,\n       COUNT(r.id) AS role_count,\n       ARRAY_AGG(r.name ORDER BY r.name) AS assigned_roles,\n       MAX(mtr.date_added) AS latest_role_assigned_at\nFROM member_to_role mtr\nJOIN member m ON m.id = mtr.member_id\nJOIN roles r ON r.id = mtr.role_id\nGROUP BY m.id, m.identity\nORDER BY m.identity ->> 'last_name', m.identity ->> 'first_name'",
+          "refId": "A"
+        }
+      ],
+      "title": "Current Role Assignments",
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 42,
+  "tags": [
+    "deepharbor",
+    "roles"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "DeepHarbor Current Role Assignments",
+  "uid": "deepharbor_roles_current",
+  "version": 1
+}
