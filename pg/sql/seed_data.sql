@@ -1,7 +1,7 @@
 /*
  * Deep Harbor Seed Data
  *
- * This file populates the database with ~25 fictional members for
+ * This file populates the database with ~30 fictional members for
  * local development and testing. It runs as 02-seed_data.sql during
  * Docker first-boot init, after the schema (01-pgsql_schema.sql)
  * is already in place.
@@ -154,7 +154,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Marie", "last_name": "Curie", "nickname": "glow_girl", "active_directory_username": "mcurie", "emails": [{"type": "primary", "email_address": "marie.curie@example.com"}]}'::jsonb,
     '{"discord_username": "mcurie_rad"}'::jsonb,
-    '{"membership_status": "inactive", "membership_level": "Member - Cash Payment", "member_since": "2018-06-01"}'::jsonb,
+    '{"membership_status": "suspended", "membership_level": "Member - Cash Payment", "member_since": "2018-06-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-4567", "waiver_signed_date": "2018-06-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2018-06-08"}'::jsonb,
     '{"rfid_tags": ["1033445566"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Mig Welders", "Cold Metals Basic"], "computer_authorizations": []}'::jsonb,
@@ -169,7 +169,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Laika", "last_name": "Sputnik", "nickname": "good_dog", "active_directory_username": "lsputnik", "emails": [{"type": "primary", "email_address": "laika.sputnik@example.com"}]}'::jsonb,
     NULL,
-    '{"membership_status": "inactive", "membership_level": "Stripe Member - $65", "member_since": "2023-09-01"}'::jsonb,
+    '{"membership_status": "suspended", "membership_level": "Stripe Member - $65", "member_since": "2023-09-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-8901", "waiver_signed_date": "2023-09-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2023-09-08"}'::jsonb,
     NULL,
     '{"authorizations": ["Band Saw", "Ender 3D Printers"], "computer_authorizations": []}'::jsonb,
@@ -361,7 +361,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Dmitri", "last_name": "Mendeleev", "nickname": "periodic_table", "active_directory_username": "dmendeleev", "emails": [{"type": "primary", "email_address": "dmitri.mendeleev@example.com"}]}'::jsonb,
     '{"discord_username": "element118"}'::jsonb,
-    '{"membership_status": "inactive", "membership_level": "Member - Grandfathered Price", "member_since": "2015-03-01"}'::jsonb,
+    '{"membership_status": "suspended", "membership_level": "Member - Grandfathered Price", "member_since": "2015-03-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-1313", "waiver_signed_date": "2015-03-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2015-03-08"}'::jsonb,
     '{"rfid_tags": ["1065656565"]}'::jsonb,
     '{"authorizations": ["Table Saw", "Band Saw", "Mig Welders", "Metal Band Saw", "Blacksmithing"], "computer_authorizations": []}'::jsonb,
@@ -375,7 +375,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Michael", "last_name": "Faraday", "nickname": "field_lines", "active_directory_username": "mfaraday", "emails": [{"type": "primary", "email_address": "michael.faraday@example.com"}]}'::jsonb,
     NULL,
-    '{"membership_status": "inactive", "membership_level": "Member - PayPal", "member_since": "2022-05-01"}'::jsonb,
+    '{"membership_status": "suspended", "membership_level": "Member - PayPal", "member_since": "2022-05-01"}'::jsonb,
     '{"id_check_1": "IL", "id_check_2": "DL-1414", "waiver_signed_date": "2022-05-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2022-05-08"}'::jsonb,
     NULL,
     '{"authorizations": ["Band Saw", "Ender 3D Printers", "Sanders"], "computer_authorizations": []}'::jsonb,
@@ -399,7 +399,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 
 
 /* =====================================================================
- * Pending Members (IDs 26-35)
+ * Pending Members (IDs 26-28)
  *
  * New signups who have paid but haven't been onboarded yet. They have
  * minimal data: identity from signup form, pending status, empty forms
@@ -410,7 +410,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Rosalind", "last_name": "Franklin", "nickname": "photo51", "active_directory_username": "rfranklin", "birthday": "1990-07-25", "emails": [{"type": "primary", "email_address": "rosalind.franklin@example.com"}], "pronouns": "she/her"}'::jsonb,
     '{"discord_username": "rfranklin_xray"}'::jsonb,
-    '{"membership_status": "pending", "membership_level": "Basic Membership", "stripe_product_id": "prod_Tws7udZJSXI9DU", "stripe_subscription_id": "sub_fake_franklin"}'::jsonb,
+    '{"membership_status": "pending", "membership_level": "Stripe Member - $65", "stripe_product_id": "prod_Tws7udZJSXI9DU", "stripe_subscription_id": "sub_fake_franklin"}'::jsonb,
     '{"id_check_1": "", "id_check_2": "", "waiver_signed_date": "2026-03-28", "terms_of_use_accepted": "true", "essentials_form": "", "orientation_completed_date": "", "is_21_or_older": false}'::jsonb,
     '{"rfid_tags": []}'::jsonb,
     '{"authorizations": [], "computer_authorizations": []}'::jsonb,
@@ -422,7 +422,7 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Alan", "last_name": "Turing", "nickname": "enigma_cracker", "active_directory_username": "aturing", "birthday": "1998-06-23", "emails": [{"type": "primary", "email_address": "alan.turing@example.com"}], "pronouns": "he/him"}'::jsonb,
     NULL,
-    '{"membership_status": "pending", "membership_level": "Basic Membership", "stripe_product_id": "prod_Tws7udZJSXI9DU", "stripe_subscription_id": "sub_fake_turing"}'::jsonb,
+    '{"membership_status": "pending", "membership_level": "Stripe Member - $65", "stripe_product_id": "prod_Tws7udZJSXI9DU", "stripe_subscription_id": "sub_fake_turing"}'::jsonb,
     '{"id_check_1": "", "id_check_2": "", "waiver_signed_date": "2026-03-29", "terms_of_use_accepted": "true", "essentials_form": "", "orientation_completed_date": "", "is_21_or_older": false}'::jsonb,
     '{"rfid_tags": []}'::jsonb,
     '{"authorizations": [], "computer_authorizations": []}'::jsonb,
@@ -430,23 +430,11 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"notes": [{"date": "2026-03-29", "author": "System", "text": "New signup via Stripe"}]}'::jsonb
 );
 
-/* ID 28 - Katherine Johnson, Pending — Stripe paid (with storage) */
-INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
-    '{"first_name": "Katherine", "last_name": "Johnson", "nickname": "human_computer", "active_directory_username": "kjohnson", "birthday": "2000-08-26", "emails": [{"type": "primary", "email_address": "katherine.johnson@example.com"}], "pronouns": "she/her"}'::jsonb,
-    '{"discord_username": "kjohnson_nasa"}'::jsonb,
-    '{"membership_status": "pending", "membership_level": "Membership with Storage", "stripe_product_id": "prod_TwsAMgaH3iLJ9c", "stripe_subscription_id": "sub_fake_johnson"}'::jsonb,
-    '{"id_check_1": "", "id_check_2": "", "waiver_signed_date": "2026-03-29", "terms_of_use_accepted": "true", "essentials_form": "", "orientation_completed_date": "", "is_21_or_older": false}'::jsonb,
-    '{"rfid_tags": []}'::jsonb,
-    '{"authorizations": [], "computer_authorizations": []}'::jsonb,
-    NULL,
-    '{"notes": [{"date": "2026-03-29", "author": "System", "text": "New signup via Stripe"}]}'::jsonb
-);
-
-/* ID 29 - Emmy Noether, Pending — NO Stripe (cash payment) */
+/* ID 28 - Emmy Noether, Pending — NO Stripe (cash payment) */
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
     '{"first_name": "Emmy", "last_name": "Noether", "nickname": "symmetry_queen", "active_directory_username": "enoether", "birthday": "1995-03-23", "emails": [{"type": "primary", "email_address": "emmy.noether@example.com"}]}'::jsonb,
     NULL,
-    '{"membership_status": "pending", "membership_level": "Member - Cash Payment"}'::jsonb,
+    '{"membership_status": "pending", "membership_level": "New Member"}'::jsonb,
     '{"id_check_1": "", "id_check_2": "", "waiver_signed_date": "2026-03-30", "terms_of_use_accepted": "true", "essentials_form": "", "orientation_completed_date": "", "is_21_or_older": false}'::jsonb,
     '{"rfid_tags": []}'::jsonb,
     '{"authorizations": [], "computer_authorizations": []}'::jsonb,
@@ -454,76 +442,40 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"notes": [{"date": "2026-03-30", "author": "System", "text": "New signup — cash payment"}]}'::jsonb
 );
 
-/* ID 30 - James Clerk Maxwell, Pending — Stripe paid */
+
+/* =====================================================================
+ * Banned Members (IDs 29-30)
+ *
+ * Members who have been banned from the space. They retain their
+ * historical data but have no active access.
+ * ===================================================================== */
+
+/* ID 29 - Edward Teller, Banned
+ * Former member banned after repeated safety violations.
+ */
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
-    '{"first_name": "James Clerk", "last_name": "Maxwell", "nickname": "field_equations", "active_directory_username": "jmaxwell", "birthday": "1993-06-13", "emails": [{"type": "primary", "email_address": "james.maxwell@example.com"}], "pronouns": "he/him"}'::jsonb,
-    '{"discord_username": "jcm_fields"}'::jsonb,
-    '{"membership_status": "pending", "membership_level": "Basic Membership", "stripe_product_id": "prod_Tws7udZJSXI9DU", "stripe_subscription_id": "sub_fake_maxwell"}'::jsonb,
-    '{"id_check_1": "", "id_check_2": "", "waiver_signed_date": "2026-03-30", "terms_of_use_accepted": "true", "essentials_form": "", "orientation_completed_date": "", "is_21_or_older": false}'::jsonb,
-    '{"rfid_tags": []}'::jsonb,
-    '{"authorizations": [], "computer_authorizations": []}'::jsonb,
+    '{"first_name": "Edward", "last_name": "Teller", "nickname": "h_bomb_ed", "active_directory_username": "eteller", "emails": [{"type": "primary", "email_address": "edward.teller@example.com"}]}'::jsonb,
+    '{"discord_username": "eteller_phys"}'::jsonb,
+    '{"membership_status": "banned", "membership_level": "Membership", "member_since": "2019-04-01"}'::jsonb,
+    '{"id_check_1": "IL", "id_check_2": "DL-6677", "waiver_signed_date": "2019-04-01", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2019-04-08"}'::jsonb,
     NULL,
-    '{"notes": [{"date": "2026-03-30", "author": "System", "text": "New signup via Stripe"}]}'::jsonb
+    '{"authorizations": ["Table Saw", "Mig Welders"], "computer_authorizations": []}'::jsonb,
+    NULL,
+    '{"notes": [{"date": "2019-04-08", "author": "System", "text": "Completed orientation"}, {"date": "2025-01-15", "author": "Board", "text": "Banned — repeated safety violations in metalworking area"}]}'::jsonb
 );
 
-/* ID 31 - Lise Meitner, Pending — Stripe paid */
+/* ID 30 - Fritz Haber, Banned
+ * Former member banned for code of conduct violation.
+ */
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
-    '{"first_name": "Lise", "last_name": "Meitner", "nickname": "fission_pioneer", "active_directory_username": "lmeitner", "birthday": "1997-11-07", "emails": [{"type": "primary", "email_address": "lise.meitner@example.com"}], "pronouns": "she/her"}'::jsonb,
+    '{"first_name": "Fritz", "last_name": "Haber", "nickname": "ammonia_fritz", "active_directory_username": "fhaber", "emails": [{"type": "primary", "email_address": "fritz.haber@example.com"}]}'::jsonb,
     NULL,
-    '{"membership_status": "pending", "membership_level": "Basic Membership", "stripe_product_id": "prod_Tws7udZJSXI9DU", "stripe_subscription_id": "sub_fake_meitner"}'::jsonb,
-    '{"id_check_1": "", "id_check_2": "", "waiver_signed_date": "2026-03-31", "terms_of_use_accepted": "true", "essentials_form": "", "orientation_completed_date": "", "is_21_or_older": false}'::jsonb,
-    '{"rfid_tags": []}'::jsonb,
-    '{"authorizations": [], "computer_authorizations": []}'::jsonb,
+    '{"membership_status": "banned", "membership_level": "Membership with Storage", "member_since": "2021-08-15"}'::jsonb,
+    '{"id_check_1": "IL", "id_check_2": "DL-7788", "waiver_signed_date": "2021-08-15", "terms_of_use_accepted": "true", "essentials_form": "completed", "orientation_completed_date": "2021-08-22"}'::jsonb,
     NULL,
-    '{"notes": [{"date": "2026-03-31", "author": "System", "text": "New signup via Stripe"}]}'::jsonb
-);
-
-/* ID 32 - Srinivasa Ramanujan, Pending — Stripe paid */
-INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
-    '{"first_name": "Srinivasa", "last_name": "Ramanujan", "nickname": "infinite_series", "active_directory_username": "sramanujan", "birthday": "2001-12-22", "emails": [{"type": "primary", "email_address": "srinivasa.ramanujan@example.com"}], "pronouns": "he/him"}'::jsonb,
-    '{"discord_username": "ramanujan_math"}'::jsonb,
-    '{"membership_status": "pending", "membership_level": "Basic Membership", "stripe_product_id": "prod_Tws7udZJSXI9DU", "stripe_subscription_id": "sub_fake_ramanujan"}'::jsonb,
-    '{"id_check_1": "", "id_check_2": "", "waiver_signed_date": "2026-03-31", "terms_of_use_accepted": "true", "essentials_form": "", "orientation_completed_date": "", "is_21_or_older": false}'::jsonb,
-    '{"rfid_tags": []}'::jsonb,
-    '{"authorizations": [], "computer_authorizations": []}'::jsonb,
-    NULL,
-    '{"notes": [{"date": "2026-03-31", "author": "System", "text": "New signup via Stripe"}]}'::jsonb
-);
-
-/* ID 33 - Barbara McClintock, Pending — NO Stripe (cash payment) */
-INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
-    '{"first_name": "Barbara", "last_name": "McClintock", "nickname": "jumping_genes", "active_directory_username": "bmcclintock", "birthday": "1988-06-16", "emails": [{"type": "primary", "email_address": "barbara.mcclintock@example.com"}], "pronouns": "she/her"}'::jsonb,
-    '{"discord_username": "barb_genetics"}'::jsonb,
-    '{"membership_status": "pending", "membership_level": "Member - Cash Payment"}'::jsonb,
-    '{"id_check_1": "", "id_check_2": "", "waiver_signed_date": "2026-04-01", "terms_of_use_accepted": "true", "essentials_form": "", "orientation_completed_date": "", "is_21_or_older": false}'::jsonb,
-    '{"rfid_tags": []}'::jsonb,
-    '{"authorizations": [], "computer_authorizations": []}'::jsonb,
-    NULL,
-    '{"notes": [{"date": "2026-04-01", "author": "System", "text": "New signup — cash payment"}]}'::jsonb
-);
-
-/* ID 34 - Subrahmanyan Chandrasekhar, Pending — Stripe paid (with storage) */
-INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
-    '{"first_name": "Subrahmanyan", "last_name": "Chandrasekhar", "nickname": "chandra_limit", "active_directory_username": "schandrasekhar", "birthday": "1999-10-19", "emails": [{"type": "primary", "email_address": "subrahmanyan.chandrasekhar@example.com"}]}'::jsonb,
-    NULL,
-    '{"membership_status": "pending", "membership_level": "Membership with Storage", "stripe_product_id": "prod_TwsAMgaH3iLJ9c", "stripe_subscription_id": "sub_fake_chandra"}'::jsonb,
-    '{"id_check_1": "", "id_check_2": "", "waiver_signed_date": "2026-04-01", "terms_of_use_accepted": "true", "essentials_form": "", "orientation_completed_date": "", "is_21_or_older": false}'::jsonb,
-    '{"rfid_tags": []}'::jsonb,
-    '{"authorizations": [], "computer_authorizations": []}'::jsonb,
-    NULL,
-    '{"notes": [{"date": "2026-04-01", "author": "System", "text": "New signup via Stripe"}]}'::jsonb
-);
-
-/* ID 35 - Dorothy Hodgkin, Pending — Stripe paid */
-INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
-    '{"first_name": "Dorothy", "last_name": "Hodgkin", "nickname": "crystal_solver", "active_directory_username": "dhodgkin", "birthday": "1996-05-12", "emails": [{"type": "primary", "email_address": "dorothy.hodgkin@example.com"}], "pronouns": "she/her"}'::jsonb,
-    '{"discord_username": "dorothy_xtal"}'::jsonb,
-    '{"membership_status": "pending", "membership_level": "Basic Membership", "stripe_product_id": "prod_Tws7udZJSXI9DU", "stripe_subscription_id": "sub_fake_hodgkin"}'::jsonb,
-    '{"id_check_1": "", "id_check_2": "", "waiver_signed_date": "2026-04-01", "terms_of_use_accepted": "true", "essentials_form": "", "orientation_completed_date": "", "is_21_or_older": false}'::jsonb,
-    '{"rfid_tags": []}'::jsonb,
-    '{"authorizations": [], "computer_authorizations": []}'::jsonb,
-    NULL,
-    '{"notes": [{"date": "2026-04-01", "author": "System", "text": "New signup via Stripe"}]}'::jsonb
+    '{"authorizations": ["Band Saw", "Ender 3D Printers", "Cold Metals Basic"], "computer_authorizations": ["Epilog Authorized Users"]}'::jsonb,
+    '{"storage_id": "D-12", "storage_area": "South Wall"}'::jsonb,
+    '{"notes": [{"date": "2021-08-22", "author": "System", "text": "Completed orientation"}, {"date": "2024-11-01", "author": "Board", "text": "Banned — code of conduct violation"}]}'::jsonb
 );
 
 
@@ -550,7 +502,7 @@ INSERT INTO member_to_role (role_id, member_id) VALUES (3, 6);   /* Margaret Ham
 SELECT setval(pg_get_serial_sequence('member', 'id'), (SELECT MAX(id) FROM member));
 
 /* That's all the seed data! On first boot the dispatcher will
- * process the ~25 member_changes records created by the insert
+ * process the ~30 member_changes records created by the insert
  * triggers. With DEV_MODE=true on the worker services, these
  * will be handled gracefully without trying to talk to hardware.
  */
