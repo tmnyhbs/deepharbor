@@ -11,7 +11,7 @@ flask_session/
 .claude
 *.code-workspace
 pg/db-init/02-seed_data.sql
-pg/sql/seed_data.local.sql
+pg/sql/seed_data.sql
 .env.local*
 .env.production*
 .env.staging*

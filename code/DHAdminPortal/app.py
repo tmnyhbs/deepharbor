@@ -428,7 +428,7 @@ def requires_view_permission(tab_name):
 ###############################################################################
 
 # Preset users for the dev login page. These match the seed data in
-# pg/sql/seed_data.sql — don't change the IDs without updating the SQL.
+# pg/sql/seed_data.sql.example — don't change the IDs without updating the SQL.
 ADMIN_DEV_USERS = [
     {"member_id": 1, "name": "Ada Lovelace", "email": "ada.lovelace@example.com", "role": "Administrator"},
     {"member_id": 3, "name": "Nikola Tesla", "email": "nikola.tesla@example.com", "role": "Authorizer"},

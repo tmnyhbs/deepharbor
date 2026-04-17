@@ -1,19 +1,24 @@
 /*
- * Deep Harbor Seed Data
+ * Deep Harbor Seed Data — template
  *
- * This file populates the database with ~30 fictional members for
- * local development and testing. It runs as 02-seed_data.sql during
- * Docker first-boot init, after the schema (01-pgsql_schema.sql)
- * is already in place.
+ * This is the COMMITTED template for ~30 fictional dev members. Docker
+ * does NOT load this file directly. It loads pg/sql/seed_data.sql
+ * (gitignored working copy). To use this template:
+ *
+ *   tools/seed_data.sh static    # copies this file → seed_data.sql
+ *   ./dh_dev.sh reset            # wipes DB and reloads from seed_data.sql
+ *
+ * The seed_data.sql / seed_data.sql.example split follows the same
+ * pattern as config.ini / config.ini.example used throughout the repo.
  *
  * IMPORTANT: The first 10 members are "dev bypass" users with stable,
- * predictable IDs (1-10). Issue #13 (dev auth bypass) references
- * these IDs directly. Don't reorder them.
+ * predictable IDs (1-10). Issue #13 (dev auth bypass) references these
+ * IDs directly. Don't reorder them.
  *
- * Inserting members fires the audit trigger, log_member_changes(),
- * and pg_notify. First boot will be noisy as the dispatcher processes
- * ~25 change events. This is expected and harmless with DEV_MODE=true
- * on the worker services.
+ * Inserting members fires the audit trigger, log_member_changes(), and
+ * pg_notify. First boot will be noisy as the dispatcher processes ~25
+ * change events. This is expected and harmless with DEV_MODE=true on
+ * the worker services.
  */
 
 

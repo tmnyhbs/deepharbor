@@ -51,8 +51,16 @@ print_access() {
 }
 
 preflight() {
-    if [[ ! -f "pg/sql/seed_data.local.sql" ]]; then
-        echo "ERROR: No seed data found at pg/sql/seed_data.local.sql"
+    # Migration: the seed working copy was renamed from seed_data.local.sql
+    # to seed_data.sql to match the repo's config.ini.example convention.
+    # If a pre-rename file still exists, move it into place.
+    if [[ -f "pg/sql/seed_data.local.sql" ]] && [[ ! -f "pg/sql/seed_data.sql" ]]; then
+        echo "Migrating pg/sql/seed_data.local.sql → pg/sql/seed_data.sql..."
+        mv "pg/sql/seed_data.local.sql" "pg/sql/seed_data.sql"
+    fi
+
+    if [[ ! -f "pg/sql/seed_data.sql" ]]; then
+        echo "ERROR: No seed data found at pg/sql/seed_data.sql"
         echo "Run '$0 setup' first, or generate seed data:"
         echo "  tools/seed_data.sh generate"
         exit 1
@@ -98,8 +106,8 @@ cmd_setup() {
 
     # Step 2: Generate seed data
     echo "--- Generating seed data ---"
-    if [[ -f "pg/sql/seed_data.local.sql" ]] && [[ -s "pg/sql/seed_data.local.sql" ]]; then
-        echo "  Seed data already exists ($(wc -l < pg/sql/seed_data.local.sql) lines)"
+    if [[ -f "pg/sql/seed_data.sql" ]] && [[ -s "pg/sql/seed_data.sql" ]]; then
+        echo "  Seed data already exists ($(wc -l < pg/sql/seed_data.sql) lines)"
         echo "  To regenerate: tools/seed_data.sh generate"
     else
         if command -v uv &> /dev/null; then
@@ -182,10 +190,16 @@ cmd_clean() {
         echo "Removed $config_count config.ini files"
     fi
 
-    # Remove generated seed data
+    # Remove the seed data working copy (template seed_data.sql.example is
+    # committed and never touched)
+    if [[ -f "pg/sql/seed_data.sql" ]]; then
+        rm -f pg/sql/seed_data.sql
+        echo "Removed pg/sql/seed_data.sql"
+    fi
+    # Also clean up the pre-rename filename if a stale copy is around
     if [[ -f "pg/sql/seed_data.local.sql" ]]; then
         rm -f pg/sql/seed_data.local.sql
-        echo "Removed pg/sql/seed_data.local.sql"
+        echo "Removed pg/sql/seed_data.local.sql (legacy name)"
     fi
 
     echo ""
