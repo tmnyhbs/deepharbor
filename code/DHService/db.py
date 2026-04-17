@@ -303,27 +303,40 @@ def search_members_paginated(query: str, page: int = 1, per_page: int = 25,
     logger.debug(f"Paginated search found {len(members)} members (total={total})")
     return _paginated_response(members, total, page, per_page)
 
-def add_update_identity(identity_dict):
-    logger.debug(f"Adding/updating member identity: {identity_dict}")
-    
+def add_update_identity(identity_dict, member_id=None):
+    # When member_id is provided by the caller (standard update path), update
+    # that row directly. Email-based lookup is only used as a fallback for the
+    # signup path where the caller does not yet have a member_id. Looking up
+    # by email for updates is unsafe because multiple members can share an
+    # email (seed data, race conditions), and SELECT ... fetchone() returns
+    # a non-deterministic row — which would overwrite the wrong member.
+    logger.debug(f"Adding/updating member identity for member_id={member_id}: {identity_dict}")
+
     # Extract modified_by if present and identity_dict is a dictionary
     last_updated_by = None
     if isinstance(identity_dict, dict):
         last_updated_by = identity_dict.pop("modified_by", None)
-    
-    email_address = get_primary_email(identity_dict)
-    if not email_address:
-        error_message = "No primary email address found in payload."
+
+    caller_provided_member_id = member_id is not None
+    if caller_provided_member_id and member_id <= 0:
+        error_message = f"Invalid member_id: {member_id} (must be positive)."
         logger.error(error_message)
         return prepare_return_payload(None, error_message)
 
-    member_id = get_member_id_from_email(email_address)
+    if not caller_provided_member_id:
+        email_address = get_primary_email(identity_dict)
+        if not email_address:
+            error_message = "No primary email address found in payload and no member_id provided."
+            logger.error(error_message)
+            return prepare_return_payload(None, error_message)
+        member_id = get_member_id_from_email(email_address)
+
     error_message = "OK"
-    
+
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cur:
-                if member_id:
+                if member_id is not None:
                     if last_updated_by is not None:
                         cur.execute(
                             "UPDATE member SET identity = %s, last_updated_by = %s WHERE id = %s",
@@ -334,7 +347,12 @@ def add_update_identity(identity_dict):
                             "UPDATE member SET identity = %s WHERE id = %s",
                             (json.dumps(identity_dict), member_id),
                         )
+                    if cur.rowcount == 0:
+                        error_message = f"No member found with id {member_id}; nothing updated."
+                        logger.warning(error_message)
+                        return prepare_return_payload(None, error_message)
                 else:
+                    # Signup path: no caller member_id and email lookup found no match — INSERT
                     if last_updated_by is not None:
                         cur.execute(
                             "INSERT INTO member (identity, last_updated_by) VALUES (%s, %s) RETURNING id",
@@ -354,7 +372,7 @@ def add_update_identity(identity_dict):
     except Exception as e:
         error_message = f"Error adding/updating member identity: {e}"
         logger.error(error_message)
-    
+
     return prepare_return_payload(member_id, error_message)
 
 def change_email_address(email_change_dict):

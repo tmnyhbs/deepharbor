@@ -162,11 +162,17 @@ async def get_member_by_stripe_customer_id(current_user: AuthenticatedClient, st
 async def update_member_identity(
     current_client: AuthenticatedClient,
     request: Request,
+    x_member_id: Annotated[int | None, Header()] = None,
 ):
-    """Add or update member identity information."""
+    """Add or update member identity information.
+
+    When X-Member-ID is provided, updates that member by id. When omitted
+    (signup path), falls back to matching an existing member by primary
+    email or inserting a new row.
+    """
     data = await request.json()
-    logger.debug(f"In update_member_identity with {data}")
-    return db.add_update_identity(data)
+    logger.debug(f"In update_member_identity with member_id={x_member_id}, data={data}")
+    return db.add_update_identity(data, member_id=x_member_id)
 
 @app.post("/v1/member/change_email_address/")
 async def change_member_email_address(
