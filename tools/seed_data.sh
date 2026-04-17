@@ -115,6 +115,17 @@ cmd_status() {
     else
         echo "  Type: Static (hand-crafted)"
     fi
+
+    # Drift check against the committed template. Useful for static
+    # working copies (tells you whether someone's hand-edited the file);
+    # less meaningful for generated copies, which are expected to differ.
+    if [[ -f "$STATIC_SOURCE" ]]; then
+        if cmp -s "$SEED_DATA_FILE" "$STATIC_SOURCE"; then
+            echo "  Matches template: yes"
+        else
+            echo "  Matches template: no (use '$0 static' to restore)"
+        fi
+    fi
 }
 
 # Main dispatch
