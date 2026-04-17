@@ -677,7 +677,7 @@ app.jinja_env.globals.update(dev_banner=DEV_BANNER)  # Used in dev banner
 ###############################################################################
 
 # Preset users for the dev login page. These match the seed data in
-# pg/sql/seed_data.sql — don't change the IDs without updating the SQL.
+# pg/sql/seed_data.sql.example — don't change the IDs without updating the SQL.
 MEMBER_DEV_USERS = [
     {"member_id": 7, "name": "Rosalind Franklin", "email": "rosalind.franklin@example.com", "description": "Active member with full data"},
     {"member_id": 16, "name": "Dorothy Vaughan", "email": "dorothy.vaughan@example.com", "description": "Brand new member, minimal data"},
