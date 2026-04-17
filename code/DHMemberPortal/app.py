@@ -502,9 +502,13 @@ def member_update_profile():
     member_id = session['member_id']
     user_email = session.get('email')
 
+    # Fetch raw identity JSONB directly (not v_member_info via get_full_member_info)
+    # so fields like birthday that aren't surfaced by the view are preserved when
+    # we round-trip through the save.
     try:
-        member_info = dhservices.get_full_member_info(access_token, member_id)
-        identity_data = (member_info.get('identity') if isinstance(member_info, dict) else {}) or {}
+        identity_data = dhservices.get_member_identity(access_token, member_id) or {}
+        if not isinstance(identity_data, dict):
+            identity_data = {}
     except Exception as e:
         logger.error(f"Error fetching identity for update: {str(e)}", exc_info=True)
         identity_data = {}
