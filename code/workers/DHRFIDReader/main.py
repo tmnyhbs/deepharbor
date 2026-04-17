@@ -256,6 +256,12 @@ def process_queue():
                 os.fsync(f.fileno())
             # Rename is an atomic operation
             os.rename(tmp_resp, final_resp)
+
+            # Throttle between board operations to protect old controller
+            # hardware from being overwhelmed by rapid back-to-back commands
+            BOARD_THROTTLE_SECONDS = 3
+            logger.debug(f"Throttling {BOARD_THROTTLE_SECONDS}s before next board operation")
+            time.sleep(BOARD_THROTTLE_SECONDS)
         except Exception as e:
             logger.error(f"Error processing {msg_id}: {e}")
         finally:
