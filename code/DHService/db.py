@@ -317,7 +317,13 @@ def add_update_identity(identity_dict, member_id=None):
     if isinstance(identity_dict, dict):
         last_updated_by = identity_dict.pop("modified_by", None)
 
-    if member_id is None:
+    caller_provided_member_id = member_id is not None
+    if caller_provided_member_id and member_id <= 0:
+        error_message = f"Invalid member_id: {member_id} (must be positive)."
+        logger.error(error_message)
+        return prepare_return_payload(None, error_message)
+
+    if not caller_provided_member_id:
         email_address = get_primary_email(identity_dict)
         if not email_address:
             error_message = "No primary email address found in payload and no member_id provided."
@@ -326,11 +332,11 @@ def add_update_identity(identity_dict, member_id=None):
         member_id = get_member_id_from_email(email_address)
 
     error_message = "OK"
-    
+
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cur:
-                if member_id:
+                if member_id is not None:
                     if last_updated_by is not None:
                         cur.execute(
                             "UPDATE member SET identity = %s, last_updated_by = %s WHERE id = %s",
@@ -341,7 +347,12 @@ def add_update_identity(identity_dict, member_id=None):
                             "UPDATE member SET identity = %s WHERE id = %s",
                             (json.dumps(identity_dict), member_id),
                         )
+                    if cur.rowcount == 0:
+                        error_message = f"No member found with id {member_id}; nothing updated."
+                        logger.warning(error_message)
+                        return prepare_return_payload(None, error_message)
                 else:
+                    # Signup path: no caller member_id and email lookup found no match — INSERT
                     if last_updated_by is not None:
                         cur.execute(
                             "INSERT INTO member (identity, last_updated_by) VALUES (%s, %s) RETURNING id",
@@ -361,7 +372,7 @@ def add_update_identity(identity_dict, member_id=None):
     except Exception as e:
         error_message = f"Error adding/updating member identity: {e}"
         logger.error(error_message)
-    
+
     return prepare_return_payload(member_id, error_message)
 
 def change_email_address(email_change_dict):
