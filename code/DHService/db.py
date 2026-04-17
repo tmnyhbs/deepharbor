@@ -303,21 +303,28 @@ def search_members_paginated(query: str, page: int = 1, per_page: int = 25,
     logger.debug(f"Paginated search found {len(members)} members (total={total})")
     return _paginated_response(members, total, page, per_page)
 
-def add_update_identity(identity_dict):
-    logger.debug(f"Adding/updating member identity: {identity_dict}")
-    
+def add_update_identity(identity_dict, member_id=None):
+    # When member_id is provided by the caller (standard update path), update
+    # that row directly. Email-based lookup is only used as a fallback for the
+    # signup path where the caller does not yet have a member_id. Looking up
+    # by email for updates is unsafe because multiple members can share an
+    # email (seed data, race conditions), and SELECT ... fetchone() returns
+    # a non-deterministic row — which would overwrite the wrong member.
+    logger.debug(f"Adding/updating member identity for member_id={member_id}: {identity_dict}")
+
     # Extract modified_by if present and identity_dict is a dictionary
     last_updated_by = None
     if isinstance(identity_dict, dict):
         last_updated_by = identity_dict.pop("modified_by", None)
-    
-    email_address = get_primary_email(identity_dict)
-    if not email_address:
-        error_message = "No primary email address found in payload."
-        logger.error(error_message)
-        return prepare_return_payload(None, error_message)
 
-    member_id = get_member_id_from_email(email_address)
+    if member_id is None:
+        email_address = get_primary_email(identity_dict)
+        if not email_address:
+            error_message = "No primary email address found in payload and no member_id provided."
+            logger.error(error_message)
+            return prepare_return_payload(None, error_message)
+        member_id = get_member_id_from_email(email_address)
+
     error_message = "OK"
     
     try:
