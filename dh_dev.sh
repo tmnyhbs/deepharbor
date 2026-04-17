@@ -3,14 +3,25 @@
 # dh_dev.sh — Manage the Deep Harbor dev environment
 #
 # Usage:
-#   ./dh_dev.sh setup       One-time setup: copy configs, generate seed data, start
-#   ./dh_dev.sh start       Build and start the dev environment
-#   ./dh_dev.sh stop        Stop containers (database persists)
-#   ./dh_dev.sh reset       Full reset: remove volumes, rebuild, start (re-seeds DB)
-#   ./dh_dev.sh status      Show container status
-#   ./dh_dev.sh clean       Remove all dev artifacts (containers, volumes, configs, seed data)
+#   ./dh_dev.sh setup                   One-time setup: copy configs, seed data, start
+#   ./dh_dev.sh start                   Build and start the dev environment
+#   ./dh_dev.sh stop                    Stop containers (database persists)
+#   ./dh_dev.sh reset                   Wipe DB volume and reload from seed file
+#   ./dh_dev.sh reseed [static|generate [N] [SEED]]
+#                                       Switch seed file and reset in one step
+#   ./dh_dev.sh status                  Show container status
+#   ./dh_dev.sh clean                   Remove all dev artifacts (containers, volumes,
+#                                       configs, seed data)
 #
 # After running setup once, use start/stop/reset for day-to-day operations.
+#
+# Notes:
+#   - `reset` wipes the DB volume and re-runs initdb against the current
+#     pg/sql/seed_data.sql. It does NOT touch that file — iterate on seed
+#     edits across multiple resets without losing them.
+#   - `setup` skips steps whose output already exists (config.ini files and
+#     seed data working copy). Use `clean` + `setup` to start truly fresh,
+#     or `reseed` to regenerate just the seed.
 
 set -euo pipefail
 
@@ -25,20 +36,27 @@ usage() {
     echo "Usage: $0 <command>"
     echo ""
     echo "Commands:"
-    echo "  setup    One-time first-run setup (copy configs, seed data, build, start)"
-    echo "  start    Build and start the dev environment"
-    echo "  stop     Stop containers (database volume preserved)"
-    echo "  reset    Full reset: stop, remove volumes, rebuild, start"
-    echo "  clean    Remove all dev artifacts (return to fresh clone state)"
-    echo "  status   Show container status"
+    echo "  setup                           First-run setup (copy configs + seed, build,"
+    echo "                                  start). Skips anything that already exists."
+    echo "  start                           Build and start (uses existing configs/seed)"
+    echo "  stop                            Stop containers (database volume preserved)"
+    echo "  reset                           Wipe DB volume, rebuild, start. Reloads the"
+    echo "                                  seed file into the fresh DB but does not"
+    echo "                                  modify the seed file itself."
+    echo "  reseed [static|generate [N] [SEED]]"
+    echo "                                  Switch the seed file (via tools/seed_data.sh)"
+    echo "                                  and then reset. One-step seed swap."
+    echo "  clean                           Remove all dev artifacts (return to fresh"
+    echo "                                  clone state: no volumes, configs, or seed)"
+    echo "  status                          Show container status"
     echo ""
     echo "Examples:"
-    echo "  $0 setup              First time? Run this."
-    echo "  $0 start              Start after a previous stop"
-    echo "  $0 stop               Stop without losing data"
-    echo "  $0 reset              Nuke everything and start fresh"
-    echo "  $0 clean              Remove everything, back to fresh clone"
-    echo "  $0 status             Check what's running"
+    echo "  $0 setup                   First time? Run this."
+    echo "  $0 reset                   Fresh DB, same seed file"
+    echo "  $0 reseed static           Swap to hand-crafted seed and reset"
+    echo "  $0 reseed generate         Swap to 25 random members and reset"
+    echo "  $0 reseed generate 100     Swap to 110 random members and reset"
+    echo "  $0 clean                   Back to fresh clone state"
 }
 
 print_access() {
@@ -148,8 +166,9 @@ cmd_stop() {
     $COMPOSE down
 
     echo "Dev environment stopped. Database volume preserved."
-    echo "Run '$0 start' to restart (data persists)."
-    echo "Run '$0 reset' for a full reset (re-seeds database)."
+    echo "Run '$0 start'  to restart (data persists)."
+    echo "Run '$0 reset'  to wipe the DB and reload the seed file."
+    echo "Run '$0 reseed' to switch seeds and reset in one step."
 }
 
 cmd_reset() {
@@ -174,6 +193,40 @@ cmd_reset() {
     MINUTES=$((DURATION / 60))
     SECS=$((DURATION % 60))
     echo "Total duration: $MINUTES minutes, $SECS seconds"
+}
+
+# Switch the seed data working copy and reset the DB in one step.
+# Thin wrapper around tools/seed_data.sh + cmd_reset so users don't
+# have to remember two commands.
+cmd_reseed() {
+    local mode="${1:-}"
+    case "$mode" in
+        static)
+            tools/seed_data.sh static
+            ;;
+        generate)
+            tools/seed_data.sh generate "${2:-15}" "${3:-}"
+            ;;
+        "")
+            echo "Usage: $0 reseed <static|generate [N] [SEED]>"
+            echo ""
+            echo "Examples:"
+            echo "  $0 reseed static           Swap to hand-crafted seed and reset"
+            echo "  $0 reseed generate         Swap to 25 random members and reset"
+            echo "  $0 reseed generate 100     Swap to 110 random members and reset"
+            echo "  $0 reseed generate 50 abc  Reproducible: same seed = same members"
+            exit 1
+            ;;
+        *)
+            echo "Unknown reseed mode: $mode"
+            echo "Use 'static' or 'generate [N] [SEED]'"
+            exit 1
+            ;;
+    esac
+
+    echo ""
+    echo "Applying new seed to DB via reset..."
+    cmd_reset
 }
 
 cmd_clean() {
@@ -223,6 +276,9 @@ case "${1:-}" in
         ;;
     reset)
         cmd_reset
+        ;;
+    reseed)
+        cmd_reseed "${2:-}" "${3:-}" "${4:-}"
         ;;
     clean)
         cmd_clean
