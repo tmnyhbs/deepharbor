@@ -388,14 +388,11 @@ def _get_authenticated_member_info():
         return None, redirect(url_for("index") if AUTH_MODE == "dev" else url_for("login"))
 
     access_token = session['access_token']
-    user_email = session['email']
+    member_id = session['member_id']
 
     try:
-        logger.info(f"Fetching member data for user: {user_email}")
-        member_data = dhservices.get_member_id(access_token, user_email)
-        member_id = member_data.get("member_id")
+        logger.info(f"Fetching member data for member {member_id}")
         member_info = dhservices.get_full_member_info(access_token, member_id)
-        logger.info(f"Member info loaded for member {member_id}")
         return member_info, None
     except Exception as e:
         logger.error(f"Error fetching member data: {str(e)}", exc_info=True)
