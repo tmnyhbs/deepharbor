@@ -114,8 +114,11 @@ def get_member_id_from_email(email_address: str) -> int | None:
         with conn.cursor() as cur:
             cur.execute(
                 """SELECT id FROM member
-                   WHERE identity->'emails' @> %s::jsonb""",
-                (json.dumps([{"type": "primary", "email_address": email_address}]),),
+                   WHERE EXISTS (
+                       SELECT 1 FROM jsonb_array_elements(identity->'emails') AS e
+                       WHERE LOWER(e->>'email_address') = LOWER(%s)
+                         AND e->>'type' = 'primary')""",
+                (email_address,),
             )
             result = cur.fetchone()
     if result:
