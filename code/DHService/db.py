@@ -501,7 +501,7 @@ def is_username_available(username: str) -> bool:
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT COUNT(1) FROM member WHERE identity->>'active_directory_username' = %s",
+                "SELECT COUNT(1) FROM member WHERE LOWER(identity->>'active_directory_username') = LOWER(%s)",
                 (username,),
             )
             result = cur.fetchone()
