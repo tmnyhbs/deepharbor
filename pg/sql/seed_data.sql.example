@@ -411,11 +411,11 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
  * (no ID check), no RFID tags, no authorizations.
  * ===================================================================== */
 
-/* ID 26 - Rosalind Franklin, Pending — Stripe paid */
+/* ID 26 - Niels Bohr, Pending — Stripe paid */
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
-    '{"first_name": "Rosalind", "last_name": "Franklin", "nickname": "photo51", "birthday": "1990-07-25", "emails": [{"type": "primary", "email_address": "rosalind.franklin@example.com"}], "pronouns": "she/her"}'::jsonb,
-    '{"discord_username": "rfranklin_xray"}'::jsonb,
-    '{"membership_status": "pending", "membership_level": "Membership", "stripe_product_id": "prod_Tws7udZJSXI9DU", "stripe_subscription_id": "sub_fake_franklin"}'::jsonb,
+    '{"first_name": "Niels", "last_name": "Bohr", "nickname": "quantum_dane", "birthday": "1990-07-25", "emails": [{"type": "primary", "email_address": "niels.bohr@example.com"}], "pronouns": "he/him"}'::jsonb,
+    '{"discord_username": "nbohr_quantum"}'::jsonb,
+    '{"membership_status": "pending", "membership_level": "Membership", "stripe_product_id": "prod_Tws7udZJSXI9DU", "stripe_subscription_id": "sub_fake_bohr"}'::jsonb,
     '{"id_check_1": "", "id_check_2": "", "waiver_signed_date": "2026-03-28", "terms_of_use_accepted": "true", "essentials_form": "", "orientation_completed_date": "", "is_21_or_older": false}'::jsonb,
     '{"rfid_tags": []}'::jsonb,
     '{"authorizations": [], "computer_authorizations": []}'::jsonb,
@@ -435,9 +435,9 @@ INSERT INTO member (identity, connections, status, forms, access, authorizations
     '{"notes": [{"date": "2026-03-29", "author": "System", "text": "New signup via Stripe"}]}'::jsonb
 );
 
-/* ID 28 - Emmy Noether, Pending — NO Stripe (cash payment) */
+/* ID 28 - Lise Meitner, Pending — NO Stripe (cash payment) */
 INSERT INTO member (identity, connections, status, forms, access, authorizations, extras, notes) VALUES (
-    '{"first_name": "Emmy", "last_name": "Noether", "nickname": "symmetry_queen", "birthday": "1995-03-23", "emails": [{"type": "primary", "email_address": "emmy.noether@example.com"}]}'::jsonb,
+    '{"first_name": "Lise", "last_name": "Meitner", "nickname": "fission_pioneer", "birthday": "1995-03-23", "emails": [{"type": "primary", "email_address": "lise.meitner@example.com"}], "pronouns": "she/her"}'::jsonb,
     NULL,
     '{"membership_status": "pending", "membership_level": "Member - Cash Payment"}'::jsonb,
     '{"id_check_1": "", "id_check_2": "", "waiver_signed_date": "2026-03-30", "terms_of_use_accepted": "true", "essentials_form": "", "orientation_completed_date": "", "is_21_or_older": false}'::jsonb,
