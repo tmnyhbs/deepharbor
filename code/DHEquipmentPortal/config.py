@@ -44,6 +44,12 @@ if os.environ.get("DH_EQUIP_CLIENT_SECRET"):
         config.add_section("dh_equipment")
     config.set("dh_equipment", "client_secret", os.environ["DH_EQUIP_CLIENT_SECRET"])
 
+# DHAdminPortal base URL (for Settings redirect link)
+if os.environ.get("DH_ADMIN_BASE_URL"):
+    if not config.has_section("dh_admin"):
+        config.add_section("dh_admin")
+    config.set("dh_admin", "base_url", os.environ["DH_ADMIN_BASE_URL"])
+
 # Flask secret key
 if os.environ.get("DH_SECRET_KEY"):
     if not config.has_section("flask"):

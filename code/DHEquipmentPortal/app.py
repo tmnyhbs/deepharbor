@@ -103,6 +103,7 @@ def index():
             member_id=session.get("member_id"),
             user_role=session.get("user_role", "Unknown"),
             user_permissions=session.get("user_permissions", {}),
+            admin_base_url=config.get("dh_admin", "base_url", fallback="http://localhost:5001"),
         )
 
 
