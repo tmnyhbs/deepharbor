@@ -564,9 +564,6 @@ def api_get_config(key):
 def api_set_config(key):
     return _proxy_put(f"/v1/equipment/config/{key}")
 
-@app.route("/api/export/<entity>", methods=["GET"])
-def api_export(entity):
-    return _proxy_get(f"/v1/equipment/export/{entity}")
 
 
 @app.route("/api/webhook-test", methods=["POST"])

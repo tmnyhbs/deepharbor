@@ -755,26 +755,3 @@ async def delete_media(key: str, request: Request, current_client: Authenticated
     except Exception as e:
         logger.warning(f"Storage delete failed for key {key!r}: {e}")
         raise HTTPException(500, "File delete failed")
-
-
-###############################################################################
-# Export
-###############################################################################
-
-@app.get("/v1/equipment/export/{entity}")
-async def export_entity(entity: str, request: Request, current_client: AuthenticatedClient):
-    ctx = _require_view(request, "equipment.config")
-    if entity == "equipment":
-        return db.list_equipment()
-    elif entity == "areas":
-        return db.list_areas()
-    elif entity == "tickets":
-        return db.list_tickets()
-    elif entity == "groups":
-        return db.list_equipment_groups()
-    elif entity == "schedules":
-        return db.list_schedules()
-    elif entity == "maintenance_schedules":
-        return db.list_maintenance_schedules()
-    else:
-        raise HTTPException(400, f"Unknown entity: {entity}")
