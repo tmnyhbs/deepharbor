@@ -164,6 +164,13 @@
                 <div class="content-card-header">Area Breakdown</div>
                 <div class="p-3" id="areaBreakdownContent">Loading...</div>
             </div>
+            <div id="dashOpenTickets" class="content-card mt-3">
+                <div class="content-card-header d-flex align-items-center justify-content-between">
+                    <span><i class="bi bi-ticket-detailed me-2"></i>Open Tickets</span>
+                    <span class="badge bg-secondary" id="dash-ticket-count"></span>
+                </div>
+                <div id="dashOpenTicketsContent">Loading...</div>
+            </div>
         </div>
 
         {# Equipment #}
@@ -1107,17 +1114,57 @@ function loadDashboard() {
         const areas = data.areas || [];
         if (areas.length === 0) {
             document.getElementById('areaBreakdownContent').innerHTML = '<p class="text-muted">No areas configured yet.</p>';
-            return;
+        } else {
+            let html = '<table class="table table-sm mb-0"><thead><tr><th>Area</th><th>Equipment</th><th>In Repair</th></tr></thead><tbody>';
+            areas.forEach(a => {
+                html += `<tr><td>${escHtml(a.name)}</td><td>${a.count}</td><td>${a.in_repair || 0}</td></tr>`;
+            });
+            html += '</tbody></table>';
+            document.getElementById('areaBreakdownContent').innerHTML = html;
         }
-        let html = '<table class="table table-sm mb-0"><thead><tr><th>Area</th><th>Equipment</th><th>In Repair</th></tr></thead><tbody>';
-        areas.forEach(a => {
-            html += `<tr><td>${escHtml(a.name)}</td><td>${a.count}</td><td>${a.in_repair || 0}</td></tr>`;
-        });
-        html += '</tbody></table>';
-        document.getElementById('areaBreakdownContent').innerHTML = html;
     }).catch(err => {
         console.error('Dashboard load error:', err);
     });
+
+    if (canView('equipment.tickets')) {
+        api('GET', '/api/tickets?status=open&status=in_progress&status=on_hold').then(tickets => {
+            const countEl = document.getElementById('dash-ticket-count');
+            const bodyEl  = document.getElementById('dashOpenTicketsContent');
+            if (!tickets || !tickets.length) {
+                if (countEl) countEl.textContent = '0';
+                bodyEl.innerHTML = '<div class="text-center py-3 text-muted small">No open tickets.</div>';
+                return;
+            }
+            if (countEl) countEl.textContent = tickets.length;
+            bodyEl.innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm mb-0">
+                        <thead><tr>
+                            <th>Ticket #</th><th>Equipment</th><th>Title</th>
+                            <th>Priority</th><th>Status</th><th>Opened</th>
+                        </tr></thead>
+                        <tbody>${tickets.map(t => {
+                            const catBadge = t.category === 'maintenance'
+                                ? ' <span class="cat-badge cat-maintenance">maint</span>' : '';
+                            return `<tr onclick="openTicketDetail(${t.id})" style="cursor:pointer">
+                                <td class="text-muted small fw-semibold">${escHtml(t.ticket_number)}${catBadge}</td>
+                                <td class="small">${escHtml(t.equipment_name || '—')}</td>
+                                <td class="small" style="max-width:220px">${escHtml(t.title)}</td>
+                                <td><span class="priority-badge p-${t.priority}">${t.priority}</span></td>
+                                <td><span class="status-badge s-${t.status}">${t.status.replace('_',' ')}</span></td>
+                                <td class="small text-muted">${new Date(t.opened_at).toLocaleDateString()}</td>
+                            </tr>`;
+                        }).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+        }).catch(err => {
+            document.getElementById('dashOpenTicketsContent').innerHTML =
+                `<div class="alert alert-danger m-3 small">Failed to load tickets: ${escHtml(err.message)}</div>`;
+        });
+    } else {
+        document.getElementById('dashOpenTickets').style.display = 'none';
+    }
 }
 
 function escHtml(s) {
@@ -3343,27 +3390,10 @@ function loadSettingsPage() {
         content.innerHTML = '<div class="alert alert-secondary mt-2"><i class="bi bi-lock me-2"></i>Change permission on <code>equipment.config</code> is required to manage settings.</div>';
         return;
     }
-    content.innerHTML = `
-        <ul class="nav nav-tabs mb-3" id="settings-main-tabs">
-            <li class="nav-item"><button class="nav-link active" onclick="showSettingsTab('notifications',this)"><i class="bi bi-bell me-1"></i>Notifications</button></li>
-            <li class="nav-item"><button class="nav-link" onclick="showSettingsTab('export',this)"><i class="bi bi-download me-1"></i>Export</button></li>
-        </ul>
-        <div id="settings-tab-body"></div>`;
-    showSettingsTab('notifications');
+    content.innerHTML = `<div id="settings-tab-body"></div>`;
+    renderNotificationsPanel(document.getElementById('settings-tab-body'));
 }
 
-function showSettingsTab(tab, btn) {
-    document.querySelectorAll('#settings-main-tabs .nav-link').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    else {
-        const first = document.querySelector(`#settings-main-tabs .nav-link`);
-        if (tab === 'notifications' && first) first.classList.add('active');
-    }
-    const body = document.getElementById('settings-tab-body');
-    if (!body) return;
-    if (tab === 'notifications') renderNotificationsPanel(body);
-    else if (tab === 'export')   renderExportPanel(body);
-}
 
 // ── Notification channel + event schema (hardcoded client-side) ──
 const NOTIF_CHANNEL_DEFS = {
@@ -3932,91 +3962,37 @@ async function _saveNotifWebhooks() {
     }
 }
 
-// ── Export Panel ──
-const EXPORT_ENTITIES = [
-    { key: 'equipment',             label: 'Equipment',             icon: 'bi-cpu' },
-    { key: 'areas',                 label: 'Areas',                 icon: 'bi-map' },
-    { key: 'tickets',               label: 'Repair Tickets',        icon: 'bi-ticket-detailed' },
-    { key: 'groups',                label: 'Equipment Groups',      icon: 'bi-collection' },
-    { key: 'schedules',             label: 'Use Schedules',         icon: 'bi-calendar3' },
-    { key: 'maintenance_schedules', label: 'Maintenance Schedules', icon: 'bi-wrench-adjustable' },
-];
 
-function renderExportPanel(container) {
-    container.innerHTML = `
-    <div style="max-width:700px">
-        <div class="content-card">
-            <div class="content-card-header"><i class="bi bi-download me-2"></i>Export Data as CSV</div>
-            <div class="p-3">
-                <p class="text-muted small mb-3">Export any category as a CSV file. Each row is one record; nested objects are JSON-encoded in their column.</p>
-                <div class="row g-3">
-                    ${EXPORT_ENTITIES.map(e => `
-                    <div class="col-sm-6">
-                        <div class="export-entity-card">
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <i class="bi ${e.icon} text-primary" style="font-size:1.25rem"></i>
-                                <span class="fw-semibold small">${escHtml(e.label)}</span>
-                            </div>
-                            <button class="btn btn-outline-secondary btn-sm w-100" id="export-btn-${e.key}"
-                                onclick="doCSVExport('${e.key}')">
-                                <i class="bi bi-file-earmark-spreadsheet me-1"></i>Download CSV
-                            </button>
-                            <div class="mt-1 small" id="export-msg-${e.key}"></div>
-                        </div>
-                    </div>`).join('')}
-                </div>
-            </div>
-        </div>
-    </div>`;
-}
+// ── Module Toggles ──
+// Reads module.* config keys and hides sidebar items + sections for disabled modules.
+const MODULE_SECTION_MAP = {
+    'module.maintenance':    'maintenance',
+    'module.scheduling':     'scheduling',
+    'module.authorizations': 'authorizations',
+};
 
-function _jsonToCSV(data) {
-    if (!data || !data.length) return '';
-    const keys = Object.keys(data[0]);
-    const esc  = v => {
-        if (v === null || v === undefined) return '';
-        const s = typeof v === 'object' ? JSON.stringify(v) : String(v);
-        return (s.includes(',') || s.includes('"') || s.includes('\n'))
-            ? `"${s.replace(/"/g, '""')}"` : s;
-    };
-    return [keys.join(','), ...data.map(row => keys.map(k => esc(row[k])).join(','))].join('\n');
-}
-
-async function doCSVExport(entity) {
-    const btn   = document.getElementById(`export-btn-${entity}`);
-    const msgEl = document.getElementById(`export-msg-${entity}`);
-    if (btn)   btn.disabled = true;
-    if (msgEl) msgEl.innerHTML = '<span class="text-muted"><span class="spinner-border spinner-border-sm me-1"></span>Exporting…</span>';
-    try {
-        const data = await api('GET', `/api/export/${entity}`);
-        if (!data || !data.length) {
-            if (msgEl) msgEl.innerHTML = '<span class="text-muted">No records to export.</span>';
-            return;
+async function _applyModuleToggles() {
+    const keys = Object.keys(MODULE_SECTION_MAP);
+    const results = await Promise.allSettled(
+        keys.map(k => api('GET', `/api/config/${k}`))
+    );
+    results.forEach((r, i) => {
+        const key     = keys[i];
+        const section = MODULE_SECTION_MAP[key];
+        const enabled = r.status !== 'fulfilled' || r.value?.value !== false;
+        if (!enabled) {
+            // Hide sidebar item
+            const sidebarEl = document.querySelector(`.sidebar-item[data-section="${section}"]`);
+            if (sidebarEl) sidebarEl.style.display = 'none';
         }
-        const csv  = _jsonToCSV(data);
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        a.href     = url;
-        a.download = `${entity}_${new Date().toISOString().slice(0,10)}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        if (msgEl) msgEl.innerHTML = `<span class="text-success"><i class="bi bi-check-circle me-1"></i>${data.length} records exported.</span>`;
-        toast(`${entity} exported (${data.length} rows)`, 'success');
-    } catch(e) {
-        if (msgEl) msgEl.innerHTML = `<span class="text-danger">${escHtml(e.message)}</span>`;
-        toast(e.message, 'error');
-    } finally {
-        if (btn) btn.disabled = false;
-    }
+    });
 }
 
 // ── Init ──
 document.addEventListener('DOMContentLoaded', function() {
     filterSidebarByPermissions();
     loadDashboard();
+    _applyModuleToggles();
     loadAreas();
     if (canChange('equipment.items')) {
         const btn = document.getElementById('btn-add-equip');

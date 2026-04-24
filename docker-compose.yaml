@@ -106,6 +106,9 @@ services:
       TZ: "America/Chicago"
       DH_SECRET_KEY: "${DH_SECRET_KEY}"
       DH_API_BASE_URL: "http://gateway/dh/service"
+      DH_EQUIP_API_BASE_URL: "http://gateway/dh/equipment"
+      DH_EQUIP_CLIENT_ID: "${DH_EQUIP_CLIENT_ID:-dev-admin-portal}"
+      DH_EQUIP_CLIENT_SECRET: "${DH_EQUIP_CLIENT_SECRET:-secret}"
     networks:
       - dh_network
     

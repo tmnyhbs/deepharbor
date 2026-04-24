@@ -58,6 +58,9 @@ services:
       - "5001:5001"
     environment:
       DH_API_BASE_URL: "http://gateway/dh/service"
+      DH_EQUIP_API_BASE_URL: "http://gateway/dh/equipment"
+      DH_EQUIP_CLIENT_ID: "dev-equipment-portal"
+      DH_EQUIP_CLIENT_SECRET: "secret"
       AUTH_MODE: dev
       DEV_BANNER: "true"
       DH_CLIENT_ID: "dev-admin-portal"
