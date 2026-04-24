@@ -453,6 +453,12 @@ def dev_login_select():
         return redirect(url_for("dev_login"))
 
     try:
+        member_id = int(member_id)
+    except (ValueError, TypeError):
+        flash("Invalid member ID.", "error")
+        return redirect(url_for("dev_login"))
+
+    try:
         # Get DHService access token — same as the B2C callback does
         access_token = dhservices.get_access_token(
             dhservices.DH_CLIENT_ID,
