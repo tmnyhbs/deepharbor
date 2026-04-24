@@ -1022,6 +1022,7 @@
 // ── Permission & Section Management ──
 const USER_PERMISSIONS = {{ user_permissions | tojson }};
 const MEMBER_ID = {{ member_id | tojson }};
+const ADMIN_BASE_URL = {{ admin_base_url | tojson }};
 
 const SECTIONS = ['dashboard', 'equipment', 'tickets', 'groups', 'areas',
                   'maintenance', 'scheduling', 'authorizations', 'settings'];
@@ -3386,12 +3387,22 @@ let _notifData = null;
 
 function loadSettingsPage() {
     const content = document.getElementById('settingsContent');
-    if (!canChange('equipment.config')) {
-        content.innerHTML = '<div class="alert alert-secondary mt-2"><i class="bi bi-lock me-2"></i>Change permission on <code>equipment.config</code> is required to manage settings.</div>';
-        return;
-    }
-    content.innerHTML = `<div id="settings-tab-body"></div>`;
-    renderNotificationsPanel(document.getElementById('settings-tab-body'));
+    content.innerHTML = `
+        <div class="card mt-2" style="max-width:520px;">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-gear me-2"></i>Equipment Settings</h5>
+                <p class="card-text text-muted">
+                    Notifications, module toggles, and other equipment configuration
+                    are managed from the <strong>Admin Portal → Equipment Module</strong> panel.
+                </p>
+                <a href="${ADMIN_BASE_URL}#equipmentModule"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="btn btn-primary">
+                    <i class="bi bi-box-arrow-up-right me-1"></i>Open Equipment Settings in Admin Portal
+                </a>
+            </div>
+        </div>`;
 }
 
 
