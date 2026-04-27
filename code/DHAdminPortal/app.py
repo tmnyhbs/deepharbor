@@ -67,30 +67,44 @@ FIELD_VALIDATORS = {
 ID_CHECK_ACTIVATION_PAST_DAYS = 7
 ID_CHECK_ACTIVATION_FUTURE_DAYS = 1  # Allows up to 24h of clock skew
 
-def validate_id_check_fields(data, *, activation: bool):
+def validate_id_check_fields(data, *, activation: bool, access_token=None):
     """Apply ID-check-specific validation that doesn't fit the regex pattern.
 
-    Currently: when called from the Onboard activation path, the date must
-    fall within the past 7 days through tomorrow (24h skew tolerance). The
-    Forms-tab path imposes no date range.
+    - id_check_date: must parse as a real calendar date (regex alone allows
+      garbage like 2026-13-01 / Feb 30); when activation=True, must fall
+      within the past 7 days through tomorrow (24h skew tolerance).
+    - id_check_by: must resolve to an existing member via DHService when
+      access_token is supplied. Skipped if the field is None or the caller
+      didn't pass a token (preserves test-client behavior).
 
     Returns (data, error_message). error_message is None if valid.
     """
-    if not activation or "id_check_date" not in data or data["id_check_date"] is None:
-        return data, None
+    if "id_check_date" in data and data["id_check_date"]:
+        try:
+            date_value = datetime.strptime(data["id_check_date"], "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            return None, "ID check date must be a valid date in YYYY-MM-DD format"
 
-    try:
-        date_value = datetime.fromisoformat(data["id_check_date"]).date()
-    except (ValueError, TypeError):
-        return None, "ID check date must be a valid date in YYYY-MM-DD format"
+        if activation:
+            today = datetime.now().date()
+            floor = today - timedelta(days=ID_CHECK_ACTIVATION_PAST_DAYS)
+            ceiling = today + timedelta(days=ID_CHECK_ACTIVATION_FUTURE_DAYS)
+            if date_value < floor or date_value > ceiling:
+                return None, (
+                    f"ID check date must be between {floor.isoformat()} and {ceiling.isoformat()}"
+                )
 
-    today = datetime.now().date()
-    floor = today - timedelta(days=ID_CHECK_ACTIVATION_PAST_DAYS)
-    ceiling = today + timedelta(days=ID_CHECK_ACTIVATION_FUTURE_DAYS)
-    if date_value < floor or date_value > ceiling:
-        return None, (
-            f"ID check date must be between {floor.isoformat()} and {ceiling.isoformat()}"
-        )
+    if access_token and "id_check_by" in data and data["id_check_by"] is not None:
+        # Resolve via DHService — None response means the member doesn't
+        # exist, regardless of how the int slipped past the regex.
+        try:
+            existing = dhservices.resolve_member_display_name(access_token, int(data["id_check_by"]))
+        except Exception as e:
+            logger.warning(f"Could not verify id_check_by={data['id_check_by']}: {e}")
+            return None, "Could not verify onboarder member"
+        if existing is None:
+            return None, "Onboarder member not found"
+
     return data, None
 
 def validate_age_18_or_older(birthday_str):
@@ -807,6 +821,10 @@ def api_onboarder_search():
         limit = int(request.args.get("limit", 20))
     except (TypeError, ValueError):
         limit = 20
+    # Clamp to a sane band: 0 → no results (also: Postgres rejects negative
+    # LIMIT with an error), 100 ceiling so a malicious or buggy caller can't
+    # request the whole member table.
+    limit = max(0, min(limit, 100))
 
     try:
         access_token = dhservices.get_access_token(
@@ -826,9 +844,13 @@ def api_member_display_name():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
 
-    member_id = request.args.get("member_id", "")
-    if not member_id:
+    raw = request.args.get("member_id", "")
+    if not raw:
         return {"error": "member_id parameter required"}, 400
+    try:
+        member_id = int(raw)
+    except (TypeError, ValueError):
+        return {"error": "member_id must be an integer"}, 400
 
     try:
         access_token = dhservices.get_access_token(
@@ -1368,7 +1390,7 @@ def api_update_member_forms():
         sanitized, error = validate_update_data(data, "forms")
         if error:
             return {"error": error}, 400
-        sanitized, error = validate_id_check_fields(sanitized, activation=activation)
+        sanitized, error = validate_id_check_fields(sanitized, activation=activation, access_token=access_token)
         if error:
             return {"error": error}, 400
 
