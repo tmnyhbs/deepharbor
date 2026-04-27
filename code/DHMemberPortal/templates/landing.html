@@ -2,7 +2,7 @@
 {% block title %}Member Portal - Pumping Station: One{% endblock %}
 {% block page_title %}Member Portal{% endblock %}
 {% block content %}
-            <div class="col-sm-6 col-lg-5">
+            <div class="col-md-6 col-lg-4">
                 <div class="card h-100">
                     <div class="card-body d-flex flex-column">
                         <h2 class="card-title">Already a Member?</h2>
@@ -12,12 +12,22 @@
                 </div>
             </div>
 
-            <div class="col-sm-6 col-lg-5">
+            <div class="col-md-6 col-lg-4">
                 <div class="card h-100">
                     <div class="card-body d-flex flex-column">
                         <h2 class="card-title">New to Pumping Station: One?</h2>
                         <p class="card-text text-muted flex-grow-1">Join our community and start your membership journey.</p>
                         <a href="{{ url_for('signup_start') }}" class="btn btn-secondary w-100">Sign Up</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column">
+                        <h2 class="card-title">Coming Back?</h2>
+                        <p class="card-text text-muted flex-grow-1">Reactivate your lapsed membership and pick up where you left off.</p>
+                        <a href="{{ url_for('signup_payment') }}" class="btn btn-ps1-red w-100">Reactivate</a>
                     </div>
                 </div>
             </div>
