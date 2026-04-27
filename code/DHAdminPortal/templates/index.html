@@ -95,13 +95,20 @@
 
             <!-- Member identity bar with close button -->
             <div id="memberHeaderInfo" class="dh-sidebar-header" style="display: none;">
-                <div class="d-flex justify-content-between align-items-start">
+                <div class="d-flex justify-content-between align-items-stretch">
                     <div>
                         <div id="memberHeaderName" class="fw-bold"></div>
                         <div id="memberHeaderEmail" class="text-muted small"></div>
                         <div id="memberHeaderId" class="text-muted small"></div>
                     </div>
-                    <button class="btn-close border-0" onclick="closeSidebar()" title="Close"></button>
+                    <div class="d-flex flex-column align-items-end justify-content-between">
+                        <button type="button" class="dh-sidebar-close" onclick="closeSidebar()" title="Close" aria-label="Close">
+                            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                        </button>
+                        <span id="memberHeaderAgeBadge" class="dh-age-badge" title="Member is 21 or older" style="display: none;">
+                            <i class="fa-solid fa-id-card me-1" aria-hidden="true"></i>21+
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -1918,6 +1925,19 @@ function normalizeMembershipLevels(levels) {
     }).filter(level => level && level.name);
 }
 
+// True iff birthdayStr (YYYY-MM-DD) is on or before today minus 21 years.
+function isOver21(birthdayStr) {
+    if (!birthdayStr || typeof birthdayStr !== 'string') return false;
+    const m = birthdayStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return false;
+    const y = +m[1], mo = +m[2], d = +m[3];
+    const dob = new Date(y, mo - 1, d);
+    if (dob.getFullYear() !== y || dob.getMonth() !== mo - 1 || dob.getDate() !== d) return false;
+    const today = new Date();
+    const cutoff = new Date(today.getFullYear() - 21, today.getMonth(), today.getDate());
+    return dob.getTime() <= cutoff.getTime();
+}
+
 function formatData(data, options = {}) {
     const tabName = options.tabName || null;
     const membershipLevels = normalizeMembershipLevels(options.membershipLevels || []);
@@ -1927,19 +1947,6 @@ function formatData(data, options = {}) {
     const formatLabel = (key) => key.split('_').map(word =>
         word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
-
-    // True iff birthdayStr (YYYY-MM-DD) is on or before today minus 21 years.
-    const isOver21 = (birthdayStr) => {
-        if (!birthdayStr || typeof birthdayStr !== 'string') return false;
-        const m = birthdayStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-        if (!m) return false;
-        const y = +m[1], mo = +m[2], d = +m[3];
-        const dob = new Date(y, mo - 1, d);
-        if (dob.getFullYear() !== y || dob.getMonth() !== mo - 1 || dob.getDate() !== d) return false;
-        const today = new Date();
-        const cutoff = new Date(today.getFullYear() - 21, today.getMonth(), today.getDate());
-        return dob.getTime() <= cutoff.getTime();
-    };
     
     // Helper function to format values as input fields
     const formatValue = (key, value) => {
@@ -2097,6 +2104,7 @@ function updateMemberHeaderInfo(member) {
     const nameEl = document.getElementById('memberHeaderName');
     const emailEl = document.getElementById('memberHeaderEmail');
     const memberIdEl = document.getElementById('memberHeaderId');
+    const badgeEl = document.getElementById('memberHeaderAgeBadge');
 
     if (!header || !nameEl || !emailEl || !memberIdEl) {
         return;
@@ -2107,6 +2115,7 @@ function updateMemberHeaderInfo(member) {
         nameEl.textContent = '';
         emailEl.textContent = '';
         memberIdEl.textContent = '';
+        if (badgeEl) badgeEl.style.display = 'none';
         return;
     }
 
@@ -2120,6 +2129,20 @@ function updateMemberHeaderInfo(member) {
     nameEl.textContent = fullName || 'Member';
     emailEl.textContent = email || 'No email on file';
     header.style.display = '';
+
+    // Members API doesn't include birthday; fetch identity to set the 21+ badge.
+    if (badgeEl && memberId) {
+        badgeEl.style.display = 'none';
+        const reqMemberId = memberId;
+        fetch(`/api/member/identity?member_id=${encodeURIComponent(memberId)}`)
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                // Bail if the user has since selected a different member.
+                if (!data || reqMemberId !== currentMemberId) return;
+                badgeEl.style.display = isOver21(data.birthday) ? '' : 'none';
+            })
+            .catch(() => { /* leave badge hidden on error */ });
+    }
 }
 
 function isAnyTabEditing() {

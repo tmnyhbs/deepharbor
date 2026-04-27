@@ -350,6 +350,28 @@ body.sidebar-open .body-content {
     border-color: rgba(255, 255, 255, 0.5);
 }
 
+/* Sidebar close (X) button — FontAwesome glyph that inherits the
+   header's text color so it stays legible across all themes. */
+.dh-sidebar-close {
+    background: transparent;
+    border: 0;
+    color: inherit;
+    padding: 0.15rem 0.4rem;
+    line-height: 1;
+    font-size: 1.25rem;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0.85;
+    transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.dh-sidebar-close:hover,
+.dh-sidebar-close:focus {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.15);
+    outline: none;
+}
+
 
 
 /* Search bar border matches theme color */
@@ -634,6 +656,42 @@ body.sidebar-resizing .details-sidebar {
 }
 
 [data-theme="hacker"] .dh-age-badge {
+    color: #000000;
+    border-color: #000000;
+}
+
+/* In the dark sidebar header the same-hue primary fill blends in.
+   Invert: solid white pill with the theme primary color as text. */
+.dh-sidebar-header .dh-age-badge {
+    background: #ffffff;
+    color: #1e3a5f;
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="bubblegum"] .dh-sidebar-header .dh-age-badge {
+    background: #ffffff;
+    color: #d63384;
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .dh-sidebar-header .dh-age-badge {
+    background: #ffffff;
+    color: #2563eb;
+}
+
+[data-theme="dark"] .dh-sidebar-header .dh-age-badge {
+    background: #ffffff;
+    color: #ef4444;
+}
+
+[data-theme="midnight"] .dh-sidebar-header .dh-age-badge {
+    background: #fbbf24;
+    color: #1e293b;
+    border-color: transparent;
+}
+
+[data-theme="hacker"] .dh-sidebar-header .dh-age-badge {
+    background: #00ff41;
     color: #000000;
     border-color: #000000;
 }
