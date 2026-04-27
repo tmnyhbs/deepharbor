@@ -3,7 +3,7 @@ import uuid
 import requests
 import json
 from functools import wraps
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, render_template, session, request, redirect, url_for, flash
 from flask_session import Session
 from flask_wtf.csrf import CSRFProtect, CSRFError
@@ -18,6 +18,7 @@ from config import config
 ### Dev mode flag — read from app_config so we only check the env var once
 AUTH_MODE = app_config.AUTH_MODE
 DEV_BANNER = app_config.DEV_BANNER
+
 if AUTH_MODE == "dev":
     logger.info("AUTH_MODE=dev — B2C authentication bypassed, dev login enabled")
 
@@ -58,7 +59,68 @@ FIELD_VALIDATORS = {
     "discord_username": (None, 50, "Discord username must be 50 characters or fewer"),
     "discord_handle": (None, 50, "Discord handle must be 50 characters or fewer"),
     "theme_song_url": (r'^https://', 500, "Theme song URL must start with https:// and be 500 characters or fewer"),
+    "birthday": (r'^\d{4}-\d{2}-\d{2}$', 10, "Birthday must be in YYYY-MM-DD format"),
+    "id_check_date": (r'^\d{4}-\d{2}-\d{2}$', 10, "ID check date must be in YYYY-MM-DD format"),
+    "id_check_by": (r'^[1-9]\d*$', 10, "Onboarder must be a valid member"),
 }
+
+ID_CHECK_ACTIVATION_PAST_DAYS = 7
+ID_CHECK_ACTIVATION_FUTURE_DAYS = 1  # Allows up to 24h of clock skew
+
+def validate_id_check_fields(data, *, activation: bool, access_token=None):
+    """Apply ID-check-specific validation that doesn't fit the regex pattern.
+
+    - id_check_date: must parse as a real calendar date (regex alone allows
+      garbage like 2026-13-01 / Feb 30); when activation=True, must fall
+      within the past 7 days through tomorrow (24h skew tolerance).
+    - id_check_by: must resolve to an existing member via DHService when
+      access_token is supplied. Skipped if the field is None or the caller
+      didn't pass a token (preserves test-client behavior).
+
+    Returns (data, error_message). error_message is None if valid.
+    """
+    if "id_check_date" in data and data["id_check_date"]:
+        try:
+            date_value = datetime.strptime(data["id_check_date"], "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            return None, "ID check date must be a valid date in YYYY-MM-DD format"
+
+        if activation:
+            today = datetime.now().date()
+            floor = today - timedelta(days=ID_CHECK_ACTIVATION_PAST_DAYS)
+            ceiling = today + timedelta(days=ID_CHECK_ACTIVATION_FUTURE_DAYS)
+            if date_value < floor or date_value > ceiling:
+                return None, (
+                    f"ID check date must be between {floor.isoformat()} and {ceiling.isoformat()}"
+                )
+
+    if access_token and "id_check_by" in data and data["id_check_by"] is not None:
+        # Resolve via DHService — None response means the member doesn't
+        # exist, regardless of how the int slipped past the regex.
+        try:
+            existing = dhservices.resolve_member_display_name(access_token, int(data["id_check_by"]))
+        except Exception as e:
+            logger.warning(f"Could not verify id_check_by={data['id_check_by']}: {e}")
+            return None, "Could not verify onboarder member"
+        if existing is None:
+            return None, "Onboarder member not found"
+
+    return data, None
+
+def validate_age_18_or_older(birthday_str):
+    """Validate that a birthday string represents someone 18 years or older.
+    Returns (is_valid, error_message)."""
+    try:
+        dob = datetime.strptime(birthday_str, "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return False, "Birthday must be a valid date in YYYY-MM-DD format"
+    today = datetime.now().date()
+    if dob.year < 1900 or dob > today:
+        return False, "Please enter a valid date of birth"
+    age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+    if age < 18:
+        return False, "Member must be 18 years or older"
+    return True, None
 
 def validate_update_data(data, tab_name):
     """Validate and sanitize incoming field data for a member update.
@@ -89,6 +151,12 @@ def validate_update_data(data, tab_name):
                 return None, error_msg
 
         sanitized[key] = value
+
+    # Age validation: birthday must represent someone 18+
+    if "birthday" in sanitized and sanitized["birthday"] is not None:
+        is_valid, age_error = validate_age_18_or_older(sanitized["birthday"])
+        if not is_valid:
+            return None, age_error
 
     return sanitized, None
 
@@ -128,11 +196,14 @@ def index():
     else:
         logger.info("User logged in, rendering index with user info")
         
-        # Always fetch fresh user roles and permissions to ensure they're up-to-date
+        # Always fetch fresh user roles and permissions to ensure they're up-to-date.
+        # Initialize member_id outside the try so the render below can pass `None`
+        # to the template if DHService is unreachable, instead of UnboundLocalError.
+        member_id = None
         try:
             # Get access token for DHService
             access_token = dhservices.get_access_token(
-                dhservices.DH_CLIENT_ID, 
+                dhservices.DH_CLIENT_ID,
                 dhservices.DH_CLIENT_SECRET
             )
             
@@ -168,6 +239,7 @@ def index():
             user=session["user"],
             user_role=session.get("user_role", "Unknown"),
             user_permissions=session.get("user_permissions", {}),
+            current_member_id=member_id,
             version=msal.__version__
         )
 
@@ -724,20 +796,76 @@ def api_member_status():
 def api_member_forms():
     if not session.get("user"):
         return {"error": "Not authenticated"}, 401
-    
+
     member_id = request.args.get("member_id", "")
     if not member_id:
         return {"error": "member_id parameter required"}, 400
-    
+
     try:
         access_token = dhservices.get_access_token(
-            dhservices.DH_CLIENT_ID, 
+            dhservices.DH_CLIENT_ID,
             dhservices.DH_CLIENT_SECRET
         )
         forms = dhservices.get_member_forms(access_token, member_id)
         return forms
     except Exception as e:
-        print(f"Error getting member forms: {e}")
+        logger.error(f"Error getting member forms: {e}")
+        return {"error": str(e)}, 500
+
+@app.route("/api/onboarder-search")
+@requires_view_permission("member.forms")
+def api_onboarder_search():
+    """Typeahead search for the onboarder picker."""
+    if not session.get("user"):
+        return {"error": "Not authenticated"}, 401
+
+    query = request.args.get("query", "")
+    try:
+        limit = int(request.args.get("limit", 20))
+    except (TypeError, ValueError):
+        limit = 20
+    # Clamp to a sane band: 0 → no results (also: Postgres rejects negative
+    # LIMIT with an error), 100 ceiling so a malicious or buggy caller can't
+    # request the whole member table.
+    limit = max(0, min(limit, 100))
+
+    try:
+        access_token = dhservices.get_access_token(
+            dhservices.DH_CLIENT_ID,
+            dhservices.DH_CLIENT_SECRET
+        )
+        return dhservices.search_onboarder_candidates(access_token, query, limit)
+    except Exception as e:
+        logger.error(f"Error searching onboarder candidates: {e}")
+        return {"error": str(e)}, 500
+
+@app.route("/api/member/display-name")
+@requires_view_permission("member.forms")
+def api_member_display_name():
+    """Resolve a member ID to identity name fields. Used to render the
+    onboarder name from a stored `forms.id_check_by` value."""
+    if not session.get("user"):
+        return {"error": "Not authenticated"}, 401
+
+    raw = request.args.get("member_id", "")
+    if not raw:
+        return {"error": "member_id parameter required"}, 400
+    try:
+        member_id = int(raw)
+    except (TypeError, ValueError):
+        return {"error": "member_id must be an integer"}, 400
+
+    try:
+        access_token = dhservices.get_access_token(
+            dhservices.DH_CLIENT_ID,
+            dhservices.DH_CLIENT_SECRET
+        )
+        name = dhservices.resolve_member_display_name(access_token, member_id)
+        if name is None:
+            return {"error": "Member not found"}, 404
+        return name
+    except Exception as e:
+        logger.error(f"Error resolving member display name: {e}")
         return {"error": str(e)}, 500
 
 @app.route("/api/member/connections")
@@ -1248,18 +1376,35 @@ def api_update_member_forms():
     
     try:
         access_token = dhservices.get_access_token(
-            dhservices.DH_CLIENT_ID, 
+            dhservices.DH_CLIENT_ID,
             dhservices.DH_CLIENT_SECRET
         )
         # Get logged-in user's member ID
         user_email = session["user"].get("email") or session["user"].get("preferred_username")
         member_data = dhservices.get_member_id(access_token, user_email)
         logged_in_member_id = member_data.get("member_id")
-        
-        data = request.get_json()
-        data["modified_by"] = logged_in_member_id
-        result = dhservices.update_member_forms(access_token, member_id, data)
-        
+
+        data = request.get_json() or {}
+
+        # The Onboard tab passes activation=true so the stricter date range
+        # check applies. The Forms-tab path leaves it unset.
+        activation = bool(data.pop("activation", False))
+
+        sanitized, error = validate_update_data(data, "forms")
+        if error:
+            return {"error": error}, 400
+        sanitized, error = validate_id_check_fields(sanitized, activation=activation, access_token=access_token)
+        if error:
+            return {"error": error}, 400
+
+        # If id_check_by came through as a string (from JSON or the picker
+        # hidden input), coerce to int now that it's passed validation.
+        if "id_check_by" in sanitized and sanitized["id_check_by"] is not None:
+            sanitized["id_check_by"] = int(sanitized["id_check_by"])
+
+        sanitized["modified_by"] = logged_in_member_id
+        result = dhservices.update_member_forms(access_token, member_id, sanitized)
+
         # Log update activity
         try:
             dhservices.log_user_activity(
@@ -1269,13 +1414,13 @@ def api_update_member_forms():
                     "activity_details": {
                         "action": "update_forms",
                         "target_member_id": member_id,
-                        "fields_updated": list(data.keys())
+                        "fields_updated": [k for k in sanitized.keys() if k != "modified_by"]
                     }
                 }
             )
         except Exception as log_error:
             logger.error(f"Failed to log update activity: {log_error}")
-        
+
         return result
     except Exception as e:
         logger.error(f"Error updating member forms: {e}")

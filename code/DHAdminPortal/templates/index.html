@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Pumping Station: One Administration Portal{% endblock %}
+{% block title %}Pumping Station: One Admin Portal{% endblock %}
 {% block content %}
 
-<h1><span class="title-org">Pumping Station: One</span> <span class="title-sub">Administration Portal</span></h1>
+<h1><span class="title-org">Pumping Station: One</span> <span class="title-sub">Admin Portal</span></h1>
 
 {% if user %}
 <!-- We're logged in -->
@@ -10,7 +10,10 @@
 <script>
     // Permissions injected from server session — not from a cookie
     const USER_PERMISSIONS = {{ user_permissions | tojson }};
+    // The logged-in admin's own member_id, used as the default onboarder
+    const CURRENT_MEMBER_ID = {{ current_member_id | tojson }};
 </script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
 <!-- Logging notice -->
 <div class="row justify-content-center">
@@ -92,13 +95,20 @@
 
             <!-- Member identity bar with close button -->
             <div id="memberHeaderInfo" class="dh-sidebar-header" style="display: none;">
-                <div class="d-flex justify-content-between align-items-start">
+                <div class="d-flex justify-content-between align-items-stretch">
                     <div>
                         <div id="memberHeaderName" class="fw-bold"></div>
                         <div id="memberHeaderEmail" class="text-muted small"></div>
                         <div id="memberHeaderId" class="text-muted small"></div>
                     </div>
-                    <button class="btn-close border-0" onclick="closeSidebar()" title="Close"></button>
+                    <div class="d-flex flex-column align-items-end justify-content-between">
+                        <button type="button" class="dh-sidebar-close" onclick="closeSidebar()" title="Close" aria-label="Close">
+                            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                        </button>
+                        <span id="memberHeaderAgeBadge" class="dh-age-badge" title="Member is 21 or older" style="display: none;">
+                            <i class="fa-solid fa-id-card me-1" aria-hidden="true"></i>21+
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -109,10 +119,17 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
 
+            <div id="memberActivatedNotice" class="alert alert-success alert-dismissible fade show mb-0" role="alert" style="display: none;">
+                <i class="fa-solid fa-circle-check me-2"></i>
+                <strong>Member activated!</strong> Tell the member to follow the next steps on their onboarding handout, and then come back to you so you can help them with setting up a key through their member portal.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
             <!-- Horizontal icon tabs with scroll arrows -->
             <div class="dh-tab-scroll-wrapper" id="tabScrollWrapper">
                 <div class="dh-tab-strip" id="memberTabs">
                     <ul class="nav" role="tablist">
+                        <li class="nav-item" id="onboard-nav" style="display:none;"><button class="nav-link" id="onboard-tab" data-bs-toggle="pill" data-bs-target="#onboard" type="button" role="tab" aria-controls="onboard" aria-selected="false"><i class="fa-solid fa-id-card"></i>Onboard</button></li>
                         <li class="nav-item"><button class="nav-link active" id="identity-tab" data-bs-toggle="pill" data-bs-target="#identity" type="button" role="tab" aria-controls="identity" aria-selected="true"><i class="fa-solid fa-user"></i>Identity</button></li>
                         <li class="nav-item"><button class="nav-link" id="status-tab" data-bs-toggle="pill" data-bs-target="#status" type="button" role="tab" aria-controls="status" aria-selected="false"><i class="fa-solid fa-circle-info"></i>Status</button></li>
                         <li class="nav-item"><button class="nav-link" id="roles-tab" data-bs-toggle="pill" data-bs-target="#roles" type="button" role="tab" aria-controls="roles" aria-selected="false"><i class="fa-solid fa-user-shield"></i>Roles</button></li>
@@ -129,6 +146,112 @@
 
             <!-- Tab content -->
             <div class="tab-content dh-sidebar-content" id="memberTabsContent">
+                <div class="tab-pane fade" id="onboard" role="tabpanel" aria-labelledby="onboard-tab">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="mb-3">Member Onboarding</h5>
+                            <div id="onboardLoading" class="text-center" style="display: none;">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <div id="onboardContent" style="display: none;">
+
+                            <!-- Stripe payment warning -->
+                            <div id="memberStripeWarning" class="alert alert-warning text-start mb-4" style="display: none;">
+                                <i class="fa-solid fa-credit-card me-2"></i>
+                                <strong>No credit card payment on file.</strong>
+                                <p class="mb-1 mt-1" style="text-align: left;">Ask the member if they have completed a credit card payment and if they used the same email address for Stripe as they did for their membership signup. If they have not completed payment, have them scan the QR code or go to ps1.link/stripe to complete payment.</p>
+                                <div class="text-center my-2">
+                                    <div id="stripeQrCode" class="d-inline-block" style="padding: 10px; background: #fff;"></div>
+                                </div>
+                                <div class="text-center mt-3">
+                                    <a href="#" class="text-muted small" onclick="dismissStripeWarning(); return false;">Ignore missing payment</a>
+                                </div>
+                            </div>
+
+                            <div id="onboardSteps">
+                            <!-- Required: Verify ID -->
+                            <div class="mb-4">
+                                <h6><i class="fa-solid fa-id-card me-2"></i>Verify ID</h6>
+                                <label class="form-label fw-semibold" for="onboardingDob">Member Provided DOB <span class="badge bg-danger required-badge">Required</span></label>
+                                <div class="d-flex gap-2 mb-2">
+                                    <input type="date" class="form-control form-control-lg" id="onboardingDob" inputmode="numeric" style="font-size: 1.5rem;" disabled>
+                                    <button class="btn btn-lg btn-outline-secondary" id="onboardingDobEditBtn" disabled title="Edit DOB" style="font-size: 1.5rem;" onclick="enableOnboardingDobEdit()">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                </div>
+                                <div id="onboardingDobError" class="alert alert-danger py-1 px-2 small mb-2" style="display: none;">
+                                    <i class="fa-solid fa-triangle-exclamation me-1"></i>Member must be 18 years or older.
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="onboardingDobMatch" onchange="updateActivateButton()">
+                                    <label class="form-check-label" for="onboardingDobMatch">DOB matches ID <span class="badge bg-danger required-badge">Required</span></label>
+                                </div>
+                            </div>
+
+                            <!-- Optional fold: Access key + ID check details -->
+                            <div class="mb-4">
+                                <button class="btn btn-link p-0 text-decoration-none dh-disclosure" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#onboardingOptional"
+                                        aria-expanded="false" aria-controls="onboardingOptional">
+                                    <i class="fa-solid fa-chevron-right me-1 dh-disclosure-chevron"></i>
+                                    Optional details
+                                </button>
+                                <div class="collapse mt-3" id="onboardingOptional">
+
+                                    <!-- Access key -->
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold" for="onboardingRfid">Access key</label>
+                                        <div class="alert alert-warning text-start small py-2 mb-2" role="note">
+                                            <i class="fa-solid fa-lightbulb me-2"></i>
+                                            New members should be directed to add their own key through the member portal &mdash;
+                                            this serves as a quick verification that their account works and teaches them where
+                                            to find the PS:1 quick links list. You can optionally set their key here.
+                                        </div>
+                                        <input type="text" class="form-control" id="onboardingRfid" autocomplete="off" maxlength="10" inputmode="numeric" pattern="[0-9]*" placeholder="10 digit number">
+                                        <small class="text-muted">First 10 digits only</small>
+                                        <div id="onboardingRfidError" class="alert alert-danger py-1 px-2 small mt-2" style="display: none;"></div>
+                                    </div>
+
+                                    <!-- ID Check (new structured fields) -->
+                                    <div class="mb-2">
+                                        <label class="form-label fw-semibold">ID Check</label>
+                                        <div class="row g-2">
+                                            <div class="col-md-5">
+                                                <label class="form-label small text-muted" for="onboardingIdCheckDate">Date</label>
+                                                <input type="date" class="form-control form-control-sm" id="onboardingIdCheckDate">
+                                            </div>
+                                            <div class="col-md-7">
+                                                <label class="form-label small text-muted" for="onboardingIdCheckBySearch">Onboarder</label>
+                                                <div id="onboardingIdCheckByPicker" class="dh-onboarder-picker" data-target-input="onboardingIdCheckBy">
+                                                    <input type="text" class="form-control form-control-sm dh-onboarder-search" id="onboardingIdCheckBySearch" autocomplete="off" placeholder="Search members…">
+                                                    <input type="hidden" id="onboardingIdCheckBy">
+                                                    <div class="dh-onboarder-results dropdown-menu" style="display:none;"></div>
+                                                </div>
+                                                <div class="dh-onboarder-warning small text-warning mt-1" style="display:none;">
+                                                    <i class="fa-solid fa-triangle-exclamation me-1"></i>Member not an onboarder
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Activate -->
+                            <div class="mb-2">
+                                <h6><i class="fa-solid fa-user-check me-2"></i>Activate</h6>
+                                <button class="btn btn-success w-100" id="onboardingActivateBtn" disabled onclick="activateMember()">
+                                    <i class="fa-solid fa-check me-1"></i>Activate Member
+                                </button>
+                                <div id="onboardingActivateError" class="alert alert-danger py-2 small mt-2" style="display: none;"></div>
+                            </div>
+                            </div><!-- end onboardSteps -->
+                            </div><!-- end onboardContent -->
+                        </div>
+                    </div>
+                </div>
+
                 <div class="tab-pane fade show active" id="identity" role="tabpanel" aria-labelledby="identity-tab">
                     <div class="card">
                         <div class="card-body">
@@ -449,6 +572,7 @@
     </div>
 </div>
 
+
 <script>
 // CSRF token for AJAX requests
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -551,8 +675,12 @@ function toggleEditMode(tabName) {
             return;
         }
         
-        // Enable all input fields, selects, and textareas in this tab
-        const inputs = tabPane.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="date"], input[type="number"], textarea, select');
+        // Enable all input fields, selects, and textareas in this tab.
+        // Includes input[type="hidden"][data-field] so picker-driven values
+        // (e.g. the onboarder picker's id_check_by) participate in edit
+        // detection — the picker dispatches input events on the hidden
+        // input when a selection is made.
+        const inputs = tabPane.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="date"], input[type="number"], input[type="hidden"][data-field], textarea, select');
         inputs.forEach(input => {
             if (input.tagName === 'SELECT') {
                 input.removeAttribute('disabled');
@@ -561,7 +689,7 @@ function toggleEditMode(tabName) {
             }
 
             input.removeAttribute('readonly');
-            
+
             // Add change listener to detect modifications
             input.addEventListener('input', () => handleFieldChange(tabName), { once: false });
         });
@@ -720,7 +848,10 @@ function saveTabData(tabName) {
     // Collect all field data
     const data = {};
     const validationErrors = [];
-    const inputs = tabPane.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="date"], input[type="number"], textarea, select');
+    // Includes input[type="hidden"][data-field] so the onboarder-picker's
+    // hidden id_check_by value participates in saves. Other hidden inputs
+    // without a data-field attribute are ignored.
+    const inputs = tabPane.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="date"], input[type="number"], input[type="hidden"][data-field], textarea, select');
     inputs.forEach(input => {
         const fieldName = input.getAttribute('data-field');
         if (fieldName) {
@@ -1653,6 +1784,128 @@ function escapeHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
+// Render the Forms tab. Handles the new structured ID Check pair plus an
+// optional read-only WA Legacy ID Check block. Other forms keys (waiver,
+// ToU, essentials, orientation) render via the same generic input pattern
+// formatData uses.
+function formatFormsData(data) {
+    data = data || {};
+    const idCheckDate = data.id_check_date || '';
+    const idCheckBy = data.id_check_by || '';
+    const legacy1 = data.id_check_1 || '';
+    const legacy2 = data.id_check_2 || '';
+    const hasNew = Boolean(idCheckDate || idCheckBy);
+    const hasLegacy = Boolean(legacy1 || legacy2);
+
+    let html = '';
+
+    // --- New ID Check section ---
+    html += `<div class="mb-3">
+        <h6 class="mb-2">ID Check</h6>
+        <div class="row g-2">
+            <div class="col-md-5">
+                <label class="form-label small text-muted" for="formsIdCheckDate">Date</label>
+                <input type="date" class="form-control form-control-sm" id="formsIdCheckDate"
+                    data-field="id_check_date" value="${escapeHtml(idCheckDate)}" readonly>
+            </div>
+            <div class="col-md-7">
+                <label class="form-label small text-muted" for="formsIdCheckBySearch">Onboarder</label>
+                <div class="dh-onboarder-picker"
+                    data-target-input="formsIdCheckBy"
+                    ${idCheckBy ? `data-seed-member-id="${escapeHtml(idCheckBy)}"` : ''}>
+                    <input type="text" class="form-control form-control-sm dh-onboarder-search"
+                        id="formsIdCheckBySearch" autocomplete="off" placeholder="Search members…" readonly>
+                    <input type="hidden" id="formsIdCheckBy" data-field="id_check_by" value="${escapeHtml(idCheckBy)}">
+                    <div class="dh-onboarder-results dropdown-menu" style="display:none;"></div>
+                </div>
+                <div class="dh-onboarder-warning small text-warning mt-1" style="display:none;">
+                    <i class="fa-solid fa-triangle-exclamation me-1"></i>Member not an onboarder
+                </div>
+            </div>
+        </div>
+    </div>`;
+
+    // --- WA Legacy notice + block ---
+    if (hasLegacy) {
+        html += `<div class="alert alert-warning small py-2 mb-3" role="note">
+            WA Legacy ID check entries are read-only. To update, fill in the new ID Check fields above.
+        </div>`;
+
+        // Hidden inputs round-trip the legacy values on save. Displayed in
+        // read-only span form alongside; never editable in any state.
+        const legacyBody = `<input type="hidden" data-field="id_check_1" value="${escapeHtml(legacy1)}">
+        <input type="hidden" data-field="id_check_2" value="${escapeHtml(legacy2)}">
+        <div class="row g-2">
+            <div class="col-md-4">
+                <label class="form-label small text-muted">ID Check 1</label>
+                <div class="form-control form-control-sm bg-body-secondary">${escapeHtml(legacy1) || '<span class="text-muted">—</span>'}</div>
+            </div>
+            <div class="col-md-8">
+                <label class="form-label small text-muted">ID Check 2</label>
+                <div class="form-control form-control-sm bg-body-secondary">${escapeHtml(legacy2) || '<span class="text-muted">—</span>'}</div>
+            </div>
+        </div>`;
+
+        if (hasNew) {
+            // Both populated → tuck legacy behind a disclosure
+            html += `<div class="mb-3">
+                <button class="btn btn-link p-0 text-decoration-none small dh-disclosure" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#formsLegacyIdCheck"
+                    aria-expanded="false" aria-controls="formsLegacyIdCheck">
+                    <i class="fa-solid fa-chevron-right me-1 dh-disclosure-chevron"></i>Show WA Legacy ID Check data
+                </button>
+                <div class="collapse mt-2" id="formsLegacyIdCheck">
+                    <h6 class="mb-2 small text-muted">WA Legacy ID Check</h6>
+                    ${legacyBody}
+                </div>
+            </div>`;
+        } else {
+            // Legacy-only → render inline below the empty new fields
+            html += `<div class="mb-3">
+                <h6 class="mb-2 small text-muted">WA Legacy ID Check</h6>
+                ${legacyBody}
+            </div>`;
+        }
+    } else {
+        // No WA Legacy data on file — show a small informational note so
+        // admins know the absence is real (vs. a render bug).
+        html += `<div class="small text-muted mb-3">
+            <i class="fa-solid fa-circle-info me-1"></i>No WA Legacy ID check data exists for this member.
+        </div>`;
+    }
+
+    // --- Other forms fields (generic render, edit-friendly) ---
+    const otherKeys = Object.keys(data).filter(k =>
+        !['id_check_date', 'id_check_by', 'id_check_1', 'id_check_2'].includes(k)
+    );
+    if (otherKeys.length > 0) {
+        html += '<hr class="my-3">';
+        const formatLabel = key => key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        html += '<div class="row">';
+        otherKeys.forEach(key => {
+            const value = data[key];
+            let renderedInput;
+            if (typeof value === 'boolean') {
+                renderedInput = `<div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" data-field="${escapeHtml(key)}" ${value ? 'checked' : ''} disabled>
+                    <label class="form-check-label">${value ? 'Yes' : 'No'}</label>
+                </div>`;
+            } else if (value === null || value === undefined || value === '') {
+                renderedInput = `<input type="text" class="form-control" data-field="${escapeHtml(key)}" value="" placeholder="Not set" readonly>`;
+            } else {
+                renderedInput = `<input type="text" class="form-control" data-field="${escapeHtml(key)}" value="${escapeHtml(value)}" readonly>`;
+            }
+            html += `<div class="col-md-6 mb-3">
+                <label class="form-label">${formatLabel(key)}</label>
+                ${renderedInput}
+            </div>`;
+        });
+        html += '</div>';
+    }
+
+    return html;
+}
+
 function normalizeMembershipLevels(levels) {
     if (!Array.isArray(levels)) {
         return [];
@@ -1672,13 +1925,26 @@ function normalizeMembershipLevels(levels) {
     }).filter(level => level && level.name);
 }
 
+// True iff birthdayStr (YYYY-MM-DD) is on or before today minus 21 years.
+function isOver21(birthdayStr) {
+    if (!birthdayStr || typeof birthdayStr !== 'string') return false;
+    const m = birthdayStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return false;
+    const y = +m[1], mo = +m[2], d = +m[3];
+    const dob = new Date(y, mo - 1, d);
+    if (dob.getFullYear() !== y || dob.getMonth() !== mo - 1 || dob.getDate() !== d) return false;
+    const today = new Date();
+    const cutoff = new Date(today.getFullYear() - 21, today.getMonth(), today.getDate());
+    return dob.getTime() <= cutoff.getTime();
+}
+
 function formatData(data, options = {}) {
     const tabName = options.tabName || null;
     const membershipLevels = normalizeMembershipLevels(options.membershipLevels || []);
     let html = '<div class="row">';
-    
+
     // Helper function to format field names
-    const formatLabel = (key) => key.split('_').map(word => 
+    const formatLabel = (key) => key.split('_').map(word =>
         word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
     
@@ -1814,11 +2080,14 @@ function formatData(data, options = {}) {
     
     // Iterate through all fields
     for (const [key, value] of Object.entries(data)) {
+        const labelExtra = (tabName === 'identity' && key === 'birthday' && isOver21(value))
+            ? ' <span class="dh-age-badge ms-2" title="Member is 21 or older"><i class="fa-solid fa-id-card me-1" aria-hidden="true"></i>21+</span>'
+            : '';
         html += `
             <div class="col-md-6 mb-3">
                 <div class="card h-100">
                     <div class="card-body">
-                        <h6 class="card-subtitle mb-2 text-muted">${formatLabel(key)}</h6>
+                        <h6 class="card-subtitle mb-2 text-muted">${formatLabel(key)}${labelExtra}</h6>
                         <div class="card-text">${formatValue(key, value)}</div>
                     </div>
                 </div>
@@ -1835,6 +2104,7 @@ function updateMemberHeaderInfo(member) {
     const nameEl = document.getElementById('memberHeaderName');
     const emailEl = document.getElementById('memberHeaderEmail');
     const memberIdEl = document.getElementById('memberHeaderId');
+    const badgeEl = document.getElementById('memberHeaderAgeBadge');
 
     if (!header || !nameEl || !emailEl || !memberIdEl) {
         return;
@@ -1845,6 +2115,7 @@ function updateMemberHeaderInfo(member) {
         nameEl.textContent = '';
         emailEl.textContent = '';
         memberIdEl.textContent = '';
+        if (badgeEl) badgeEl.style.display = 'none';
         return;
     }
 
@@ -1858,6 +2129,20 @@ function updateMemberHeaderInfo(member) {
     nameEl.textContent = fullName || 'Member';
     emailEl.textContent = email || 'No email on file';
     header.style.display = '';
+
+    // Members API doesn't include birthday; fetch identity to set the 21+ badge.
+    if (badgeEl && memberId) {
+        badgeEl.style.display = 'none';
+        const reqMemberId = memberId;
+        fetch(`/api/member/identity?member_id=${encodeURIComponent(memberId)}`)
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                // Bail if the user has since selected a different member.
+                if (!data || reqMemberId !== currentMemberId) return;
+                badgeEl.style.display = isOver21(data.birthday) ? '' : 'none';
+            })
+            .catch(() => { /* leave badge hidden on error */ });
+    }
 }
 
 function isAnyTabEditing() {
@@ -1888,6 +2173,10 @@ function loadMemberData(memberOrId) {
 
     updateMemberHeaderInfo(member);
 
+    // Hide activated notice from previous member
+    const activatedNotice = document.getElementById('memberActivatedNotice');
+    if (activatedNotice) activatedNotice.style.display = 'none';
+
     // Show suspended/inactive member warning
     const warningEl = document.getElementById('memberSuspendedWarning');
     const statusEl = document.getElementById('memberSuspendedStatus');
@@ -1902,8 +2191,62 @@ function loadMemberData(memberOrId) {
         }
     }
 
+    // Show/hide Stripe payment warning for pending members without Stripe payment
+    const stripeWarningEl = document.getElementById('memberStripeWarning');
+    if (stripeWarningEl) {
+        const isPending = member ? (member.membership_status || '').toLowerCase() === 'pending' : false;
+        const hasStripePayment = member && member.stripe_product_id;
+
+        if (isPending && !hasStripePayment) {
+            // Generate QR code (clear previous one first)
+            const qrContainer = document.getElementById('stripeQrCode');
+            qrContainer.innerHTML = '';
+            new QRCode(qrContainer, {
+                text: 'https://ps1.link/stripe',
+                width: 160,
+                height: 160,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M
+            });
+
+            stripeWarningEl.style.display = '';
+            const onboardSteps = document.getElementById('onboardSteps');
+            if (onboardSteps) onboardSteps.style.display = 'none';
+        } else {
+            stripeWarningEl.style.display = 'none';
+            const onboardSteps = document.getElementById('onboardSteps');
+            if (onboardSteps) onboardSteps.style.display = '';
+        }
+    }
+
     // Filter tabs based on user permissions
     filterTabsByPermissions();
+
+    // Deactivate all tabs (including onboard) before activating the correct one
+    const allTabNames = ['onboard', 'identity', 'status', 'roles', 'forms', 'connections', 'extras', 'authorizations', 'notes', 'access', 'entry'];
+    allTabNames.forEach(tabName => {
+        const btn = document.getElementById(`${tabName}-tab`);
+        const pane = document.getElementById(tabName);
+        if (btn) { btn.classList.remove('active'); btn.setAttribute('aria-selected', 'false'); }
+        if (pane) { pane.classList.remove('show', 'active'); }
+    });
+
+    // Show/hide onboard tab based on member status and permissions.
+    // Onboarding requires change access to identity (DOB), access (RFID),
+    // status (activate), and forms (id_check_date / id_check_by). Without
+    // any one of these the activation Promise.all will partially succeed
+    // and leave the member in a broken state, so gate the whole tab.
+    const onboardNav = document.getElementById('onboard-nav');
+    const memberStatus = member ? (member.membership_status || '').toLowerCase() : '';
+    const canOnboard = canChangeTab('member.identity')
+        && canChangeTab('member.access')
+        && canChangeTab('member.status')
+        && canChangeTab('member.forms');
+    const showOnboard = memberStatus === 'pending' && canOnboard;
+    if (onboardNav) {
+        onboardNav.style.display = showOnboard ? 'block' : 'none';
+    }
 
     // Open the sidebar
     openSidebar();
@@ -1913,10 +2256,15 @@ function loadMemberData(memberOrId) {
     const allTabs = ['identity', 'status', 'roles', 'forms', 'connections', 'extras', 'authorizations', 'notes', 'access', 'entry'];
     let firstVisibleTab = null;
 
-    for (const tabName of allTabs) {
-        if (canViewTab('member.' + tabName, permissions) || canChangeTab('member.' + tabName, permissions)) {
-            firstVisibleTab = tabName;
-            break;
+    // If member is pending, activate onboard tab first
+    if (showOnboard) {
+        firstVisibleTab = 'onboard';
+    } else {
+        for (const tabName of allTabs) {
+            if (canViewTab('member.' + tabName, permissions) || canChangeTab('member.' + tabName, permissions)) {
+                firstVisibleTab = tabName;
+                break;
+            }
         }
     }
 
@@ -1927,10 +2275,520 @@ function loadMemberData(memberOrId) {
         firstTab.show();
 
         // Load data for the first visible tab
-        fetchTabData(firstVisibleTab, memberId);
+        if (firstVisibleTab === 'onboard') {
+            loadOnboardTab(memberId);
+        } else {
+            fetchTabData(firstVisibleTab, memberId);
+        }
     }
 
     if (!_restoringFromHistory) pushURL();
+}
+
+// ============================================================================
+// Onboard Tab
+// ============================================================================
+
+function loadOnboardTab(memberId) {
+    const loadingEl = document.getElementById('onboardLoading');
+    const contentEl = document.getElementById('onboardContent');
+
+    // Show spinner, hide content
+    if (loadingEl) loadingEl.style.display = '';
+    if (contentEl) contentEl.style.display = 'none';
+
+    // Fetch identity data to populate DOB
+    fetch(`/api/member/identity?member_id=${encodeURIComponent(memberId)}`)
+        .then(r => {
+            if (!r.ok) throw new Error('Failed to fetch identity');
+            return r.json();
+        })
+        .then(data => {
+            const dobInput = document.getElementById('onboardingDob');
+            const dobEditBtn = document.getElementById('onboardingDobEditBtn');
+            const dobError = document.getElementById('onboardingDobError');
+            if (dobInput) {
+                dobInput.value = data.birthday || '';
+                dobInput.disabled = true;
+                dobInput.classList.remove('is-invalid');
+            }
+            if (dobError) dobError.style.display = 'none';
+            if (dobEditBtn) {
+                dobEditBtn.disabled = false;
+                dobEditBtn.style.display = '';
+                dobEditBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
+            }
+            // Reset RFID field
+            const rfidInput = document.getElementById('onboardingRfid');
+            const rfidError = document.getElementById('onboardingRfidError');
+            if (rfidInput) { rfidInput.value = ''; rfidInput.classList.remove('is-invalid'); }
+            if (rfidError) rfidError.style.display = 'none';
+
+            // Reset new structured ID Check fields. Date defaults to today;
+            // onboarder defaults to the logged-in admin (CURRENT_MEMBER_ID).
+            initOnboardingIdCheck();
+
+            // Reset checkbox, activate button, and error
+            const dobMatch = document.getElementById('onboardingDobMatch');
+            if (dobMatch) dobMatch.checked = false;
+            const activateBtn = document.getElementById('onboardingActivateBtn');
+            if (activateBtn) activateBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i>Activate Member';
+            const activateError = document.getElementById('onboardingActivateError');
+            if (activateError) activateError.style.display = 'none';
+            updateActivateButton();
+
+            // Validate age on load
+            if (data.birthday) {
+                validateOnboardingAge();
+            }
+        })
+        .catch(err => {
+            console.error('Error loading onboard data:', err);
+        })
+        .finally(() => {
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (contentEl) contentEl.style.display = '';
+        });
+
+}
+
+// Reset and pre-populate the Onboard tab's ID Check fields:
+// - Date input: today, with 7-day past floor and 1-day future ceiling.
+// - Onboarder picker: defaulted to the logged-in admin's member_id.
+function initOnboardingIdCheck() {
+    const dateInput = document.getElementById('onboardingIdCheckDate');
+    if (dateInput) {
+        const today = new Date();
+        const past = new Date(today); past.setDate(today.getDate() - 7);
+        const future = new Date(today); future.setDate(today.getDate() + 1);
+        const fmt = d => d.toISOString().slice(0, 10);
+        dateInput.min = fmt(past);
+        dateInput.max = fmt(future);
+        dateInput.value = fmt(today);
+    }
+    const pickerEl = document.getElementById('onboardingIdCheckByPicker');
+    if (pickerEl) {
+        initOnboarderPicker(pickerEl, CURRENT_MEMBER_ID);
+    }
+}
+
+// Reusable onboarder typeahead picker component. Used by the Onboard tab and
+// the Forms tab. Wires up debounced search against /api/onboarder-search,
+// renders ranked results (member.forms-permission holders first), and shows
+// a soft warning when the selected member lacks that permission.
+//
+// Container layout (built into the page; this only attaches handlers):
+//   <div class="dh-onboarder-picker" data-target-input="hiddenInputId">
+//     <input class="dh-onboarder-search" type="text">
+//     <input type="hidden" id="hiddenInputId">
+//     <div class="dh-onboarder-results dropdown-menu"></div>
+//   </div>
+//   <div class="dh-onboarder-warning"></div>  (sibling, optional)
+function initOnboarderPicker(container, defaultMemberId) {
+    if (!container || container.dataset.dhPickerInited === '1') {
+        // Already wired up; just refresh selection if asked.
+        if (defaultMemberId) selectOnboarderById(container, defaultMemberId);
+        return;
+    }
+    container.dataset.dhPickerInited = '1';
+
+    const searchInput = container.querySelector('.dh-onboarder-search');
+    const hiddenId = container.getAttribute('data-target-input');
+    const hiddenInput = hiddenId ? document.getElementById(hiddenId) : null;
+    const resultsEl = container.querySelector('.dh-onboarder-results');
+    const warningEl = container.parentElement
+        ? container.parentElement.querySelector('.dh-onboarder-warning')
+        : null;
+
+    function setWarning(show) {
+        if (!warningEl) return;
+        // Only surface the soft warning when the picker is actively editable —
+        // i.e. when the search input is not readonly. The Forms tab puts the
+        // picker into read-only state until the Edit button is clicked, so
+        // historical "onboarder no longer holds member.forms" cases don't
+        // shout at admins who are just viewing the record.
+        const isReadOnly = searchInput?.hasAttribute('readonly');
+        warningEl.style.display = (show && !isReadOnly) ? '' : 'none';
+    }
+
+    function applySelection(member) {
+        if (!member) {
+            if (hiddenInput) {
+                hiddenInput.value = '';
+                // Programmatic value changes don't fire input events.
+                // Dispatch on the hidden input (which has data-field but no
+                // recursive picker listener) so the Forms tab edit-detection
+                // logic picks up the change and surfaces the Save button.
+                hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            if (searchInput) searchInput.value = '';
+            setWarning(false);
+            return;
+        }
+        const label = `${member.first_name || ''} ${member.last_name || ''}`.trim()
+            + (member.username ? ` (${member.username})` : '');
+        if (searchInput) searchInput.value = label;
+        if (hiddenInput) {
+            hiddenInput.value = String(member.member_id);
+            hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        setWarning(member.has_forms_change_perm === false);
+    }
+
+    function renderResults(members) {
+        if (!resultsEl) return;
+        if (!members || members.length === 0) {
+            resultsEl.innerHTML = '<div class="dropdown-item-text small text-muted">No matches</div>';
+        } else {
+            resultsEl.innerHTML = members.map(m => {
+                const label = `${m.first_name || ''} ${m.last_name || ''}`.trim();
+                const username = m.username ? ` <span class="text-muted small">(${escapeHtml(m.username)})</span>` : '';
+                const badge = m.has_forms_change_perm
+                    ? ' <span class="badge bg-success ms-1">Onboarder</span>'
+                    : '';
+                return `<button type="button" class="dropdown-item d-flex justify-content-between align-items-center"
+                        data-member-id="${m.member_id}"
+                        data-first="${escapeHtml(m.first_name || '')}"
+                        data-last="${escapeHtml(m.last_name || '')}"
+                        data-username="${escapeHtml(m.username || '')}"
+                        data-has-perm="${m.has_forms_change_perm ? '1' : '0'}">
+                        <span>${escapeHtml(label)}${username}</span>${badge}
+                    </button>`;
+            }).join('');
+            resultsEl.querySelectorAll('button.dropdown-item').forEach(btn => {
+                btn.addEventListener('mousedown', evt => {
+                    evt.preventDefault(); // keep focus
+                    applySelection({
+                        member_id: parseInt(btn.dataset.memberId, 10),
+                        first_name: btn.dataset.first,
+                        last_name: btn.dataset.last,
+                        username: btn.dataset.username,
+                        has_forms_change_perm: btn.dataset.hasPerm === '1',
+                    });
+                    resultsEl.style.display = 'none';
+                });
+            });
+        }
+        // Use 'block' explicitly — '' would fall back to Bootstrap's
+        // .dropdown-menu rule which sets display:none.
+        resultsEl.style.display = 'block';
+    }
+
+    let debounceHandle = null;
+    function runSearch(query) {
+        if (debounceHandle) clearTimeout(debounceHandle);
+        debounceHandle = setTimeout(() => {
+            fetch(`/api/onboarder-search?query=${encodeURIComponent(query)}`)
+                .then(r => r.ok ? r.json() : { members: [] })
+                .then(data => renderResults((data && data.members) || []))
+                .catch(() => { if (resultsEl) resultsEl.style.display = 'none'; });
+        }, 200);
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            if (searchInput.hasAttribute('readonly')) return; // ignore in read mode
+            const q = searchInput.value.trim();
+            if (q.length === 0) {
+                // Clearing the field clears the selection but still shows
+                // top-ranked onboarders so the user can pick another without
+                // having to type something to re-open the dropdown.
+                applySelection(null);
+                runSearch('');
+                return;
+            }
+            runSearch(q);
+        });
+        searchInput.addEventListener('focus', () => {
+            if (searchInput.hasAttribute('readonly')) return; // ignore in read mode
+            // Select the current value so the user can immediately overtype,
+            // then always run a search — empty query returns the top-ranked
+            // onboarders so the dropdown is useful even when the field
+            // already holds the resolved name of the current selection.
+            searchInput.select();
+            runSearch('');
+        });
+        searchInput.addEventListener('blur', () => {
+            // Defer so click on a result fires first
+            setTimeout(() => { if (resultsEl) resultsEl.style.display = 'none'; }, 150);
+        });
+    }
+
+    if (defaultMemberId) selectOnboarderById(container, defaultMemberId);
+}
+
+// Resolve an onboarder by member_id and apply the selection to a picker
+// container. Used to seed the picker with a default value (current admin
+// on Onboard tab; existing id_check_by on Forms tab).
+function selectOnboarderById(container, memberId) {
+    if (!memberId) return;
+    fetch(`/api/member/display-name?member_id=${encodeURIComponent(memberId)}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(member => {
+            if (!member) return;
+            // Determine permission status by re-running a tiny search.
+            fetch(`/api/onboarder-search?query=${encodeURIComponent(member.username || member.first_name || '')}&limit=20`)
+                .then(r => r.ok ? r.json() : { members: [] })
+                .then(data => {
+                    const match = (data.members || []).find(m => m.member_id === member.member_id);
+                    const hasPerm = match ? match.has_forms_change_perm : false;
+                    const searchInput = container.querySelector('.dh-onboarder-search');
+                    const hiddenInput = document.getElementById(container.getAttribute('data-target-input'));
+                    const warningEl = container.parentElement
+                        ? container.parentElement.querySelector('.dh-onboarder-warning')
+                        : null;
+                    const label = `${member.first_name || ''} ${member.last_name || ''}`.trim()
+                        + (member.username ? ` (${member.username})` : '');
+                    if (searchInput) searchInput.value = label;
+                    if (hiddenInput) hiddenInput.value = String(member.member_id);
+                    // Suppress the warning while the picker is in read mode
+                    // (Forms tab default). It will reappear once the user
+                    // clicks Edit *and* changes the selection.
+                    if (warningEl) {
+                        const isReadOnly = searchInput?.hasAttribute('readonly');
+                        warningEl.style.display = (!hasPerm && !isReadOnly) ? '' : 'none';
+                    }
+                });
+        })
+        .catch(err => console.warn('Could not resolve onboarder name:', err));
+}
+
+function dismissStripeWarning() {
+    const warning = document.getElementById('memberStripeWarning');
+    const steps = document.getElementById('onboardSteps');
+    if (warning) warning.style.display = 'none';
+    if (steps) steps.style.display = '';
+}
+
+function enableOnboardingDobEdit() {
+    const dobInput = document.getElementById('onboardingDob');
+    const dobEditBtn = document.getElementById('onboardingDobEditBtn');
+    if (!dobInput || !dobEditBtn) return;
+
+    dobInput.disabled = false;
+    dobEditBtn.style.display = 'none';
+    dobInput.focus();
+    dobInput.addEventListener('change', validateOnboardingAge);
+}
+
+function activateMember() {
+    const dobInput = document.getElementById('onboardingDob');
+    const dobMatch = document.getElementById('onboardingDobMatch');
+    const rfidInput = document.getElementById('onboardingRfid');
+    const activateBtn = document.getElementById('onboardingActivateBtn');
+    const activateError = document.getElementById('onboardingActivateError');
+
+    // Validate
+    const errors = [];
+
+    if (!dobInput || !dobInput.value) {
+        errors.push('Date of birth is required.');
+    } else if (!validateOnboardingAge()) {
+        errors.push('Member must be 18 years or older.');
+    }
+
+    if (!dobMatch || !dobMatch.checked) {
+        errors.push('You must confirm that the DOB matches the member\'s ID.');
+    }
+
+    if (!validateOnboardingRfid(true)) {
+        errors.push('Key number must be exactly 10 digits.');
+    }
+
+    if (errors.length > 0) {
+        activateError.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i>' + errors.join('<br>');
+        activateError.style.display = '';
+        return;
+    }
+
+    activateError.style.display = 'none';
+    activateBtn.disabled = true;
+    activateBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Activating...';
+
+    const memberId = currentMemberId;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const headers = { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken };
+
+    // Build update promises
+    const promises = [];
+
+    // 1. Always update DOB (saves current value whether edited or not)
+    promises.push(
+        fetch(`/api/member/identity?member_id=${encodeURIComponent(memberId)}`, {
+            method: 'POST', headers, body: JSON.stringify({ birthday: dobInput.value })
+        }).then(r => { if (!r.ok) throw new Error('Failed to update DOB'); return r.json(); })
+    );
+
+    // 2. Add RFID key
+    const rfidVal = rfidInput.value.trim();
+    if (rfidVal) {
+        promises.push(
+            fetch(`/api/member/access?member_id=${encodeURIComponent(memberId)}`, {
+                method: 'POST', headers, body: JSON.stringify({ rfid_tags: [rfidVal] })
+            }).then(r => { if (!r.ok) throw new Error('Failed to add RFID key'); return r.json(); })
+        );
+    }
+
+    // 3. Save the structured ID Check fields. The activation flag turns on
+    //    the date-range check (today − 7 days through today + 1 day). The
+    //    forms POST replaces the whole JSONB blob server-side, so we merge
+    //    the new keys into the existing forms object before submitting to
+    //    avoid clobbering the signup-time waiver/ToU values.
+    const idCheckDate = (document.getElementById('onboardingIdCheckDate') || {}).value || '';
+    const idCheckBy = (document.getElementById('onboardingIdCheckBy') || {}).value || '';
+    if (idCheckDate && idCheckBy) {
+        promises.push(
+            fetch(`/api/member/forms?member_id=${encodeURIComponent(memberId)}`)
+                .then(r => r.ok ? r.json() : {})
+                .then(existing => {
+                    const merged = Object.assign({}, existing || {}, {
+                        id_check_date: idCheckDate,
+                        id_check_by: parseInt(idCheckBy, 10),
+                        activation: true
+                    });
+                    return fetch(`/api/member/forms?member_id=${encodeURIComponent(memberId)}`, {
+                        method: 'POST', headers, body: JSON.stringify(merged)
+                    }).then(r => {
+                        if (!r.ok) return r.json().then(j => { throw new Error(j.error || 'Failed to save ID check'); });
+                        return r.json();
+                    });
+                })
+        );
+    }
+
+    // 4. Set status to active — sequenced AFTER the data writes complete so a
+    //    forms validation failure (or any other 4xx) doesn't half-activate the
+    //    member. Once status flips to 'active', triggers fire and the dispatch
+    //    chain provisions AD/B2C — there's no clean rollback for that, so we
+    //    only run it once the supporting data has landed.
+    Promise.all(promises)
+        .then(() => fetch(`/api/member/status?member_id=${encodeURIComponent(memberId)}`, {
+            method: 'POST', headers, body: JSON.stringify({ membership_status: 'active' })
+        }))
+        .then(r => { if (!r.ok) throw new Error('Failed to activate member'); return r.json(); })
+        .then(() => {
+            // Hide onboard tab
+            const onboardNav = document.getElementById('onboard-nav');
+            const onboardPane = document.getElementById('onboard');
+            const onboardTabBtn = document.getElementById('onboard-tab');
+            if (onboardNav) onboardNav.style.display = 'none';
+            if (onboardPane) { onboardPane.classList.remove('show', 'active'); }
+            if (onboardTabBtn) { onboardTabBtn.classList.remove('active'); onboardTabBtn.setAttribute('aria-selected', 'false'); }
+
+            // Hide "not active" warning
+            const warningEl = document.getElementById('memberSuspendedWarning');
+            if (warningEl) warningEl.style.display = 'none';
+
+            // Activate identity tab
+            const identityTab = document.getElementById('identity-tab');
+            if (identityTab) {
+                const tab = new bootstrap.Tab(identityTab);
+                tab.show();
+                fetchTabData('identity', memberId);
+            }
+
+            // Show activated notice banner
+            const activatedNotice = document.getElementById('memberActivatedNotice');
+            if (activatedNotice) {
+                activatedNotice.style.display = '';
+                activatedNotice.classList.add('show');
+            }
+
+            // Refresh the member list to reflect the updated status
+            if (typeof loadMembers === 'function') loadMembers(1);
+        })
+        .catch(err => {
+            activateError.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i>' + err.message;
+            activateError.style.display = '';
+            activateBtn.disabled = false;
+            activateBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i>Activate Member';
+        });
+}
+
+function initOnboardingRfid() {
+    const rfidInput = document.getElementById('onboardingRfid');
+    if (!rfidInput) return;
+    rfidInput.addEventListener('input', () => {
+        rfidInput.value = rfidInput.value.replace(/[^0-9]/g, '');
+        validateOnboardingRfid(false);
+    });
+    rfidInput.addEventListener('blur', () => {
+        validateOnboardingRfid(true);
+    });
+}
+
+function validateOnboardingRfid(checkLength) {
+    const rfidInput = document.getElementById('onboardingRfid');
+    const rfidError = document.getElementById('onboardingRfidError');
+    if (!rfidInput || !rfidError) return true;
+
+    const val = rfidInput.value.trim();
+    if (val === '') {
+        rfidError.style.display = 'none';
+        rfidInput.classList.remove('is-invalid');
+        return true;
+    }
+    if (!/^[0-9]+$/.test(val)) {
+        rfidError.textContent = 'Key number must contain only digits.';
+        rfidError.style.display = '';
+        rfidInput.classList.add('is-invalid');
+        return false;
+    }
+    if (checkLength && val.length < 10) {
+        rfidError.textContent = 'Key number must be exactly 10 digits.';
+        rfidError.style.display = '';
+        rfidInput.classList.add('is-invalid');
+        return false;
+    }
+    if (val.length === 10) {
+        rfidError.style.display = 'none';
+        rfidInput.classList.remove('is-invalid');
+    }
+    return val.length === 10;
+}
+
+function updateActivateButton() {
+    const dobMatch = document.getElementById('onboardingDobMatch');
+    const activateBtn = document.getElementById('onboardingActivateBtn');
+    if (activateBtn) {
+        activateBtn.disabled = !(dobMatch && dobMatch.checked);
+    }
+}
+
+function validateOnboardingAge() {
+    const dobInput = document.getElementById('onboardingDob');
+    const dobError = document.getElementById('onboardingDobError');
+    if (!dobInput || !dobInput.value) {
+        if (dobError) dobError.style.display = 'none';
+        return false;
+    }
+
+    const dob = new Date(dobInput.value + 'T00:00:00');
+    const today = new Date();
+
+    if (dob.getFullYear() < 1900 || dob > today) {
+        dobError.textContent = 'Please enter a valid date of birth.';
+        dobError.style.display = '';
+        dobInput.classList.add('is-invalid');
+        return false;
+    }
+
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+        age--;
+    }
+
+    if (age < 18) {
+        dobError.textContent = 'Member must be 18 years or older.';
+        dobError.style.display = '';
+        dobInput.classList.add('is-invalid');
+        return false;
+    } else {
+        dobError.style.display = 'none';
+        dobInput.classList.remove('is-invalid');
+        return true;
+    }
 }
 
 function fetchMembershipLevels() {
@@ -2068,6 +2926,34 @@ function fetchTabData(tabName, memberId) {
         return;
     }
 
+    // Special handling for forms tab — renders the new structured ID Check
+    // pair plus a read-only WA Legacy block when applicable.
+    if (tabName === 'forms') {
+        fetch(`/api/member/${tabName}?member_id=${encodeURIComponent(memberId)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch ${tabName} data`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                dataEl.innerHTML = formatFormsData(data);
+                const pickerEl = dataEl.querySelector('.dh-onboarder-picker');
+                if (pickerEl) {
+                    const seedId = pickerEl.getAttribute('data-seed-member-id');
+                    initOnboarderPicker(pickerEl, seedId ? parseInt(seedId, 10) : null);
+                }
+            })
+            .catch(error => {
+                dataEl.innerHTML = '<div class="alert alert-danger">Error: ' + error.message + '</div>';
+            })
+            .finally(() => {
+                loadingEl.style.display = 'none';
+                if (editBtn) editBtn.disabled = false;
+            });
+        return;
+    }
+
     // Special handling for notes tab
     if (tabName === 'notes') {
         fetch(`/api/member/${tabName}?member_id=${encodeURIComponent(memberId)}`)
@@ -2112,15 +2998,18 @@ function fetchTabData(tabName, memberId) {
 
 // Add event listeners to tabs to load data when clicked
 document.addEventListener('DOMContentLoaded', function() {
-    const tabs = ['identity', 'status', 'roles', 'forms', 'connections', 'extras', 'authorizations', 'notes', 'access', 'entry'];
-    
+    const tabs = ['onboard', 'identity', 'status', 'roles', 'forms', 'connections', 'extras', 'authorizations', 'notes', 'access', 'entry'];
+
     tabs.forEach(tabName => {
         const tabEl = document.getElementById(`${tabName}-tab`);
         if (tabEl) {
             tabEl.addEventListener('shown.bs.tab', function() {
                 if (currentMemberId) {
-                    fetchTabData(tabName, currentMemberId);
-                    // Log tab selection
+                    if (tabName === 'onboard') {
+                        loadOnboardTab(currentMemberId);
+                    } else {
+                        fetchTabData(tabName, currentMemberId);
+                    }
                     logTabSelection(tabName, currentMemberId);
                 }
             });
@@ -2129,6 +3018,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Apply navbar visibility based on permissions
     filterNavbarByPermissions();
+
+    // Initialize onboarding RFID input
+    initOnboardingRfid();
 
     // Tab scroll indicators
     const tabStrip = document.getElementById('memberTabs');

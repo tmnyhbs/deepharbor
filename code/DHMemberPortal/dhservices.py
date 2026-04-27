@@ -80,6 +80,17 @@ def get_full_member_info(access_token: str, member_id: str):
     response.raise_for_status()
     return response.json()
 
+def resolve_member_display_name(access_token: str, member_id):
+    """Resolve identity name fields for a member by ID. Returns None on 404."""
+    url = f"{DH_API_BASE_URL}/v1/member/display_name/"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    params = {"member_id": member_id}
+    response = requests.get(url, headers=headers, params=params, timeout=5)
+    if response.status_code == 404:
+        return None
+    response.raise_for_status()
+    return response.json()
+
 # Our function to get member roles from DHService
 def get_member_roles(access_token: str, member_id: str):
     url = f"{DH_API_BASE_URL}/v1/member/roles/"

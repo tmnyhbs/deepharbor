@@ -76,31 +76,24 @@
                 </div>
             </div>
 
+            {% if forms and (forms.id_check_date or forms.terms_of_use_accepted or forms.essentials_form or forms.waiver_signed_date or forms.orientation_completion_date) %}
             <div class="card mb-3">
                 <div class="card-body">
                     <h2 class="card-title mb-3">Forms</h2>
 
-                    {% if forms %}
+                    {% if forms.id_check_date %}
                     <div class="row">
-                        {% if forms.id_check_1 %}
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <div class="info-group">
-                                <label>ID Check 1</label>
+                                <label>ID Check</label>
                                 <span class="info-label-desc">A visual ID check is completed during onboarding to verify you're 18+. No ID information is retained.</span>
-                                <div class="info-value">{{ forms.id_check_1 }}</div>
+                                <div class="info-value">
+                                    Verified on {{ forms.id_check_date }}{% if forms.id_check_by_name %} by {{ forms.id_check_by_name }}{% endif %}
+                                </div>
                             </div>
                         </div>
-                        {% endif %}
-
-                        {% if forms.id_check_2 %}
-                        <div class="col-md-6">
-                            <div class="info-group">
-                                <label>ID Check 2</label>
-                                <div class="info-value">{{ forms.id_check_2 }}</div>
-                            </div>
-                        </div>
-                        {% endif %}
                     </div>
+                    {% endif %}
 
                     <div class="row">
                         {% if forms.terms_of_use_accepted %}
@@ -141,13 +134,7 @@
                         </div>
                         {% endif %}
                     </div>
-
-                    {% if not forms.id_check_1 and not forms.id_check_2 and not forms.terms_of_use_accepted and not forms.essentials_form and not forms.waiver_signed_date and not forms.orientation_completion_date %}
-                    <p class="no-data">No forms data on file.</p>
-                    {% endif %}
-                    {% else %}
-                    <p class="no-data">No forms data on file.</p>
-                    {% endif %}
                 </div>
             </div>
+            {% endif %}
 {% endblock %}

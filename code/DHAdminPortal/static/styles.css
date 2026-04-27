@@ -350,6 +350,28 @@ body.sidebar-open .body-content {
     border-color: rgba(255, 255, 255, 0.5);
 }
 
+/* Sidebar close (X) button — FontAwesome glyph that inherits the
+   header's text color so it stays legible across all themes. */
+.dh-sidebar-close {
+    background: transparent;
+    border: 0;
+    color: inherit;
+    padding: 0.15rem 0.4rem;
+    line-height: 1;
+    font-size: 1.25rem;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0.85;
+    transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.dh-sidebar-close:hover,
+.dh-sidebar-close:focus {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.15);
+    outline: none;
+}
+
 
 
 /* Search bar border matches theme color */
@@ -468,6 +490,13 @@ body.sidebar-resizing .details-sidebar {
 
     .dh-sidebar-content {
         padding: 0.5rem 0.4rem 0.75rem 0.4rem;
+    }
+}
+
+/* Mobile: title subtitle on its own line */
+@media (max-width: 768px) {
+    .body-content h1 .title-sub {
+        display: block;
     }
 }
 
@@ -597,6 +626,74 @@ body.sidebar-resizing .details-sidebar {
     margin-left: 0.35rem;
     padding: 0.15em 0.45em;
     border-radius: 3px;
+}
+
+/* "21+" age-of-majority indicator next to the Birthday card label
+   on the admin portal Identity tab. Theme-aware via --primary-color,
+   with overrides where white-on-primary fails contrast. */
+.dh-age-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0.25em 0.55em;
+    border-radius: 4px;
+    vertical-align: middle;
+    letter-spacing: 0.02em;
+    background: var(--primary-color, #2563eb);
+    color: #ffffff;
+    border: 1px solid transparent;
+}
+
+[data-theme="bubblegum"] .dh-age-badge {
+    background: #ff1493;
+    color: #ffffff;
+}
+
+[data-theme="midnight"] .dh-age-badge {
+    color: #1e293b;
+}
+
+[data-theme="hacker"] .dh-age-badge {
+    color: #000000;
+    border-color: #000000;
+}
+
+/* In the dark sidebar header the same-hue primary fill blends in.
+   Invert: solid white pill with the theme primary color as text. */
+.dh-sidebar-header .dh-age-badge {
+    background: #ffffff;
+    color: #1e3a5f;
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="bubblegum"] .dh-sidebar-header .dh-age-badge {
+    background: #ffffff;
+    color: #d63384;
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .dh-sidebar-header .dh-age-badge {
+    background: #ffffff;
+    color: #2563eb;
+}
+
+[data-theme="dark"] .dh-sidebar-header .dh-age-badge {
+    background: #ffffff;
+    color: #ef4444;
+}
+
+[data-theme="midnight"] .dh-sidebar-header .dh-age-badge {
+    background: #fbbf24;
+    color: #1e293b;
+    border-color: transparent;
+}
+
+[data-theme="hacker"] .dh-sidebar-header .dh-age-badge {
+    background: #00ff41;
+    color: #000000;
+    border-color: #000000;
 }
 
 .field-error {
@@ -3404,6 +3501,51 @@ body.sidebar-resizing .details-sidebar {
 
 .form-check-input:disabled {
     opacity: 0.6;
+}
+
+/* Disclosure chevron: rotates 90deg when its target is expanded.
+   Used by collapsible "Optional details" rows. */
+.dh-disclosure-chevron {
+    transition: transform 0.2s ease;
+}
+.dh-disclosure[aria-expanded="true"] .dh-disclosure-chevron {
+    transform: rotate(90deg);
+}
+
+/* Onboarder picker: typeahead with absolute-positioned dropdown menu. */
+.dh-onboarder-picker {
+    position: relative;
+}
+.dh-onboarder-picker .dh-onboarder-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+/* Unchecked checkbox/radio: bump border contrast across all themes.
+   Higher specificity than the per-theme `.form-check-input` rules above,
+   so :checked and :focus states are unaffected. */
+.form-check-input:not(:checked):not(:focus) {
+    border-width: 1.5px;
+}
+[data-theme="bubblegum"] .form-check-input:not(:checked):not(:focus) {
+    border-color: rgba(0, 0, 0, 0.45);
+}
+[data-theme="light"] .form-check-input:not(:checked):not(:focus) {
+    border-color: rgba(30, 41, 59, 0.55);
+}
+[data-theme="dark"] .form-check-input:not(:checked):not(:focus) {
+    border-color: rgba(228, 228, 231, 0.55);
+}
+[data-theme="midnight"] .form-check-input:not(:checked):not(:focus) {
+    border-color: rgba(200, 214, 229, 0.55);
+}
+[data-theme="hacker"] .form-check-input:not(:checked):not(:focus) {
+    border-color: rgba(0, 255, 65, 0.5);
 }
 
 .form-control {

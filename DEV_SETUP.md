@@ -61,8 +61,9 @@ on top of the production compose file:
 5. **Bypasses external calls** — `DEV_MODE=true` on worker services
    (DH2AD, DH2RFID) so they return success without contacting
    hardware controllers
-6. **Loads seed data** — 25 members inserted on first boot (10 dev
-   users with stable IDs + 15 random members)
+6. **Loads seed data** — 30 members inserted on first boot (10 dev
+   users with stable IDs, 15 additional active/suspended members,
+   2 banned members, and 3 pending members)
 7. **Sets Flask secret key** — `DH_SECRET_KEY` is set automatically
    for CSRF protection and session security (production requires
    generating your own — see [README.md](README.md))
@@ -145,7 +146,7 @@ cp -n .env.grafana.okta.example .env.grafana.okta.production
 tools/seed_data.sh generate              # 25 members (15 random + 10 dev)
 tools/seed_data.sh generate 100          # 110 members (100 random + 10 dev)
 tools/seed_data.sh generate 50 myseed    # Reproducible with a specific seed
-tools/seed_data.sh static                # Hand-crafted static data (25 members)
+tools/seed_data.sh static                # Hand-crafted static data (30 members)
 tools/seed_data.sh status                # Show current seed data info
 ```
 
@@ -187,18 +188,26 @@ The first 10 members (IDs 1–10) are stable "dev bypass" users with
 known names and roles. They are always included regardless of whether
 you use `generate` or `static` mode.
 
-| ID | Name               | Role          |
-|----|--------------------|---------------|
-| 1  | Ada Lovelace       | Administrator |
-| 2  | Charles Babbage    | Administrator |
-| 3  | Nikola Tesla       | Authorizer    |
-| 4  | Marie Curie        | Authorizer    |
-| 5  | Grace Hopper       | Board         |
-| 6  | Alan Turing        | Board         |
-| 7  | Rosalind Franklin  | Active Member |
-| 8  | Linus Torvalds     | Active Member |
-| 9  | Margaret Hamilton  | Inactive      |
-| 10 | Dennis Ritchie     | Inactive      |
+| ID | Name               | Role          | Status     |
+|----|--------------------|---------------|------------|
+| 1  | Ada Lovelace       | Administrator | active     |
+| 2  | Charles Babbage    | Administrator | active     |
+| 3  | Nikola Tesla       | Authorizer    | active     |
+| 4  | Hedy Lamarr        | Authorizer    | active     |
+| 5  | Grace Hopper       | Board         | active     |
+| 6  | Margaret Hamilton  | Board         | active     |
+| 7  | Rosalind Franklin  | (no role)     | active     |
+| 8  | Katherine Johnson  | (no role)     | active     |
+| 9  | Marie Curie        | (no role)     | suspended  |
+| 10 | Laika Sputnik      | (no role)     | suspended  |
+
+Every member in the static seed has a `birthday` set in identity, and
+the `forms` JSONB is intentionally distributed across all four
+ID-check matrix cells (5 new-only / 5 both / 17 WA-legacy with format
+jitter / 3 empty pending) so the admin Forms tab and Onboard tab
+exercise every render path on a fresh `./dh_dev.sh reset`. The
+generator (`tools/seed_data.sh generate`) mirrors the same 60/17/17/6
+distribution for random members.
 
 The seed data only loads on first boot (PostgreSQL initdb). If the
 volume already has data, init scripts are skipped. Use `./dh_dev.sh reset`

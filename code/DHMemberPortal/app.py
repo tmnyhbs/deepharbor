@@ -468,9 +468,27 @@ def member_storage():
     if error:
         return error
 
+    forms = member_info.get('forms', {}) if isinstance(member_info, dict) else {}
+
+    # Resolve the onboarder's display name from forms.id_check_by so the
+    # template can render "ID verified on <date> by <name>" without exposing
+    # raw member IDs. Failures are non-fatal — the line just falls back to
+    # showing the ID.
+    if forms.get('id_check_by'):
+        try:
+            access_token = session.get('access_token')
+            if access_token:
+                onboarder = dhservices.resolve_member_display_name(access_token, forms['id_check_by'])
+                if onboarder:
+                    parts = [onboarder.get('first_name'), onboarder.get('last_name')]
+                    full_name = ' '.join(p for p in parts if p).strip()
+                    forms['id_check_by_name'] = full_name or onboarder.get('username')
+        except Exception as e:
+            logger.warning(f"Could not resolve onboarder name for member_id={forms.get('id_check_by')}: {e}")
+
     return render_template('dashboard_info_storage.html',
                          extras=member_info.get('extras', {}) if isinstance(member_info, dict) else {},
-                         forms=member_info.get('forms', {}) if isinstance(member_info, dict) else {},
+                         forms=forms,
                          status=member_info.get('status', {}) if isinstance(member_info, dict) else {},
                          identity=member_info.get('identity', {}) if isinstance(member_info, dict) else {},
                          user=session.get('user'))

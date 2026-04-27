@@ -12,6 +12,9 @@ client_name = dev-admin-portal
 client_secret = ikactyRLicKoI8VHiD9KZEwTrOIhtYjfzm1h6YUjj7M
 api_base_url = http://localhost/dh/service
 
+[portals]
+member_portal_url = http://localhost:5002
+
 [flask]
 secret_key = CHANGE-ME-generate-with-python-c-import-secrets-print-secrets-token-hex-32
 
