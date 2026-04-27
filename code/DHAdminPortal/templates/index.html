@@ -163,9 +163,9 @@
                             </div>
 
                             <div id="onboardSteps">
-                            <!-- Step 1: Verify ID -->
+                            <!-- Required: Verify ID -->
                             <div class="mb-4">
-                                <h6><i class="fa-solid fa-id-card me-2"></i>Step 1: Verify ID</h6>
+                                <h6><i class="fa-solid fa-id-card me-2"></i>Verify ID</h6>
                                 <label class="form-label fw-semibold" for="onboardingDob">Member Provided DOB <span class="badge bg-danger required-badge">Required</span></label>
                                 <div class="d-flex gap-2 mb-2">
                                     <input type="date" class="form-control" id="onboardingDob" inputmode="numeric" disabled>
@@ -182,22 +182,55 @@
                                 </div>
                             </div>
 
-                            <!-- Step 2: Add RFID Key -->
+                            <!-- Optional fold: Access key + ID check details -->
                             <div class="mb-4">
-                                <h6><i class="fa-solid fa-key me-2"></i>Step 2: Add RFID Key</h6>
-                                <div class="input-group">
-                                    <button class="btn btn-outline-secondary" type="button" id="rfidCameraBtn" onclick="openRfidCameraModal()" title="Scan RFID card with camera">
-                                        <i class="fa-solid fa-camera"></i>
-                                    </button>
-                                    <input type="text" class="form-control" id="onboardingRfid" autocomplete="off" maxlength="10" inputmode="numeric" pattern="[0-9]*" placeholder="10 digit number">
+                                <button class="btn btn-link p-0 text-decoration-none dh-disclosure" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#onboardingOptional"
+                                        aria-expanded="false" aria-controls="onboardingOptional">
+                                    <i class="fa-solid fa-chevron-right me-1 dh-disclosure-chevron"></i>
+                                    Optional details
+                                </button>
+                                <div class="collapse mt-3" id="onboardingOptional">
+
+                                    <!-- Access key -->
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold" for="onboardingRfid">Access key</label>
+                                        <div class="alert alert-warning text-start small py-2 mb-2" role="note">
+                                            <i class="fa-solid fa-lightbulb me-2"></i>
+                                            New members should be directed to add their own key through the member portal &mdash;
+                                            this serves as a quick verification that their account works and teaches them where
+                                            to find the PS:1 quick links list. You can optionally set their key here.
+                                        </div>
+                                        <div class="input-group">
+                                            <button class="btn btn-outline-secondary" type="button" id="rfidCameraBtn" onclick="openRfidCameraModal()" title="Scan access card with camera">
+                                                <i class="fa-solid fa-camera"></i>
+                                            </button>
+                                            <input type="text" class="form-control" id="onboardingRfid" autocomplete="off" maxlength="10" inputmode="numeric" pattern="[0-9]*" placeholder="10 digit number">
+                                        </div>
+                                        <small class="text-muted">First 10 digits only</small>
+                                        <div id="onboardingRfidError" class="alert alert-danger py-1 px-2 small mt-2" style="display: none;"></div>
+                                    </div>
+
+                                    <!-- ID check details (read-only, populated from /api/member/forms) -->
+                                    <div class="mb-2">
+                                        <label class="form-label fw-semibold">ID check details</label>
+                                        <div class="row g-2">
+                                            <div class="col-md-4">
+                                                <label class="form-label small text-muted" for="onboardingIdCheck1">ID Check 1 (state)</label>
+                                                <input type="text" class="form-control form-control-sm" id="onboardingIdCheck1" readonly>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <label class="form-label small text-muted" for="onboardingIdCheck2">ID Check 2 (ID number)</label>
+                                                <input type="text" class="form-control form-control-sm" id="onboardingIdCheck2" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <small class="text-muted">First 10 digits only</small>
-                                <div id="onboardingRfidError" class="alert alert-danger py-1 px-2 small mt-2" style="display: none;"></div>
                             </div>
 
-                            <!-- Step 3: Activate -->
+                            <!-- Activate -->
                             <div class="mb-2">
-                                <h6><i class="fa-solid fa-user-check me-2"></i>Step 3: Activate</h6>
+                                <h6><i class="fa-solid fa-user-check me-2"></i>Activate</h6>
                                 <button class="btn btn-success w-100" id="onboardingActivateBtn" disabled onclick="activateMember()">
                                     <i class="fa-solid fa-check me-1"></i>Activate Member
                                 </button>
@@ -537,7 +570,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="rfidCameraModalLabel"><i class="fa-solid fa-camera me-2"></i>Scan RFID Card</h5>
+                <h5 class="modal-title" id="rfidCameraModalLabel"><i class="fa-solid fa-camera me-2"></i>Scan access card</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-center">
@@ -2170,6 +2203,12 @@ function loadOnboardTab(memberId) {
             if (rfidInput) { rfidInput.value = ''; rfidInput.classList.remove('is-invalid'); }
             if (rfidError) rfidError.style.display = 'none';
 
+            // Reset ID check fields (populated by separate /api/member/forms fetch below)
+            const idCheck1 = document.getElementById('onboardingIdCheck1');
+            const idCheck2 = document.getElementById('onboardingIdCheck2');
+            if (idCheck1) idCheck1.value = '';
+            if (idCheck2) idCheck2.value = '';
+
             // Reset checkbox, activate button, and error
             const dobMatch = document.getElementById('onboardingDobMatch');
             if (dobMatch) dobMatch.checked = false;
@@ -2191,6 +2230,19 @@ function loadOnboardTab(memberId) {
             if (loadingEl) loadingEl.style.display = 'none';
             if (contentEl) contentEl.style.display = '';
         });
+
+    // Populate read-only ID check fields from member.forms. Failure (e.g. 403 if
+    // current user lacks member.forms view permission) is non-fatal — fields stay blank.
+    fetch(`/api/member/forms?member_id=${encodeURIComponent(memberId)}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(forms => {
+            if (!forms) return;
+            const idCheck1 = document.getElementById('onboardingIdCheck1');
+            const idCheck2 = document.getElementById('onboardingIdCheck2');
+            if (idCheck1) idCheck1.value = forms.id_check_1 || '';
+            if (idCheck2) idCheck2.value = forms.id_check_2 || '';
+        })
+        .catch(err => console.warn('Could not load member forms for onboard tab:', err));
 }
 
 function dismissStripeWarning() {

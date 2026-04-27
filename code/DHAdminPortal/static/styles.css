@@ -3413,6 +3413,37 @@ body.sidebar-resizing .details-sidebar {
     opacity: 0.6;
 }
 
+/* Disclosure chevron: rotates 90deg when its target is expanded.
+   Used by collapsible "Optional details" rows. */
+.dh-disclosure-chevron {
+    transition: transform 0.2s ease;
+}
+.dh-disclosure[aria-expanded="true"] .dh-disclosure-chevron {
+    transform: rotate(90deg);
+}
+
+/* Unchecked checkbox/radio: bump border contrast across all themes.
+   Higher specificity than the per-theme `.form-check-input` rules above,
+   so :checked and :focus states are unaffected. */
+.form-check-input:not(:checked):not(:focus) {
+    border-width: 1.5px;
+}
+[data-theme="bubblegum"] .form-check-input:not(:checked):not(:focus) {
+    border-color: rgba(0, 0, 0, 0.45);
+}
+[data-theme="light"] .form-check-input:not(:checked):not(:focus) {
+    border-color: rgba(30, 41, 59, 0.55);
+}
+[data-theme="dark"] .form-check-input:not(:checked):not(:focus) {
+    border-color: rgba(228, 228, 231, 0.55);
+}
+[data-theme="midnight"] .form-check-input:not(:checked):not(:focus) {
+    border-color: rgba(200, 214, 229, 0.55);
+}
+[data-theme="hacker"] .form-check-input:not(:checked):not(:focus) {
+    border-color: rgba(0, 255, 65, 0.5);
+}
+
 .form-control {
     background-color: #ffffff;
 }
