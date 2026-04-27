@@ -196,11 +196,14 @@ def index():
     else:
         logger.info("User logged in, rendering index with user info")
         
-        # Always fetch fresh user roles and permissions to ensure they're up-to-date
+        # Always fetch fresh user roles and permissions to ensure they're up-to-date.
+        # Initialize member_id outside the try so the render below can pass `None`
+        # to the template if DHService is unreachable, instead of UnboundLocalError.
+        member_id = None
         try:
             # Get access token for DHService
             access_token = dhservices.get_access_token(
-                dhservices.DH_CLIENT_ID, 
+                dhservices.DH_CLIENT_ID,
                 dhservices.DH_CLIENT_SECRET
             )
             
