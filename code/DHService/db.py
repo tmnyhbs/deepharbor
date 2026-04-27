@@ -67,7 +67,14 @@ def _get_single_field(member_id: str, field: str):
     return None
 
 def _update_single_field(member_id: int, field: str, value, serialize=True, last_updated_by=None):
-    """Generic function to update a single field in the member table."""
+    """Generic function to REPLACE a single field in the member table.
+
+    Use this only for non-object JSONB columns (e.g. notes, which is an
+    array and is built-up in Python before write). For object-shaped JSONB
+    columns (identity, status, forms, access, extras, authorizations,
+    connections), use `_merge_jsonb_field` so partial POSTs don't wipe
+    keys the caller didn't supply.
+    """
     if field not in ALLOWED_MEMBER_FIELDS:
         raise ValueError(f"Invalid field: {field}")
     logger.debug(f"Updating member {field} for member ID: {member_id}")
@@ -89,6 +96,53 @@ def _update_single_field(member_id: int, field: str, value, serialize=True, last
             conn.commit()
     except Exception as e:
         error_message = f"Error updating member {field}: {e}"
+        logger.error(error_message)
+    return prepare_return_payload(member_id, error_message)
+
+def _merge_jsonb_field(member_id: int, field: str, value: dict, last_updated_by=None):
+    """Shallow-merge `value` into the existing JSONB column `field` on member.
+
+    Uses Postgres `||` operator for atomic single-statement merge. Top-level
+    keys in `value` overwrite matching keys in the existing column; keys not
+    present in `value` are preserved. Works correctly when the column is NULL
+    (treated as `{}`).
+
+    Caveats:
+    - Shallow merge only — array values inside the blob are replaced wholesale
+      (e.g. `emails`, `rfid_tags`). Every existing caller sends full arrays,
+      so this matches intent.
+    - Cannot remove keys. To delete a key, callers would need a dedicated
+      delete endpoint (none exists today; add when needed).
+    - Only valid for object-shaped JSONB columns. Do NOT call this for `notes`
+      (array): `||` on arrays concatenates instead of merging, which would
+      double-append since `add_update_notes` builds the full list.
+    """
+    if field not in ALLOWED_MEMBER_FIELDS:
+        raise ValueError(f"Invalid field: {field}")
+    logger.debug(f"Merging into member {field} for member ID: {member_id}")
+    error_message = "OK"
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                payload = json.dumps(value)
+                if last_updated_by is not None:
+                    cur.execute(
+                        f"UPDATE member "
+                        f"SET    {field} = COALESCE({field}, '{{}}'::jsonb) || %s::jsonb, "
+                        f"       last_updated_by = %s "
+                        f"WHERE  id = %s",
+                        (payload, last_updated_by, member_id),
+                    )
+                else:
+                    cur.execute(
+                        f"UPDATE member "
+                        f"SET    {field} = COALESCE({field}, '{{}}'::jsonb) || %s::jsonb "
+                        f"WHERE  id = %s",
+                        (payload, member_id),
+                    )
+            conn.commit()
+    except Exception as e:
+        error_message = f"Error merging member {field}: {e}"
         logger.error(error_message)
     return prepare_return_payload(member_id, error_message)
 
@@ -344,14 +398,24 @@ def add_update_identity(identity_dict, member_id=None):
         with get_db_connection() as conn:
             with conn.cursor() as cur:
                 if member_id is not None:
+                    # Shallow JSONB merge so a partial POST (e.g. just
+                    # `{"birthday": ...}`) doesn't wipe other identity
+                    # keys. See GH #263. The `emails` array key is
+                    # replaced wholesale on merge, which matches every
+                    # caller's intent (they always send full arrays).
                     if last_updated_by is not None:
                         cur.execute(
-                            "UPDATE member SET identity = %s, last_updated_by = %s WHERE id = %s",
+                            "UPDATE member "
+                            "SET    identity = COALESCE(identity, '{}'::jsonb) || %s::jsonb, "
+                            "       last_updated_by = %s "
+                            "WHERE  id = %s",
                             (json.dumps(identity_dict), last_updated_by, member_id),
                         )
                     else:
                         cur.execute(
-                            "UPDATE member SET identity = %s WHERE id = %s",
+                            "UPDATE member "
+                            "SET    identity = COALESCE(identity, '{}'::jsonb) || %s::jsonb "
+                            "WHERE  id = %s",
                             (json.dumps(identity_dict), member_id),
                         )
                     if cur.rowcount == 0:
@@ -359,7 +423,8 @@ def add_update_identity(identity_dict, member_id=None):
                         logger.warning(error_message)
                         return prepare_return_payload(None, error_message)
                 else:
-                    # Signup path: no caller member_id and email lookup found no match — INSERT
+                    # Signup path: no caller member_id and email lookup found
+                    # no match — INSERT the full blob. No row to merge into.
                     if last_updated_by is not None:
                         cur.execute(
                             "INSERT INTO member (identity, last_updated_by) VALUES (%s, %s) RETURNING id",
@@ -422,49 +487,23 @@ def change_email_address(email_change_dict):
     return prepare_return_payload(member_id, error_message)
 
 def add_update_connections(member_id, connections_dict):
-    logger.debug(f"Adding/updating connections for member ID: {member_id}")
-    
-    # Extract modified_by if present and connections_dict is a dictionary
-    last_updated_by = None
-    if isinstance(connections_dict, dict):
-        last_updated_by = connections_dict.pop("modified_by", None)
-    
-    error_message = "OK"
-    try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT connections FROM member WHERE id = %s", (member_id,))
-                result = cur.fetchone()
-                existing = result[0] if result and result[0] else {}
-                existing.update(connections_dict)
-                if last_updated_by is not None:
-                    cur.execute(
-                        "UPDATE member SET connections = %s, last_updated_by = %s WHERE id = %s",
-                        (json.dumps(existing), last_updated_by, member_id),
-                    )
-                else:
-                    cur.execute(
-                        "UPDATE member SET connections = %s WHERE id = %s",
-                        (json.dumps(existing), member_id),
-                    )
-            conn.commit()
-    except Exception as e:
-        error_message = f"Error updating connections: {e}"
-        logger.error(error_message)
-    return prepare_return_payload(member_id, error_message)
+    last_updated_by = connections_dict.pop("modified_by", None) if isinstance(connections_dict, dict) else None
+    return _merge_jsonb_field(member_id, "connections", connections_dict, last_updated_by=last_updated_by)
 
-# Simple field update functions using the generic helper
+# Object-shaped JSONB update functions — use `_merge_jsonb_field` so partial
+# POSTs don't wipe keys the caller didn't supply. See GH #263 for the bug
+# class this prevents.
 def add_update_forms(member_id, forms_dict):
     last_updated_by = forms_dict.pop("modified_by", None) if isinstance(forms_dict, dict) else None
-    return _update_single_field(member_id, "forms", forms_dict, last_updated_by=last_updated_by)
+    return _merge_jsonb_field(member_id, "forms", forms_dict, last_updated_by=last_updated_by)
 
 def add_update_access(member_id, access_dict):
     last_updated_by = access_dict.pop("modified_by", None) if isinstance(access_dict, dict) else None
-    return _update_single_field(member_id, "access", access_dict, last_updated_by=last_updated_by)
+    return _merge_jsonb_field(member_id, "access", access_dict, last_updated_by=last_updated_by)
 
 def add_update_extras(member_id, extras_dict):
     last_updated_by = extras_dict.pop("modified_by", None) if isinstance(extras_dict, dict) else None
-    return _update_single_field(member_id, "extras", extras_dict, last_updated_by=last_updated_by)
+    return _merge_jsonb_field(member_id, "extras", extras_dict, last_updated_by=last_updated_by)
 
 def add_update_notes(member_id, notes_dict):
     last_updated_by = notes_dict.pop("modified_by", None) if isinstance(notes_dict, dict) else None
@@ -496,11 +535,11 @@ def add_update_notes(member_id, notes_dict):
 
 def add_update_status(member_id, status_dict):
     last_updated_by = status_dict.pop("modified_by", None) if isinstance(status_dict, dict) else None
-    return _update_single_field(member_id, "status", status_dict, last_updated_by=last_updated_by)
+    return _merge_jsonb_field(member_id, "status", status_dict, last_updated_by=last_updated_by)
 
 def add_update_authorizations(member_id, authorizations_dict):
     last_updated_by = authorizations_dict.pop("modified_by", None) if isinstance(authorizations_dict, dict) else None
-    return _update_single_field(member_id, "authorizations", authorizations_dict, last_updated_by=last_updated_by)
+    return _merge_jsonb_field(member_id, "authorizations", authorizations_dict, last_updated_by=last_updated_by)
 
 def get_member_authorization_changes(member_id: str) -> dict:
     logger.debug(f"Getting authorization changes for member ID: {member_id}")
