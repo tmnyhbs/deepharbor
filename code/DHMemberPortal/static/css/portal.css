@@ -729,6 +729,18 @@ body {
     --bs-btn-hover-border-color: #b91c1c;
 }
 
+.btn-ps1-red {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #d11242;
+    --bs-btn-border-color: #d11242;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #a80e35;
+    --bs-btn-hover-border-color: #a80e35;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #a80e35;
+    --bs-btn-active-border-color: #a80e35;
+}
+
 /* Responsive social grid */
 @media (max-width: 575.98px) {
     .social-grid {
