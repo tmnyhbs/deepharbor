@@ -575,7 +575,14 @@ def search_onboarder_candidates(query: str, limit: int = 20) -> list[dict]:
     onboarder picker.
     """
     logger.debug(f"Searching onboarder candidates for query: {query!r}")
-    pattern = f"%{query.strip()}%" if query else "%"
+    # Escape ILIKE wildcards in user input so a literal `%` or `_` doesn't
+    # silently turn into a wildcard match. `\` itself is also escaped so
+    # `\%` typed by the user isn't treated as our escape sequence.
+    if query:
+        cleaned = query.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        pattern = f"%{cleaned}%"
+    else:
+        pattern = "%"
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
