@@ -17,3 +17,5 @@ pg/sql/seed_data.sql
 .env.staging*
 .env.development*
 .env.*.production
+/backlog.config.yml
+/backlog/
