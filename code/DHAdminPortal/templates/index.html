@@ -2656,14 +2656,16 @@ function activateMember() {
         );
     }
 
-    // 4. Set status to active
-    promises.push(
-        fetch(`/api/member/status?member_id=${encodeURIComponent(memberId)}`, {
-            method: 'POST', headers, body: JSON.stringify({ membership_status: 'active' })
-        }).then(r => { if (!r.ok) throw new Error('Failed to activate member'); return r.json(); })
-    );
-
+    // 4. Set status to active — sequenced AFTER the data writes complete so a
+    //    forms validation failure (or any other 4xx) doesn't half-activate the
+    //    member. Once status flips to 'active', triggers fire and the dispatch
+    //    chain provisions AD/B2C — there's no clean rollback for that, so we
+    //    only run it once the supporting data has landed.
     Promise.all(promises)
+        .then(() => fetch(`/api/member/status?member_id=${encodeURIComponent(memberId)}`, {
+            method: 'POST', headers, body: JSON.stringify({ membership_status: 'active' })
+        }))
+        .then(r => { if (!r.ok) throw new Error('Failed to activate member'); return r.json(); })
         .then(() => {
             // Hide onboard tab
             const onboardNav = document.getElementById('onboard-nav');
