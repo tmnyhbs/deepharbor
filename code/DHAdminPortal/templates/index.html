@@ -1922,11 +1922,24 @@ function formatData(data, options = {}) {
     const tabName = options.tabName || null;
     const membershipLevels = normalizeMembershipLevels(options.membershipLevels || []);
     let html = '<div class="row">';
-    
+
     // Helper function to format field names
-    const formatLabel = (key) => key.split('_').map(word => 
+    const formatLabel = (key) => key.split('_').map(word =>
         word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
+
+    // True iff birthdayStr (YYYY-MM-DD) is on or before today minus 21 years.
+    const isOver21 = (birthdayStr) => {
+        if (!birthdayStr || typeof birthdayStr !== 'string') return false;
+        const m = birthdayStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (!m) return false;
+        const y = +m[1], mo = +m[2], d = +m[3];
+        const dob = new Date(y, mo - 1, d);
+        if (dob.getFullYear() !== y || dob.getMonth() !== mo - 1 || dob.getDate() !== d) return false;
+        const today = new Date();
+        const cutoff = new Date(today.getFullYear() - 21, today.getMonth(), today.getDate());
+        return dob.getTime() <= cutoff.getTime();
+    };
     
     // Helper function to format values as input fields
     const formatValue = (key, value) => {
@@ -2060,11 +2073,14 @@ function formatData(data, options = {}) {
     
     // Iterate through all fields
     for (const [key, value] of Object.entries(data)) {
+        const labelExtra = (tabName === 'identity' && key === 'birthday' && isOver21(value))
+            ? ' <span class="dh-age-badge ms-2" title="Member is 21 or older"><i class="fa-solid fa-id-card me-1" aria-hidden="true"></i>21+</span>'
+            : '';
         html += `
             <div class="col-md-6 mb-3">
                 <div class="card h-100">
                     <div class="card-body">
-                        <h6 class="card-subtitle mb-2 text-muted">${formatLabel(key)}</h6>
+                        <h6 class="card-subtitle mb-2 text-muted">${formatLabel(key)}${labelExtra}</h6>
                         <div class="card-text">${formatValue(key, value)}</div>
                     </div>
                 </div>

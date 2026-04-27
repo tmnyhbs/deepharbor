@@ -606,6 +606,38 @@ body.sidebar-resizing .details-sidebar {
     border-radius: 3px;
 }
 
+/* "21+" age-of-majority indicator next to the Birthday card label
+   on the admin portal Identity tab. Theme-aware via --primary-color,
+   with overrides where white-on-primary fails contrast. */
+.dh-age-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0.25em 0.55em;
+    border-radius: 4px;
+    vertical-align: middle;
+    letter-spacing: 0.02em;
+    background: var(--primary-color, #2563eb);
+    color: #ffffff;
+    border: 1px solid transparent;
+}
+
+[data-theme="bubblegum"] .dh-age-badge {
+    background: #ff1493;
+    color: #ffffff;
+}
+
+[data-theme="midnight"] .dh-age-badge {
+    color: #1e293b;
+}
+
+[data-theme="hacker"] .dh-age-badge {
+    color: #000000;
+    border-color: #000000;
+}
+
 .field-error {
     border-color: #dc2626 !important;
     background-color: #fef2f2 !important;
