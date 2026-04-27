@@ -2193,11 +2193,17 @@ function loadMemberData(memberOrId) {
         if (pane) { pane.classList.remove('show', 'active'); }
     });
 
-    // Show/hide onboard tab based on member status and permissions
-    // Onboarding requires change access to identity (DOB), access (RFID), and status (activate)
+    // Show/hide onboard tab based on member status and permissions.
+    // Onboarding requires change access to identity (DOB), access (RFID),
+    // status (activate), and forms (id_check_date / id_check_by). Without
+    // any one of these the activation Promise.all will partially succeed
+    // and leave the member in a broken state, so gate the whole tab.
     const onboardNav = document.getElementById('onboard-nav');
     const memberStatus = member ? (member.membership_status || '').toLowerCase() : '';
-    const canOnboard = canChangeTab('member.identity') && canChangeTab('member.access') && canChangeTab('member.status');
+    const canOnboard = canChangeTab('member.identity')
+        && canChangeTab('member.access')
+        && canChangeTab('member.status')
+        && canChangeTab('member.forms');
     const showOnboard = memberStatus === 'pending' && canOnboard;
     if (onboardNav) {
         onboardNav.style.display = showOnboard ? 'block' : 'none';
