@@ -3422,6 +3422,20 @@ body.sidebar-resizing .details-sidebar {
     transform: rotate(90deg);
 }
 
+/* Onboarder picker: typeahead with absolute-positioned dropdown menu. */
+.dh-onboarder-picker {
+    position: relative;
+}
+.dh-onboarder-picker .dh-onboarder-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    max-height: 240px;
+    overflow-y: auto;
+}
+
 /* Unchecked checkbox/radio: bump border contrast across all themes.
    Higher specificity than the per-theme `.form-check-input` rules above,
    so :checked and :focus states are unaffected. */

@@ -151,6 +151,8 @@ json_build_object(
     'forms', json_build_object(
         'id_check_1', m.forms ->> 'id_check_1'::TEXT,
         'id_check_2', m.forms ->> 'id_check_2'::TEXT,
+        'id_check_date', to_date(m.forms ->> 'id_check_date'::TEXT, 'YYYY-MM-DD' ),
+        'id_check_by', NULLIF(m.forms ->> 'id_check_by', '')::INT,
         'waiver_signed_date', to_date(m.forms ->> 'waiver_signed_date'::TEXT, 'YYYY-MM-DD' ),
         'terms_of_use_accepted', m.forms ->> 'terms_of_use_accepted'::TEXT,
         'essentials_form', m.forms ->> 'essentials_form'::TEXT,

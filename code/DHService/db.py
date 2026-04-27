@@ -566,6 +566,83 @@ def get_member_roles(member_id: str) -> list[str]:
     logger.debug(f"Member ID: {member_id} has roles: {roles}")
     return roles
 
+def search_onboarder_candidates(query: str, limit: int = 20) -> list[dict]:
+    """Search members by name/username for the onboarder picker.
+
+    Ranks members holding the `member.forms` change permission first (via any
+    role they hold), then alphabetical by last_name, first_name. Returns at
+    most `limit` rows. Used by the admin portal Onboard tab and Forms tab
+    onboarder picker.
+    """
+    logger.debug(f"Searching onboarder candidates for query: {query!r}")
+    pattern = f"%{query.strip()}%" if query else "%"
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT m.id,
+                       m.identity ->> 'first_name'                AS first_name,
+                       m.identity ->> 'last_name'                 AS last_name,
+                       m.identity ->> 'active_directory_username' AS username,
+                       COALESCE(BOOL_OR(r.permission -> 'change' ? 'member.forms'), FALSE)
+                                                                  AS has_forms_change_perm
+                FROM       member m
+                LEFT JOIN  member_to_role mtr ON mtr.member_id = m.id
+                LEFT JOIN  roles r            ON r.id = mtr.role_id
+                WHERE      m.identity ->> 'first_name' ILIKE %s
+                       OR  m.identity ->> 'last_name'  ILIKE %s
+                       OR  m.identity ->> 'active_directory_username' ILIKE %s
+                GROUP BY   m.id
+                ORDER BY   has_forms_change_perm DESC,
+                           LOWER(m.identity ->> 'last_name')  ASC NULLS LAST,
+                           LOWER(m.identity ->> 'first_name') ASC NULLS LAST
+                LIMIT      %s
+                """,
+                (pattern, pattern, pattern, limit),
+            )
+            rows = cur.fetchall()
+    return [
+        {
+            "member_id": row[0],
+            "first_name": row[1],
+            "last_name": row[2],
+            "username": row[3],
+            "has_forms_change_perm": row[4],
+        }
+        for row in rows
+    ]
+
+
+def resolve_member_display_name(member_id: int) -> dict | None:
+    """Return identity name fields for a single member, or None if not found.
+
+    Used by the admin portal Forms tab and the member portal storage card to
+    render the onboarder name from a stored `id_check_by` member_id.
+    """
+    logger.debug(f"Resolving display name for member ID: {member_id}")
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """ SELECT m.id,
+                           m.identity ->> 'first_name',
+                           m.identity ->> 'last_name',
+                           m.identity ->> 'active_directory_username'
+                    FROM   member m
+                    WHERE  m.id = %s
+                """,
+                (member_id,),
+            )
+            row = cur.fetchone()
+    if not row:
+        return None
+    return {
+        "member_id": row[0],
+        "first_name": row[1],
+        "last_name": row[2],
+        "username": row[3],
+    }
+
+
 def get_full_member_info(member_id: str) -> dict:
     logger.debug(f"Getting full member info for member ID: {member_id}")
     with get_db_connection() as conn:

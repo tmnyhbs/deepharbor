@@ -132,6 +132,7 @@ DEV_USERS = [
             "nickname": "enchantress_of_numbers",
             "active_directory_username": "alovelace",
             "emails": [{"type": "primary", "email_address": "ada.lovelace@example.com"}],
+            "birthday": "1985-12-10",
         },
         "connections": {"discord_username": "ada_admin"},
         "status": {
@@ -175,6 +176,7 @@ DEV_USERS = [
             "nickname": "difference_engine",
             "active_directory_username": "cbabbage",
             "emails": [{"type": "primary", "email_address": "charles.babbage@example.com"}],
+            "birthday": "1978-04-22",
         },
         "connections": {"discord_username": "cbabbage"},
         "status": {
@@ -216,6 +218,7 @@ DEV_USERS = [
             "nickname": "spark_lord",
             "active_directory_username": "ntesla",
             "emails": [{"type": "primary", "email_address": "nikola.tesla@example.com"}],
+            "birthday": "1992-07-09",
         },
         "connections": {"discord_username": "spark_lord"},
         "status": {
@@ -264,6 +267,7 @@ DEV_USERS = [
             "nickname": "frequency_hopper",
             "active_directory_username": "hlamarr",
             "emails": [{"type": "primary", "email_address": "hedy.lamarr@example.com"}],
+            "birthday": "1980-11-09",
         },
         "connections": {"discord_username": "hedy_builds"},
         "status": {
@@ -309,6 +313,7 @@ DEV_USERS = [
             "nickname": "queen_bug",
             "active_directory_username": "ghopper",
             "emails": [{"type": "primary", "email_address": "grace.hopper@example.com"}],
+            "birthday": "1972-12-09",
         },
         "connections": {"discord_username": "admiral_grace"},
         "status": {
@@ -345,6 +350,7 @@ DEV_USERS = [
             "nickname": "stack_overflow",
             "active_directory_username": "mhamilton",
             "emails": [{"type": "primary", "email_address": "margaret.hamilton@example.com"}],
+            "birthday": "1986-08-17",
         },
         "connections": {"discord_username": "mhamilton_apollo"},
         "status": {
@@ -381,6 +387,7 @@ DEV_USERS = [
             "nickname": "photo_51",
             "active_directory_username": "rfranklin",
             "emails": [{"type": "primary", "email_address": "rosalind.franklin@example.com"}],
+            "birthday": "1995-07-25",
         },
         "connections": {"discord_username": "xray_rosalind"},
         "status": {
@@ -421,6 +428,7 @@ DEV_USERS = [
             "nickname": "human_computer",
             "active_directory_username": "kjohnson",
             "emails": [{"type": "primary", "email_address": "katherine.johnson@example.com"}],
+            "birthday": "1990-08-26",
         },
         "connections": {"discord_username": "kjohnson_math"},
         "status": {
@@ -462,6 +470,7 @@ DEV_USERS = [
             "nickname": "glow_girl",
             "active_directory_username": "mcurie",
             "emails": [{"type": "primary", "email_address": "marie.curie@example.com"}],
+            "birthday": "1968-11-07",
         },
         "connections": {"discord_username": "mcurie_rad"},
         "status": {
@@ -498,6 +507,7 @@ DEV_USERS = [
             "nickname": "good_dog",
             "active_directory_username": "lsputnik",
             "emails": [{"type": "primary", "email_address": "laika.sputnik@example.com"}],
+            "birthday": "2002-11-03",
         },
         "connections": None,
         "status": {
@@ -585,18 +595,95 @@ def pick_membership_level(is_active: bool, is_new: bool) -> str:
     return random.choices(types, weights=weights, k=1)[0]
 
 
+### ID-check data: dev seed exercises every cell of the new/legacy matrix so
+### the admin Forms tab and member-portal Forms card can be tested without
+### hand-tooling DB UPDATEs. See the plan at
+### /home/rubin110/.claude/plans/lively-dreaming-wreath.md for context.
+
+# Cell distribution for randomly-generated active members.
+# Pending members are forced into the "empty" cell upstream (forms = None).
+ID_CHECK_CELL_WEIGHTS = {
+    "legacy_only": 60,
+    "new_only": 17,
+    "both": 17,
+    "empty": 6,
+}
+
+# Member IDs holding `member.forms` change permission per the generator's
+# ROLE_ASSIGNMENTS list. id_check_by picks are biased toward this pool, but
+# occasionally select a non-onboarder so the post-save soft-warning render
+# path gets exercised.
+_ONBOARDER_IDS = (1, 2, 7)
+_NON_ONBOARDER_IDS = (3, 4, 5, 6)
+
+
+def _pick_id_check_by() -> int:
+    """Pick a member_id for `id_check_by`, biased toward onboarders."""
+    if random.random() < 0.85:
+        return random.choice(_ONBOARDER_IDS)
+    return random.choice(_NON_ONBOARDER_IDS)
+
+
+def _legacy_id_check_pair(fake: Faker) -> tuple[str, str]:
+    """Return a (id_check_1, id_check_2) pair from one of the historical
+    "eras" of inconsistent free-form usage. Empty strings are valid: many
+    real records had only one of the two fields populated."""
+    pattern = random.choice([
+        "default",         # IL + DL-NNNN
+        "verbose_state",   # Illinois + D123-4567-8901
+        "passport",        # US + PP-NNNNNNNN
+        "free_form",       # initials + verification date in id_check_2
+        "single_combined", # everything in id_check_1, id_check_2 empty
+        "rambling",        # narrative note in both
+    ])
+    if pattern == "default":
+        return fake.state_abbr(), f"DL-{random.randint(1000, 9999)}"
+    if pattern == "verbose_state":
+        return fake.state(), f"D{random.randint(100, 999)}-{random.randint(1000, 9999)}-{random.randint(1000, 9999)}"
+    if pattern == "passport":
+        return "US", f"PP-{fake.bothify('?########').upper()}"
+    if pattern == "free_form":
+        initials = fake.first_name()[0] + fake.last_name()[0]
+        verify_date = fake.date_between(start_date="-7y", end_date="-2y").isoformat()
+        return initials, verify_date
+    if pattern == "single_combined":
+        return f"{fake.state_abbr()} DL {fake.bothify('?#######').upper()}", ""
+    # rambling
+    return f"saw {fake.state_abbr()} DL, looked legit", f"{fake.first_name()[0]}{fake.last_name()[0]} approved"
+
+
 def generate_forms(fake: Faker) -> dict:
-    """Generate a realistic forms JSONB object."""
+    """Generate a realistic forms JSONB object across all four matrix cells.
+
+    The cell is chosen via ID_CHECK_CELL_WEIGHTS; the rest of the forms keys
+    (waiver, ToU, essentials, orientation) are populated for every cell
+    because they're independent of the ID-check work. The "empty" cell still
+    returns a dict — `forms` itself goes to NULL upstream only for pending
+    members."""
     waiver_date = fake.date_between(start_date="-5y", end_date="-1m")
     orientation_date = waiver_date + timedelta(days=random.randint(1, 14))
-    return {
-        "id_check_1": fake.state_abbr(),
-        "id_check_2": f"DL-{random.randint(1000, 9999)}",
+    forms = {
         "waiver_signed_date": waiver_date.isoformat(),
         "terms_of_use_accepted": "true",
         "essentials_form": "completed",
         "orientation_completed_date": orientation_date.isoformat(),
     }
+
+    cells = list(ID_CHECK_CELL_WEIGHTS.keys())
+    weights = [ID_CHECK_CELL_WEIGHTS[c] for c in cells]
+    cell = random.choices(cells, weights=weights, k=1)[0]
+
+    if cell in ("legacy_only", "both"):
+        legacy1, legacy2 = _legacy_id_check_pair(fake)
+        forms["id_check_1"] = legacy1
+        forms["id_check_2"] = legacy2
+
+    if cell in ("new_only", "both"):
+        new_check_date = fake.date_between(start_date="-5y", end_date="today")
+        forms["id_check_date"] = new_check_date.isoformat()
+        forms["id_check_by"] = _pick_id_check_by()
+
+    return forms
 
 
 def generate_unique_rfid_tags(count: int, used_tags: set) -> list[str]:
@@ -704,14 +791,20 @@ def generate_random_member(
         used_usernames.add(username)
     used_emails.add(email)
 
-    # Identity — pending members have minimal data like brand-new members
+    # Identity — pending members have minimal data like brand-new members.
+    # Birthday: every member 18-70 years old. Pending members keep theirs
+    # because the Onboard tab's "DOB matches ID" check needs something to
+    # display; active/suspended/banned members get one so the Identity tab
+    # has data to render.
     has_full_data = not is_new and not is_pending
+    birthday = fake.date_of_birth(minimum_age=18, maximum_age=70).isoformat()
     identity = {
         "first_name": first_name,
         "last_name": last_name,
         "nickname": fake.user_name() if has_full_data else None,
         "active_directory_username": username if has_full_data else None,
         "emails": [{"type": "primary", "email_address": email}],
+        "birthday": birthday,
     }
 
     # Status

@@ -88,6 +88,23 @@ async def get_full_member_info(current_user: AuthenticatedClient, member_id: int
     """Get full member information."""
     return db.get_full_member_info(member_id)
 
+@app.get("/v1/member/display_name/")
+async def get_member_display_name(current_user: AuthenticatedClient, member_id: int):
+    """Get a member's identity name fields by ID. Used to render the onboarder
+    name from a stored `forms.id_check_by` value. Returns 404 if the member
+    does not exist."""
+    name = db.resolve_member_display_name(member_id)
+    if name is None:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Member not found")
+    return name
+
+@app.get("/v1/onboarder_search/")
+async def onboarder_search(current_user: AuthenticatedClient, query: str = "", limit: int = 20):
+    """Typeahead search for the admin portal onboarder picker. Ranks members
+    holding `member.forms` change permission first."""
+    return {"members": db.search_onboarder_candidates(query, limit)}
+
 # These services are to get individual member data fields
 @app.get("/v1/member/connections/")
 async def get_member_connections(current_user: AuthenticatedClient, member_id: int):
