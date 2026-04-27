@@ -183,7 +183,7 @@ async def change_access(request: dict):
                     url = dh2rfid_add_endpoint
                     logger.debug(f"Add tag URL: {url}")
                     payload = dh2rfid_request
-                    response = requests.post(url, json=payload)
+                    response = requests.post(url, json=payload, timeout=30)
                     if response.status_code != 200:
                         logger.error(f"Failed to add tag via DH2RFID: {response.text}")
                         raise HTTPException(
@@ -197,8 +197,8 @@ async def change_access(request: dict):
                     # Send the request to DH2RFID worker
                     url = dh2rfid_remove_endpoint
                     logger.debug(f"Remove tag URL: {url}")
-                    payload = dh2rfid_request                
-                    response = requests.post(url, json=payload)
+                    payload = dh2rfid_request
+                    response = requests.post(url, json=payload, timeout=30)
                     if response.status_code != 200:
                         logger.error(f"Failed to remove tag via DH2RFID: {response.text}")
                         raise HTTPException(

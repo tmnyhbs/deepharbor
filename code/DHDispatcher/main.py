@@ -210,7 +210,7 @@ def process_row(row):
         "change_type": change_type,
         "change_data": change_data,
     }
-    response = requests.post(url, json=payload)
+    response = requests.post(url, json=payload, timeout=30)
     if response.status_code != 200:
         logger.error(
             f"Failed to process change for change row id={row['id']}: {response.text}" 
@@ -227,8 +227,34 @@ def process_row(row):
     return True
 
 
+# Deduplicate a batch: when multiple rows exist for the same member_id +
+# change_type, only the latest matters because downstream services read
+# current DB state. Earlier rows are redundant and can be marked processed.
+def deduplicate_batch(rows):
+    latest = {}
+    for row in rows:
+        data = row.get("data", {})
+        key = (data.get("member_id"), data.get("change"))
+        latest[key] = row
+
+    latest_ids = {row["id"] for row in latest.values()}
+    to_process = [r for r in rows if r["id"] in latest_ids]
+    to_skip = [r for r in rows if r["id"] not in latest_ids]
+    return to_process, to_skip
+
+
 # Process a batch of rows sequentially by id
 def process_batch(conn, cur, rows):
+    # Deduplicate: for same member_id + change_type, only process the latest
+    rows, skipped = deduplicate_batch(rows)
+    if skipped:
+        skip_ids = [r["id"] for r in skipped]
+        logger.info(
+            f"Deduplicating: skipping {len(skipped)} superseded row(s): ids={skip_ids}"
+        )
+        mark_batch_as_processed(cur, skip_ids)
+        conn.commit()
+
     processed_count = 0
 
     for row_dict in rows:
@@ -300,9 +326,11 @@ def process_pending_notifications(conn, cur):
             f"Received {notification_count} notification(s); processing unprocessed rows..."
         )
 
-    # Fetch and process all unprocessed rows in id order
-    # This handles the case where multiple inserts happened and notifications
-    # might arrive out of order or be coalesced
+    # Fetch and process all unprocessed rows in id order.
+    # Keep looping until no unprocessed rows remain — new rows may have been
+    # inserted while we were processing the previous batch (e.g., portal sends
+    # identity then access ~100ms apart, and the HTTP call to process identity
+    # takes 1-2s).
     last_id = 0
 
     while True:
@@ -314,9 +342,6 @@ def process_pending_notifications(conn, cur):
         process_batch(conn, cur, rows)
 
         last_id = rows[-1]["id"]
-
-        if len(rows) < BATCH_SIZE:
-            break
 
 
 ###############################################################################
@@ -350,27 +375,35 @@ def main():
 
                 # Main wait loop
                 while True:
-                    # Wait for notifications; block until data available
-                    # Use a timeout to periodically check for unprocessed rows
-                    # (handles edge cases where notifications might be missed)
-                    ready = select.select([conn], [], [], 60.0)
+                    # Before blocking on select, check if notifications are
+                    # already buffered in conn.notifies. This happens when
+                    # DB operations (commit, set_isolation_level, execute)
+                    # consume notification data from the TCP socket as a
+                    # side effect — select.select() then sees an empty
+                    # socket and would block, even though notifications
+                    # are waiting in memory.
+                    conn.poll()
+                    has_buffered = len(conn.notifies) > 0
 
-                    if ready == ([], [], []):
-                        # Timeout: do a quick check for any unprocessed rows
-                        conn.set_isolation_level(
-                            psycopg2.extensions.ISOLATION_LEVEL_READ_COMMITTED
-                        )
-                        unprocessed = count_unprocessed(cur)
-                        if unprocessed > 0:
-                            logger.info(
-                                f"Timeout check: found {unprocessed} unprocessed row(s)."
+                    if not has_buffered:
+                        ready = select.select([conn], [], [], POLL_INTERVAL)
+
+                        if ready == ([], [], []):
+                            # Timeout: do a quick check for any unprocessed rows
+                            conn.set_isolation_level(
+                                psycopg2.extensions.ISOLATION_LEVEL_READ_COMMITTED
                             )
-                            resume_unprocessed(conn, cur)
-                        conn.set_isolation_level(
-                            psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT
-                        )
-                        cur.execute(f"LISTEN {CHANNEL};")
-                        continue
+                            unprocessed = count_unprocessed(cur)
+                            if unprocessed > 0:
+                                logger.info(
+                                    f"Timeout check: found {unprocessed} unprocessed row(s)."
+                                )
+                                resume_unprocessed(conn, cur)
+                            conn.set_isolation_level(
+                                psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT
+                            )
+                            cur.execute(f"LISTEN {CHANNEL};")
+                            continue
 
                     # Switch to read-committed for processing
                     conn.set_isolation_level(

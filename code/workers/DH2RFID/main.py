@@ -97,7 +97,7 @@ def check_responses(sent_ids):
             
     return completed, data
 
-def perform_board_operation(operation, tag_id=None, converted_tag=None, timeout=10):
+def perform_board_operation(operation, tag_id=None, converted_tag=None, timeout=30):
     payload = {
         "operation": operation,
         "tag_id": tag_id,

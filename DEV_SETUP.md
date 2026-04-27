@@ -150,9 +150,10 @@ tools/seed_data.sh static                # Hand-crafted static data (30 members)
 tools/seed_data.sh status                # Show current seed data info
 ```
 
-Output goes to `pg/sql/seed_data.local.sql` (gitignored), which is
-mounted into the database container during init. The static reference
-data lives in `pg/sql/seed_data.sql` (committed to git).
+Output goes to `pg/sql/seed_data.sql` (gitignored working copy), which
+is mounted into the database container during init. The committed
+template lives at `pg/sql/seed_data.sql.example` — this matches the
+repo-wide `config.ini.example` → `config.ini` convention.
 
 ### 3. Start / Stop
 

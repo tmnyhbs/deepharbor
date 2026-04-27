@@ -388,14 +388,11 @@ def _get_authenticated_member_info():
         return None, redirect(url_for("index") if AUTH_MODE == "dev" else url_for("login"))
 
     access_token = session['access_token']
-    user_email = session['email']
+    member_id = session['member_id']
 
     try:
-        logger.info(f"Fetching member data for user: {user_email}")
-        member_data = dhservices.get_member_id(access_token, user_email)
-        member_id = member_data.get("member_id")
+        logger.info(f"Fetching member data for member {member_id}")
         member_info = dhservices.get_full_member_info(access_token, member_id)
-        logger.info(f"Member info loaded for member {member_id}")
         return member_info, None
     except Exception as e:
         logger.error(f"Error fetching member data: {str(e)}", exc_info=True)
@@ -505,12 +502,21 @@ def member_update_profile():
     member_id = session['member_id']
     user_email = session.get('email')
 
+    # Fetch raw identity JSONB directly (not v_member_info via get_full_member_info)
+    # so fields like birthday that aren't surfaced by the view are preserved when
+    # we round-trip through the save.
     try:
-        member_info = dhservices.get_full_member_info(access_token, member_id)
-        identity_data = (member_info.get('identity') if isinstance(member_info, dict) else {}) or {}
+        identity_data = dhservices.get_member_identity(access_token, member_id) or {}
+        if not isinstance(identity_data, dict):
+            identity_data = {}
     except Exception as e:
         logger.error(f"Error fetching identity for update: {str(e)}", exc_info=True)
         identity_data = {}
+
+    # Save original identity before applying form fields so we can
+    # skip the update if nothing actually changed — avoids creating
+    # a spurious member_changes row that delays access change processing
+    original_identity = dict(identity_data)
 
     apply_form_fields(request.form, identity_data, UPDATABLE_FIELDS["identity"])
 
@@ -535,7 +541,8 @@ def member_update_profile():
     source_page = request.form.get('source_page', 'profile')
 
     try:
-        dhservices.update_member_identity(access_token, member_id, identity_data)
+        if identity_data != original_identity:
+            dhservices.update_member_identity(access_token, member_id, identity_data)
         if 'rfid_tags' in request.form:
             dhservices.update_member_access(access_token, member_id, access_data)
         flash('Profile updated successfully', 'success')
@@ -670,7 +677,7 @@ app.jinja_env.globals.update(dev_banner=DEV_BANNER)  # Used in dev banner
 ###############################################################################
 
 # Preset users for the dev login page. These match the seed data in
-# pg/sql/seed_data.sql — don't change the IDs without updating the SQL.
+# pg/sql/seed_data.sql.example — don't change the IDs without updating the SQL.
 MEMBER_DEV_USERS = [
     {"member_id": 7, "name": "Rosalind Franklin", "email": "rosalind.franklin@example.com", "description": "Active member with full data"},
     {"member_id": 16, "name": "Dorothy Vaughan", "email": "dorothy.vaughan@example.com", "description": "Brand new member, minimal data"},
