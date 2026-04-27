@@ -62,6 +62,14 @@ Generates random member records for dev/testing. Called via `tools/seed_data.sh 
 
 See `tools/seed_data.sh --help` for usage.
 
+Random members get a `birthday` (uniform 18–70 years old via Faker) and
+a `forms` JSONB distributed across the four ID-check matrix cells —
+~60% WA-legacy with format jitter (`id_check_1` / `id_check_2`), ~17%
+new-only structured (`id_check_date` + `id_check_by`), ~17% both
+populated, ~6% empty. `id_check_by` is biased toward the seed-onboarder
+member IDs (1, 2, 7) with occasional non-onboarders so the soft-warning
+path on the admin onboarder picker gets exercised.
+
 ## Additional Resources
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 - [Docker PostgreSQL Image](https://hub.docker.com/_/postgres)
