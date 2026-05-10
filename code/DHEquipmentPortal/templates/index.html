@@ -3418,14 +3418,6 @@ const NOTIF_CHANNEL_DEFS = {
             { key: 'from_address',  label: 'From Address',       type: 'text',     hint: 'equipment@yourdomain.com' },
             { key: 'to_address',    label: 'Default To Address', type: 'text',     hint: 'admin@yourdomain.com' },
         ]
-    },
-    push: {
-        label: 'Push',
-        fields: [
-            { key: 'vapid_public_key',  label: 'VAPID Public Key',  type: 'text',     hint: '' },
-            { key: 'vapid_private_key', label: 'VAPID Private Key', type: 'password', hint: '' },
-            { key: 'vapid_subject',     label: 'VAPID Subject',     type: 'text',     hint: 'mailto:admin@yourdomain.com' },
-        ]
     }
 };
 
@@ -3469,16 +3461,12 @@ function _renderNotifTabs(container, activeTab) {
             <li class="nav-item"><button class="nav-link ${activeTab==='events'?'active':''}"
                 onclick="_renderNotifTabs(this.closest('.notif-panel-wrap'),'events')">
                 <i class="bi bi-list-check me-1"></i>Events</button></li>
-            <li class="nav-item"><button class="nav-link ${activeTab==='webhooks'?'active':''}"
-                onclick="_renderNotifTabs(this.closest('.notif-panel-wrap'),'webhooks')">
-                <i class="bi bi-link-45deg me-1"></i>Webhooks</button></li>
         </ul>
         <div id="notif-tab-body"></div>
     </div>`;
     container.firstElementChild.classList.add('notif-panel-wrap');
-    if (activeTab === 'channels')       _renderNotifChannels();
-    else if (activeTab === 'events')    _renderNotifEvents();
-    else if (activeTab === 'webhooks')  _renderNotifWebhooks();
+    if (activeTab === 'channels')    _renderNotifChannels();
+    else if (activeTab === 'events') _renderNotifEvents();
 }
 
 /* ── Channels ── */
@@ -3489,14 +3477,14 @@ function _renderNotifChannels() {
 
     body.innerHTML = `
         <p class="text-muted small">Enable and configure delivery channels. Disabled channels won't dispatch any events.</p>
-        ${['email','push'].map(chKey => {
+        ${['email'].map(chKey => {
             const def = NOTIF_CHANNEL_DEFS[chKey];
             const ch  = channels[chKey] || {enabled: false, config: {}};
             const cfg = ch.config || {};
             return `
             <div class="content-card mb-3">
                 <div class="content-card-header d-flex align-items-center justify-content-between">
-                    <span><i class="bi ${chKey==='email'?'bi-envelope':'bi-phone'} me-2"></i>${escHtml(def.label)}</span>
+                    <span><i class="bi bi-envelope me-2"></i>${escHtml(def.label)}</span>
                     <div class="form-check form-switch mb-0">
                         <input class="form-check-input" type="checkbox" id="nch-enable-${chKey}" ${ch.enabled?'checked':''}>
                         <label class="form-check-label small" for="nch-enable-${chKey}">${ch.enabled?'Enabled':'Disabled'}</label>
@@ -3528,19 +3516,23 @@ function _renderNotifChannels() {
         <div class="d-flex gap-2">
             <button class="btn btn-primary btn-sm" onclick="_saveNotifChannels()"><i class="bi bi-floppy me-1"></i>Save Channels</button>
         </div>
-        <div class="mt-2 small" id="notif-ch-msg"></div>`;
+        <div class="mt-2 small" id="notif-ch-msg"></div>
+        <hr class="my-4">
+        <h6 class="fw-semibold mb-3"><i class="bi bi-link-45deg me-2"></i>Webhooks</h6>
+        <div id="notif-webhooks-container"></div>`;
 
-    ['email','push'].forEach(chKey => {
+    ['email'].forEach(chKey => {
         const el = document.getElementById(`nch-enable-${chKey}`);
         if (el) el.addEventListener('change', () => {
             el.nextElementSibling.textContent = el.checked ? 'Enabled' : 'Disabled';
         });
     });
+    _renderNotifWebhooks();
 }
 
 async function _saveNotifChannels() {
     const newChannels = JSON.parse(JSON.stringify(_notifData.channels || {}));
-    ['email','push'].forEach(chKey => {
+    ['email'].forEach(chKey => {
         const def      = NOTIF_CHANNEL_DEFS[chKey];
         const enableEl = document.getElementById(`nch-enable-${chKey}`);
         newChannels[chKey] = newChannels[chKey] || {};
@@ -3572,7 +3564,7 @@ function _renderNotifEvents() {
     const body = document.getElementById('notif-tab-body');
     if (!body || !_notifData) return;
     const events   = _notifData.events || {};
-    const channels = ['email', 'push', 'webhook'];
+    const channels = ['email', 'webhook'];
 
     const groups = {};
     Object.entries(NOTIF_EVENT_DEFS).forEach(([key, def]) => {
@@ -3583,7 +3575,7 @@ function _renderNotifEvents() {
 
     const colHeads = channels.map(ch =>
         `<th style="min-width:70px;text-align:center">
-            <i class="bi ${ch==='email'?'bi-envelope':ch==='push'?'bi-phone':'bi-link-45deg'} me-1"></i>${ch}
+            <i class="bi ${ch==='email'?'bi-envelope':'bi-link-45deg'} me-1"></i>${ch}
         </th>`
     ).join('');
 
@@ -3638,7 +3630,7 @@ async function _saveNotifEvents() {
 
 /* ── Webhooks ── */
 function _renderNotifWebhooks() {
-    const body = document.getElementById('notif-tab-body');
+    const body = document.getElementById('notif-webhooks-container') || document.getElementById('notif-tab-body');
     if (!body || !_notifData) return;
     const webhooks  = _notifData.webhooks || [];
     const allEvents = Object.keys(NOTIF_EVENT_DEFS);
