@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Membership Locked - Pumping Station: One{% endblock %}
+{% block page_title %}{% endblock %}
+
+{% block content %}
+<div class="col-12 col-md-10 col-lg-8">
+    <div class="alert alert-danger p-4 mb-3" style="border-left: 4px solid var(--error-color); border-radius: 8px;" role="alert">
+        <h4 class="mb-0"><i class="fa-solid fa-lock me-2"></i>Membership Locked</h4>
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<footer class="dh-footer mt-auto py-3 text-muted small">
+    <div class="container">
+        {% if session.user %}
+        <div class="d-flex align-items-center justify-content-center gap-3 mb-3">
+            <span>Logged in as {{ session.email or 'Unknown' }}</span>
+            <a href="{{ url_for('logout') }}" class="btn btn-secondary btn-sm">Logout</a>
+        </div>
+        {% endif %}
+        <hr>
+        <div class="d-flex align-items-center justify-content-center gap-3">
+            <a href="https://pumpingstationone.org" rel="noopener noreferrer"><img src="{{ url_for('static', filename='images/ps1-logo-square.svg') }}" alt="Pumping Station: One" class="dh-footer-logo"></a>
+            <div>
+                <p class="mb-0">&copy; {{ now().year }} Pumping Station: One NFP</p>
+            </div>
+        </div>
+    </div>
+</footer>
+{% endblock %}

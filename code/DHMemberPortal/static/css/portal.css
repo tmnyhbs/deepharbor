@@ -791,3 +791,21 @@ i.ic-x          { color: #000000 !important; } /* X brand */
 .offcanvas .nav-link.active i {
     color: white !important;
 }
+
+/* Card locked state: shown on the keys page (and elsewhere) when a member's
+ * status isn't active. Card text stays legible; interactive controls inside
+ * are visually faded and pointer-events are dropped as a belt-and-suspenders
+ * with the disabled attribute on the controls themselves. */
+.dh-card-locked .card-body {
+    opacity: 0.55;
+}
+.dh-card-locked .card-title {
+    opacity: 1;
+}
+.dh-card-locked input,
+.dh-card-locked button,
+.dh-card-locked select,
+.dh-card-locked textarea {
+    pointer-events: none;
+    cursor: not-allowed;
+}

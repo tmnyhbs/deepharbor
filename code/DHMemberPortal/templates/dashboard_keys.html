@@ -2,31 +2,10 @@
 {% block title %}Keys & Access - Pumping Station: One{% endblock %}
 {% block page_title %}<i class="fa-solid fa-key ic-keys"></i> Keys & Access{% endblock %}
 {% block dashboard_content %}
-            {% if status.membership_status|lower != 'active' %}
-            <!-- Full inactive warning (hides all page content until dismissed) -->
-            <div id="inactiveWarningFull">
-                <div class="alert alert-danger p-4" style="border-left: 4px solid var(--error-color); border-radius: 8px;">
-                    <h4 class="mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i>Membership Inactive</h4>
-                    <p>Your membership is currently inactive. Any key changes made will not grant building access until your membership is reactivated.</p>
-                    <div class="d-grid gap-2">
-                        <a href="https://billing.stripe.com/p/login/cN27vM18zeI35wI9AA" class="btn text-white" style="background-color: #059669; border-color: #059669;" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-credit-card me-1"></i> Update Billing</a>
-                        <a href="https://ps1.link/discord" class="btn text-white" style="background-color: #5865F2; border-color: #5865F2;" rel="noopener noreferrer"><i class="fa-brands fa-discord me-1"></i> Get Help in Discord</a>
-                        <a href="mailto:info@pumpingstationone.org" class="btn text-white" style="background-color: #2563eb; border-color: #2563eb;"><i class="fa-solid fa-envelope me-1"></i> Get Help over Email</a>
-                        <button type="button" class="btn btn-outline-secondary" id="dismissInactiveWarning"><i class="fa-solid fa-arrow-right me-1"></i> Continue to Keys Anyway</button>
-                    </div>
-                </div>
-            </div>
+            {% set keys_locked = (status.membership_status or '')|lower != 'active' %}
 
-            <!-- Collapsed reminder (shown after dismissing full warning) -->
-            <div id="inactiveWarningSmall" style="display: none;">
-                <div class="alert alert-danger mb-3" role="alert">
-                    <i class="fa-solid fa-triangle-exclamation me-2"></i><strong>Reminder:</strong> Your membership is inactive. Key changes won't grant access until reactivated.
-                </div>
-            </div>
-            {% endif %}
-
-            <div id="keysPageContent" {% if status.membership_status|lower != 'active' %}style="display: none;"{% endif %}>
-            <div class="card mb-3">
+            <div id="keysPageContent">
+            <div class="card mb-3{% if keys_locked %} dh-card-locked{% endif %}">
                 <div class="card-body">
                     <h2 class="card-title mb-3">Your Keys</h2>
 
@@ -69,33 +48,33 @@
                                         {% if rfid_tags_list|length > 0 %}
                                             {% for tag in rfid_tags_list %}
                                             <tr>
-                                                <td><input type="text" class="form-control rfid-tag-input" autocomplete="off" value="{{ tag.strip() }}" maxlength="10" inputmode="numeric" pattern="[0-9]*"></td>
-                                                <td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn">Delete</button></td>
+                                                <td><input type="text" class="form-control rfid-tag-input" autocomplete="off" value="{{ tag.strip() }}" maxlength="10" inputmode="numeric" pattern="[0-9]*"{% if keys_locked %} disabled{% endif %}></td>
+                                                <td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn"{% if keys_locked %} disabled{% endif %}>Delete</button></td>
                                             </tr>
                                             {% endfor %}
                                         {% else %}
                                             <tr>
-                                                <td><input type="text" class="form-control rfid-tag-input" autocomplete="off" value="" maxlength="10" inputmode="numeric" pattern="[0-9]*"></td>
-                                                <td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn">Delete</button></td>
+                                                <td><input type="text" class="form-control rfid-tag-input" autocomplete="off" value="" maxlength="10" inputmode="numeric" pattern="[0-9]*"{% if keys_locked %} disabled{% endif %}></td>
+                                                <td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm delete-rfid-btn"{% if keys_locked %} disabled{% endif %}>Delete</button></td>
                                             </tr>
                                         {% endif %}
                                     </tbody>
                                 </table>
                             </div>
-                            <button type="button" class="btn btn-outline-primary btn-sm" id="addRfidTagBtn" title="Add card or fob"><i class="fa-solid fa-plus"></i></button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="addRfidTagBtn" title="Add card or fob"{% if keys_locked %} disabled{% endif %}><i class="fa-solid fa-plus"></i></button>
                             <input type="hidden" name="rfid_tags" id="rfidTagsHidden">
                         </div>
                     </div>
 
                     <div class="text-center mt-3">
-                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="submit" class="btn btn-primary"{% if keys_locked %} disabled{% endif %}>Save</button>
                     </div>
                     </form>
                 </div>
             </div>
 
             <!-- Placeholder for future features -->
-            <div class="card mb-3">
+            <div class="card mb-3{% if keys_locked %} dh-card-locked{% endif %}">
                 <div class="card-body">
                     <h2 class="card-title mb-3">Doorbot</h2>
                     <p class="no-data">Doorbot coming soon.</p>
@@ -109,6 +88,7 @@
         const addRfidTagBtn = document.getElementById('addRfidTagBtn');
         const rfidTagsTableBody = document.getElementById('rfidTagsTableBody');
         const validationError = document.getElementById('keysValidationError');
+        const keysLocked = {{ 'true' if keys_locked else 'false' }};
 
         // Strip non-numeric characters from input
         function enforceNumeric(input) {
@@ -121,7 +101,7 @@
         document.querySelectorAll('.rfid-tag-input').forEach(enforceNumeric);
 
         // Add new RFID tag row
-        if (addRfidTagBtn) {
+        if (addRfidTagBtn && !keysLocked) {
             addRfidTagBtn.addEventListener('click', () => {
                 const newRow = document.createElement('tr');
                 newRow.innerHTML = `
@@ -135,6 +115,7 @@
 
         // Delete RFID tag row (delegated)
         document.addEventListener('click', (e) => {
+            if (keysLocked) return;
             if (e.target.classList.contains('delete-rfid-btn')) {
                 const row = e.target.closest('tr');
                 if (rfidTagsTableBody.children.length > 1) {
@@ -148,6 +129,10 @@
         // Validate and collect RFID tags before submit
         if (keysForm) {
             keysForm.addEventListener('submit', (e) => {
+                if (keysLocked) {
+                    e.preventDefault();
+                    return;
+                }
                 validationError.style.display = 'none';
                 const rfidInputs = document.querySelectorAll('.rfid-tag-input');
                 const tags = Array.from(rfidInputs)
@@ -176,16 +161,6 @@
                 }
 
                 document.getElementById('rfidTagsHidden').value = tags.join(', ');
-            });
-        }
-
-        // Dismiss inactive membership warning
-        const dismissBtn = document.getElementById('dismissInactiveWarning');
-        if (dismissBtn) {
-            dismissBtn.addEventListener('click', () => {
-                document.getElementById('inactiveWarningFull').style.display = 'none';
-                document.getElementById('inactiveWarningSmall').style.display = 'block';
-                document.getElementById('keysPageContent').style.display = 'block';
             });
         }
 
