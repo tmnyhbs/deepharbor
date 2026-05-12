@@ -358,7 +358,16 @@ def authorized():
             session['access_token'] = access_token
             session['member_id'] = member_id
             session['email'] = email
-            
+
+            # Stash membership_status so the banned-member gate can fire on the
+            # very first post-login request, not just after the first dashboard hit.
+            try:
+                full_info = dhservices.get_full_member_info(access_token, member_id) or {}
+                session['membership_status'] = (full_info.get('status', {}) or {}).get('membership_status', '').lower()
+            except Exception as e:
+                logger.warning(f"Could not fetch status at B2C login for member_id={member_id}: {e}")
+                session['membership_status'] = ''
+
             logger.info(f"Member {email} (ID: {member_id}) logged in successfully, redirecting to dashboard")
             return redirect(url_for('member_dashboard'))
             
@@ -393,11 +402,47 @@ def _get_authenticated_member_info():
     try:
         logger.info(f"Fetching member data for member {member_id}")
         member_info = dhservices.get_full_member_info(access_token, member_id)
+        # Refresh cached membership_status so the before_request gate catches
+        # mid-session admin status flips (e.g. active → banned) on the next page.
+        if isinstance(member_info, dict):
+            session['membership_status'] = (member_info.get('status', {}) or {}).get('membership_status', '').lower()
         return member_info, None
     except Exception as e:
         logger.error(f"Error fetching member data: {str(e)}", exc_info=True)
         flash('Error loading member data', 'error')
         return None, redirect(url_for('login'))
+
+
+# Endpoints reachable by a banned member. Everything else redirects to the
+# locked page. 'static' is Flask's auto-registered static-file endpoint —
+# without it, the locked page's CSS/JS/images would also bounce.
+_ALLOWED_ENDPOINTS_FOR_BANNED = {
+    'health', 'version', 'anonymous',
+    'logout', 'member_locked', 'static',
+}
+
+
+@app.before_request
+def _gate_banned_members():
+    if not session.get('user'):
+        return None
+    if request.endpoint in _ALLOWED_ENDPOINTS_FOR_BANNED:
+        return None
+    if (session.get('membership_status') or '').lower() == 'banned':
+        return redirect(url_for('member_locked'))
+    return None
+
+
+@app.route('/dashboard/locked')
+def member_locked():
+    """Terminal-status landing page for banned members. Non-banned users
+    are redirected away; anonymous users are sent to the login page."""
+    if not session.get('user'):
+        return redirect(url_for('index'))
+    if (session.get('membership_status') or '').lower() != 'banned':
+        return redirect(url_for('member_dashboard'))
+    return render_template('dashboard_locked.html', user=session.get('user'))
+
 
 @app.route('/dashboard')
 def member_dashboard():
@@ -762,6 +807,15 @@ def dev_login_select():
         session["access_token"] = access_token
         session["member_id"] = member_id
         session["email"] = email
+
+        # Stash membership_status so the banned-member gate can fire on the
+        # very first post-login request, not just after the first dashboard hit.
+        try:
+            full_info = dhservices.get_full_member_info(access_token, member_id) or {}
+            session['membership_status'] = (full_info.get('status', {}) or {}).get('membership_status', '').lower()
+        except Exception as e:
+            logger.warning(f"Could not fetch status at dev login for member_id={member_id}: {e}")
+            session['membership_status'] = ''
 
         logger.info(f"Dev login: member_id={member_id}, email={email}")
 
