@@ -72,6 +72,8 @@
             {% endif %}
             {% endwith %}
 
+            {% if status %}{% include '_dashboard_status_banner.html' %}{% endif %}
+
             {% block dashboard_content %}{% endblock %}
         </main>
     </div>

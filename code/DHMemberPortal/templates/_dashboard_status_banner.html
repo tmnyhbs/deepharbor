@@ -1,0 +1,20 @@
+{# Global membership-status banner. Included from _dashboard_base.html so it
+   appears on every /dashboard/* page. Renders for pending/suspended/inactive;
+   active and banned suppress the banner. #}
+{% set _ms = (status.membership_status or '')|lower %}
+{% if _ms in ['pending', 'suspended', 'inactive'] %}
+<div class="dh-status-banner dh-status-banner-{{ 'pending' if _ms == 'pending' else 'inactive' }} alert alert-danger p-4 mb-3" style="border-left: 4px solid var(--error-color); border-radius: 8px;" role="alert">
+    {% if _ms == 'pending' %}
+    <h4 class="mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i>Membership Pending</h4>
+    <p class="mb-3">Your membership signup isn't complete. If you have not made a payment please do so now. Check with an onboarding volunteer in the space if you still require an ID verification.</p>
+    {% else %}
+    <h4 class="mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i>Membership Inactive</h4>
+    <p class="mb-3">Your membership is currently inactive. Update your billing information to make a payment and reactivate your membership.</p>
+    {% endif %}
+    <div class="d-grid gap-2 d-sm-flex flex-sm-wrap">
+        <a href="https://billing.stripe.com/p/login/cN27vM18zeI35wI9AA" class="btn text-white" style="background-color: #059669; border-color: #059669;" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-credit-card me-1"></i> Update Billing</a>
+        <a href="https://ps1.link/discord" class="btn text-white" style="background-color: #5865F2; border-color: #5865F2;" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-discord me-1"></i> Get Help in Discord</a>
+        <a href="mailto:info@pumpingstationone.org" class="btn text-white" style="background-color: #2563eb; border-color: #2563eb;"><i class="fa-solid fa-envelope me-1"></i> Get Help over Email</a>
+    </div>
+</div>
+{% endif %}
